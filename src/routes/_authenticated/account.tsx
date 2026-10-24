@@ -10,6 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   AtSign,
   KeyRound,
   LogOut,
@@ -51,6 +59,8 @@ function AccountPage() {
   const [newEmail, setNewEmail] = useState(user?.email ?? "");
   const [newPass, setNewPass] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
   const [allowMentions, setAllowMentions] = useState<boolean>(
     (profile as { allow_mentions?: boolean } | null)?.allow_mentions ?? true,
   );
@@ -142,11 +152,10 @@ function AccountPage() {
   };
 
   const requestPrivacyAction = async (request_type: "export" | "deletion") => {
-    if (
-      request_type === "deletion" &&
-      !confirm("Request account deletion? Your account stays active until the request is reviewed.")
-    )
+    if (request_type === "deletion") {
+      setDeleteDialogOpen(true);
       return;
+    }
     setBusy(true);
     const result = await requestDataFn({ data: { request_type } });
     setBusy(false);
@@ -158,6 +167,37 @@ function AccountPage() {
       request_type === "export" ? "Data export requested." : "Deletion request received.",
     );
     await queryClient.invalidateQueries({ queryKey: ["account-data-requests"] });
+  };
+
+  const confirmDeletionRequest = async () => {
+    if (!user?.email || !deletePassword) {
+      toast.error("Enter your account password to continue.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: deletePassword,
+      });
+      if (authError) {
+        toast.error("That password could not be verified. No request was sent.");
+        return;
+      }
+      const result = await requestDataFn({ data: { request_type: "deletion" } });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Deletion request received.");
+      setDeleteDialogOpen(false);
+      setDeletePassword("");
+      await queryClient.invalidateQueries({ queryKey: ["account-data-requests"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send the deletion request.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -427,6 +467,70 @@ function AccountPage() {
             </div>
           ) : null}
         </section>
+        <AlertDialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            if (!busy) {
+              setDeleteDialogOpen(open);
+              if (!open) setDeletePassword("");
+            }
+          }}
+        >
+          <AlertDialogContent className="max-w-md rounded-3xl border-border bg-card p-6 shadow-2xl">
+            <AlertDialogHeader className="text-left">
+              <AlertDialogTitle className="font-serif text-2xl font-normal text-foreground">
+                Request account deletion?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                Your account stays active while the request is reviewed. Confirm with your current
+                password to submit this request.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {isEmailAuth ? (
+              <div className="space-y-2">
+                <Label
+                  htmlFor="delete-account-password"
+                  className="text-[10px] uppercase tracking-widest text-muted-foreground"
+                >
+                  Account password
+                </Label>
+                <Input
+                  id="delete-account-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && deletePassword) void confirmDeletionRequest();
+                  }}
+                  className="bg-background"
+                />
+              </div>
+            ) : (
+              <p className="rounded-xl border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground">
+                This account uses {provider} sign-in and has no SameThing password to verify here.
+                Add an email/password sign-in method before submitting a deletion request.
+              </p>
+            )}
+            <div className="flex justify-end gap-3 pt-2">
+              <AlertDialogCancel
+                disabled={busy}
+                onClick={() => setDeletePassword("")}
+                className="rounded-full border-border bg-background text-muted-foreground"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <button
+                type="button"
+                onClick={() => void confirmDeletionRequest()}
+                disabled={busy || !isEmailAuth || !deletePassword}
+                className="rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {busy ? "Sending…" : "Request deletion"}
+              </button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </AppShell>
     </OnboardingGate>
   );

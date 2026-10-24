@@ -877,10 +877,16 @@ export const adminListSupportRequests = createServerFn({ method: "GET" })
           .in("id", ids)
       : { data: [] };
     const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile]));
-    const items = (requests ?? []).map((row: any) => ({
-      ...row,
-      profile: profileMap.get(row.user_id) ?? null,
-    }));
+    const items = (requests ?? []).map((row: any) => {
+      const replyEmailMatch =
+        typeof row.message === "string" ? row.message.match(/^\[Reply email:([^\]]+)\]\n\n/) : null;
+      return {
+        ...row,
+        message: replyEmailMatch ? row.message.slice(replyEmailMatch[0].length) : row.message,
+        reply_to_email: replyEmailMatch?.[1]?.trim() ?? null,
+        profile: profileMap.get(row.user_id) ?? null,
+      };
+    });
     items.sort((left: any, right: any) => {
       const premiumRank = (profile: any) => {
         const premiumUntil = profile?.premium_until ? new Date(profile.premium_until).getTime() : 0;
@@ -901,6 +907,7 @@ const SupportActionInput = z.object({
   status: z.enum(["open", "in_progress", "resolved", "closed"]),
   title: z.string().trim().max(120).default("Reply from SameThing Support"),
   body: z.string().trim().max(2000).default(""),
+  email_sent: z.boolean().default(false),
 });
 
 export const adminUpdateSupportRequest = createServerFn({ method: "POST" })
@@ -912,19 +919,48 @@ export const adminUpdateSupportRequest = createServerFn({ method: "POST" })
     const db = supabaseAdmin as any;
     const { data: request, error: requestError } = await db
       .from("support_requests")
-      .select("id, user_id")
+      .select("id, user_id, subject, message")
       .eq("id", data.request_id)
       .maybeSingle();
     if (requestError || !request)
       return { ok: false as const, error: "Support request not found." };
-    if (data.body)
-      await sendAdminSystemMessage(
-        db,
-        request.user_id,
-        data.title || "Reply from SameThing Support",
-        data.body,
-        { support_request_id: data.request_id },
-      );
+    const replyEmailMatch =
+      typeof request.message === "string"
+        ? request.message.match(/^\[Reply email:([^\]]+)\]\n\n/)
+        : null;
+    const replyEmail = replyEmailMatch?.[1]?.trim();
+    if (data.status === "resolved" && data.body && replyEmail && !data.email_sent)
+      return { ok: false as const, error: "Send the reply to the contact email before resolving." };
+    if (data.status === "resolved" && data.body && data.email_sent && !replyEmail)
+      return { ok: false as const, error: "This request has no contact email address." };
+    if (data.status === "resolved" && replyEmail && !data.body)
+      return { ok: false as const, error: "Add the email reply before resolving this request." };
+    if (data.body) {
+      const { data: existingNotice, error: noticeLookupError } = await db
+        .from("system_messages")
+        .select("id")
+        .eq("recipient_id", request.user_id)
+        .eq("kind", "moderation")
+        .contains("meta", { support_request_id: data.request_id })
+        .limit(1)
+        .maybeSingle();
+      if (noticeLookupError)
+        return { ok: false as const, error: "Could not check the inbox reply." };
+      if (!existingNotice) {
+        const { error: noticeError } = await db.from("system_messages").insert({
+          recipient_id: request.user_id,
+          kind: "moderation",
+          title: data.email_sent
+            ? "We replied by email"
+            : data.title || "Reply from SameThing Support",
+          body: data.email_sent
+            ? `We sent a reply about “${request.subject}” to ${replyEmail}. Check your email.\n\n${data.body}`
+            : data.body,
+          meta: { support_request_id: data.request_id },
+        });
+        if (noticeError) return { ok: false as const, error: "Could not send the inbox reply." };
+      }
+    }
     const { error } = await db
       .from("support_requests")
       .update({

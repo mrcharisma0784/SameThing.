@@ -148,6 +148,16 @@ export const requestAccountData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => AccountDataRequestInput.parse(input))
   .handler(async ({ data, context }) => {
+    if (data.request_type === "deletion") {
+      const authTime = Number(context.claims.auth_time);
+      const authAgeSeconds = Math.floor(Date.now() / 1000) - authTime;
+      if (!Number.isFinite(authTime) || authAgeSeconds < 0 || authAgeSeconds > 300) {
+        return {
+          ok: false as const,
+          error: "Confirm your password again before submitting a deletion request.",
+        };
+      }
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data: existing, error: existingError } = await db

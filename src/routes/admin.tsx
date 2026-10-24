@@ -1708,6 +1708,7 @@ type SupportItem = {
   id: string;
   subject: string;
   message: string;
+  reply_to_email?: string | null;
   screenshot_name?: string | null;
   status: string;
   created_at: string;
@@ -1735,6 +1736,7 @@ function SupportPanel() {
   const [busy, setBusy] = useState<string | null>(null);
   const [replyId, setReplyId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   const reload = async () => {
     const result = await list({ data: { status: "open" } });
     setItems(result.items as SupportItem[]);
@@ -1745,6 +1747,10 @@ function SupportPanel() {
   }, []);
 
   const updateOne = async (item: SupportItem, status: "in_progress" | "resolved") => {
+    if (status === "resolved" && item.reply_to_email && !emailSent) {
+      toast.error("Send the reply to the contact email first, then confirm it below.");
+      return;
+    }
     setBusy(item.id);
     const result = await update({
       data: {
@@ -1752,6 +1758,7 @@ function SupportPanel() {
         status,
         title: "Reply from SameThing Support",
         body: status === "resolved" && reply.trim() ? reply.trim() : "",
+        email_sent: status === "resolved" && emailSent,
       },
     });
     setBusy(null);
@@ -1761,6 +1768,7 @@ function SupportPanel() {
         status === "resolved" ? "Support request resolved." : "Support request started.",
       );
       setReply("");
+      setEmailSent(false);
       setReplyId(null);
       await reload();
     }
@@ -1775,6 +1783,14 @@ function SupportPanel() {
               <div>
                 <p className="text-xs uppercase tracking-widest text-accent">{item.subject}</p>
                 <p className="mt-1 text-sm text-foreground">{item.message}</p>
+                {item.reply_to_email && (
+                  <a
+                    href={`mailto:${encodeURIComponent(item.reply_to_email)}?subject=${encodeURIComponent(`SameThing support: ${item.subject}`)}`}
+                    className="mt-2 inline-flex text-xs text-accent underline underline-offset-4"
+                  >
+                    Reply by email: {item.reply_to_email}
+                  </a>
+                )}
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                   <span>
                     @{item.profile?.username ?? "unknown"} ·{" "}
@@ -1806,7 +1822,11 @@ function SupportPanel() {
               <button
                 type="button"
                 disabled={busy === item.id}
-                onClick={() => setReplyId((current) => (current === item.id ? null : item.id))}
+                onClick={() => {
+                  setReplyId((current) => (current === item.id ? null : item.id));
+                  setReply("");
+                  setEmailSent(false);
+                }}
                 className="rounded-full border border-accent/50 px-3 py-1.5 text-xs text-accent disabled:opacity-50"
               >
                 Reply & resolve
@@ -1819,15 +1839,42 @@ function SupportPanel() {
                   onChange={(event) => setReply(event.target.value.slice(0, 2000))}
                   rows={3}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground"
-                  placeholder="Write a reply for the user's inbox…"
+                  placeholder={
+                    item.reply_to_email
+                      ? "Write the reply you will send by email…"
+                      : "Write a reply for the user's inbox…"
+                  }
                 />
+                {item.reply_to_email && (
+                  <>
+                    <a
+                      href={`mailto:${encodeURIComponent(item.reply_to_email)}?subject=${encodeURIComponent(`SameThing support: ${item.subject}`)}&body=${encodeURIComponent(reply)}`}
+                      className="inline-flex rounded-full border border-border px-3 py-1.5 text-xs text-foreground hover:border-accent"
+                    >
+                      Open email draft
+                    </a>
+                    <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={emailSent}
+                        onChange={(event) => setEmailSent(event.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-[color:var(--accent)]"
+                      />
+                      I sent this reply to the contact email above.
+                    </label>
+                  </>
+                )}
                 <button
                   type="button"
-                  disabled={busy === item.id}
+                  disabled={
+                    busy === item.id || !reply.trim() || Boolean(item.reply_to_email && !emailSent)
+                  }
                   onClick={() => void updateOne(item, "resolved")}
                   className="rounded-full bg-accent px-3 py-1.5 text-xs text-accent-foreground disabled:opacity-50"
                 >
-                  Resolve and send
+                  {item.reply_to_email
+                    ? "Confirm email & notify inbox"
+                    : "Resolve and notify inbox"}
                 </button>
               </div>
             )}

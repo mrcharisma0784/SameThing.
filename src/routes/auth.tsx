@@ -315,7 +315,7 @@ function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="block w-full text-right text-xs text-muted-foreground underline decoration-transparent underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
+                      className="block w-full text-left text-xs text-muted-foreground underline decoration-transparent underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
                     >
                       Forgot your password?
                     </button>
@@ -336,9 +336,6 @@ function AuthPage() {
                         placeholder="Paste a friend’s code"
                         className="mt-1"
                       />
-                      <p className="mt-1 text-[10px] text-muted-foreground">
-                        One-time reward: you receive 5 Same credits.
-                      </p>
                     </div>
                   )}
                   {mode === "signup" && (
@@ -403,7 +400,16 @@ function AuthPage() {
                 onClick={() => setMode((m) => (m === "signin" ? "signup" : "signin"))}
                 className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
               >
-                {mode === "signin" ? "New here? Create an account." : "Have an account? Sign in."}
+                {mode === "signin" ? (
+                  <>
+                    New here?{" "}
+                    <span className="font-semibold text-foreground">Create an account.</span>
+                  </>
+                ) : (
+                  <>
+                    Have an account? <span className="font-semibold text-foreground">Sign in.</span>
+                  </>
+                )}
               </button>
             )}
           </div>

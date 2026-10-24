@@ -6,6 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const SupportInput = z.object({
   subject: z.string().trim().min(2).max(120),
   message: z.string().trim().min(3).max(4000),
+  reply_to_email: z.string().trim().email().max(254),
   screenshot_name: z.string().trim().max(200).optional(),
   user_agent: z.string().trim().max(500).optional(),
 });
@@ -20,9 +21,9 @@ export const sendSupportRequest = createServerFn({ method: "POST" })
       .insert({
         user_id: context.userId,
         subject: data.subject,
-        message: data.user_agent
-          ? `${data.message}\n\n[User agent: ${data.user_agent}]`
-          : data.message,
+        message: `[Reply email: ${data.reply_to_email}]\n\n${data.message}${
+          data.user_agent ? `\n\n[User agent: ${data.user_agent}]` : ""
+        }`,
         screenshot_name: data.screenshot_name || null,
       })
       .select("id, subject, status, created_at")

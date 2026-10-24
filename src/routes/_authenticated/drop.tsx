@@ -291,17 +291,19 @@ function DropPage() {
                 <Plus className="h-3.5 w-3.5" /> add
               </Button>
             </div>
-            <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-              custom tags {customTags.length}/{tagLimit}
-              {!isPremium && (
-                <>
-                  {" · "}
-                  <Link to="/premium" className="text-accent">
-                    ✦ premium: 15
-                  </Link>
-                </>
-              )}
-            </p>
+            <div className="mt-3 flex items-center justify-between">
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                Custom tags
+              </Label>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {customTags.length}/{tagLimit}
+              </span>
+            </div>
+            {!isPremium && (
+              <Link to="/premium" className="mt-1 block text-[10px] text-accent hover:underline">
+                ✦ Premium: 15 tags
+              </Link>
+            )}
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border bg-card p-4">

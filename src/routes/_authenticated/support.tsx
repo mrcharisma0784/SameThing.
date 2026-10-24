@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ChevronDown, LifeBuoy, ImagePlus, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -64,8 +64,14 @@ function SupportPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [replyEmail, setReplyEmail] = useState(user?.email ?? "");
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const accountEmail = user?.email;
+
+  useEffect(() => {
+    if (accountEmail) setReplyEmail((current) => current || accountEmail);
+  }, [accountEmail]);
 
   const submit = async () => {
     if (!user) return;
@@ -73,11 +79,17 @@ function SupportPage() {
       toast.error("Add a short subject and tell us what happened.");
       return;
     }
+    const cleanReplyEmail = replyEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanReplyEmail)) {
+      toast.error("Enter a valid email address so we can reply.");
+      return;
+    }
     setSending(true);
     const result = await sendFn({
       data: {
         subject: subject.trim(),
         message: message.trim(),
+        reply_to_email: cleanReplyEmail,
         screenshot_name: screenshot?.name,
         user_agent: typeof navigator === "undefined" ? "" : navigator.userAgent.slice(0, 500),
       },
@@ -89,6 +101,7 @@ function SupportPage() {
     }
     setSubject("");
     setMessage("");
+    setReplyEmail(accountEmail ?? "");
     setScreenshot(null);
     toast.success("Thanks — we read every one.");
   };
@@ -189,6 +202,19 @@ function SupportPage() {
             </span>
           </label>
 
+          <label className="mt-4 block text-[10px] uppercase tracking-widest text-muted-foreground">
+            Email for our reply
+            <Input
+              type="email"
+              autoComplete="email"
+              required
+              value={replyEmail}
+              onChange={(event) => setReplyEmail(event.target.value.slice(0, 254))}
+              placeholder="you@example.com"
+              className="mt-2 h-12 rounded-xl bg-background text-base normal-case tracking-normal"
+            />
+          </label>
+
           <div className="mt-5">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Screenshot (optional)
@@ -212,8 +238,8 @@ function SupportPage() {
           >
             {sending ? "Sending…" : "Send to support"}
           </Button>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            We reply straight to your inbox.
+          <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
+            We’ll reply to this email and let you know here in your inbox when we’ve sent our reply.
           </p>
         </section>
       </AppShell>
