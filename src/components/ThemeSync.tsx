@@ -10,7 +10,8 @@ export function ThemeSync() {
   const { profile } = useAuth();
   const raw = profile?.theme ?? DEFAULT_THEME;
   const plan = profile?.plan ?? "free";
-  const theme = isValidTheme(raw) && !(isPremiumTheme(raw) && plan !== "premium") ? raw : DEFAULT_THEME;
+  const theme =
+    isValidTheme(raw) && !(isPremiumTheme(raw) && plan !== "premium") ? raw : DEFAULT_THEME;
 
   useEffect(() => {
     if (typeof document === "undefined") return;

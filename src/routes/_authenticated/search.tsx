@@ -3,18 +3,29 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, X, AtSign } from "lucide-react";
+import { Search as SearchIcon, X, AtSign, Star } from "lucide-react";
+import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { searchThings, searchUsers } from "@/lib/api/search.functions";
 import { ThingCard, type ThingCardData } from "@/components/ThingCard";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { useAuth } from "@/hooks/use-auth";
+import { profileDisplayTags } from "@/lib/test-user";
 
 export const Route = createFileRoute("/_authenticated/search")({
   head: () => ({ meta: [{ title: "Search · SameThing." }] }),
   component: SearchPage,
 });
 
-type UserHit = { username: string; emoji: string; bio: string | null; plan?: string };
+type UserHit = {
+  username: string;
+  emoji: string;
+  bio: string | null;
+  plan?: string;
+  premium_until?: string | null;
+  is_test_user?: boolean | null;
+  test_user_until?: string | null;
+  test_user_label?: string | null;
+};
 
 function SearchPage() {
   const { profile } = useAuth();
@@ -25,7 +36,9 @@ function SearchPage() {
   useEffect(() => {
     if (t.current) clearTimeout(t.current);
     t.current = setTimeout(() => setDebounced(q.trim()), 300);
-    return () => { if (t.current) clearTimeout(t.current); };
+    return () => {
+      if (t.current) clearTimeout(t.current);
+    };
   }, [q]);
 
   const isUserMode = debounced.startsWith("@");
@@ -33,13 +46,19 @@ function SearchPage() {
 
   const { data: things, isFetching: thingsFetching } = useQuery({
     queryKey: ["search", debounced],
-    queryFn: async () => (debounced.length >= 2 ? (await searchThings({ data: { q: debounced } })).things as ThingCardData[] : []),
+    queryFn: async () =>
+      debounced.length >= 2
+        ? ((await searchThings({ data: { q: debounced } })).things as ThingCardData[])
+        : [],
     enabled: !isUserMode && debounced.length >= 2,
   });
 
   const { data: users, isFetching: usersFetching } = useQuery({
     queryKey: ["user-search", userTerm],
-    queryFn: async () => (userTerm.length >= 1 ? (await searchUsers({ data: { q: userTerm } })).users as UserHit[] : []),
+    queryFn: async () =>
+      userTerm.length >= 1
+        ? ((await searchUsers({ data: { q: userTerm } })).users as UserHit[])
+        : [],
     enabled: isUserMode && userTerm.length >= 1,
   });
 
@@ -53,13 +72,16 @@ function SearchPage() {
           Search<span className="dot">.</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Title, content, or tag — or type <span className="font-mono text-foreground">@</span> to find people.
+          Title, content, or tag — or type <span className="font-mono text-foreground">@</span> to
+          find people.
         </p>
 
         <div className="mt-5 relative">
-          {isUserMode
-            ? <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
-            : <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />}
+          {isUserMode ? (
+            <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
+          ) : (
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          )}
           <Input
             autoFocus
             value={q}
@@ -93,26 +115,51 @@ function SearchPage() {
               No users matched “@{userTerm}”.
             </p>
           )}
-          {isUserMode && users?.map((u) => {
-            const isMe = profile?.username === u.username;
-            return (
-              <Link
-                key={u.username}
-                to={isMe ? "/me" : "/u/$username"}
-                params={isMe ? undefined : { username: u.username }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-accent/40"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-background text-xl">{u.emoji}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 font-serif text-base text-foreground">
-                    @{u.username}
-                    {u.plan === "premium" && <span className="text-xs text-accent">✦</span>}
-                  </p>
-                  {u.bio && <p className="truncate text-xs text-muted-foreground">{u.bio}</p>}
-                </div>
-              </Link>
-            );
-          })}
+          {isUserMode &&
+            users?.map((u) => {
+              const isMe = profile?.username === u.username;
+              return (
+                <Link
+                  key={u.username}
+                  to={isMe ? "/me" : "/u/$username"}
+                  params={isMe ? undefined : { username: u.username }}
+                  className={`relative flex items-center gap-3 rounded-2xl border bg-card p-4 transition-colors hover:border-accent/40 ${
+                    u.plan === "premium"
+                      ? "border-[color:var(--rare)]/80 shadow-[0_0_24px_color-mix(in_srgb,var(--rare)_16%,transparent)]"
+                      : "border-border"
+                  }`}
+                >
+                  {u.plan === "premium" && (
+                    <span className="absolute -left-2 -top-2 grid h-6 w-6 place-items-center rounded-full border border-[color:var(--rare)]/80 bg-background text-[color:var(--rare)] shadow-[0_0_14px_color-mix(in_srgb,var(--rare)_24%,transparent)]">
+                      <Star className="h-3 w-3 fill-current" aria-label="PremiumThing." />
+                    </span>
+                  )}
+                  <span
+                    className={`grid h-10 w-10 place-items-center rounded-full border border-border bg-background text-foreground ${u.plan === "premium" ? "premium-ring" : ""}`}
+                  >
+                    <ProfileGlyph value={u.emoji} className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="font-serif text-base text-foreground">@{u.username}</p>
+                      {profileDisplayTags(u).map((tag) => (
+                        <span
+                          key={tag}
+                          className={
+                            tag === "PremiumThing." || tag === "LabThing."
+                              ? "rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-accent"
+                              : "rounded-full border border-border px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground"
+                          }
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    {u.bio && <p className="truncate text-xs text-muted-foreground">{u.bio}</p>}
+                  </div>
+                </Link>
+              );
+            })}
 
           {!isUserMode && ready && !isFetching && (things?.length ?? 0) === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">

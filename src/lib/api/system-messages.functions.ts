@@ -26,6 +26,30 @@ export const listMySystemMessages = createServerFn({ method: "GET" })
     return { items: (data as unknown as SystemMessage[]) ?? [] };
   });
 
+export const ensureWelcomeSystemMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing, error: lookupError } = await supabaseAdmin
+      .from("system_messages" as never)
+      .select("id")
+      .eq("recipient_id", context.userId)
+      .eq("kind", "welcome")
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    if (existing) return { created: false };
+
+    const { error } = await supabaseAdmin.from("system_messages" as never).insert({
+      recipient_id: context.userId,
+      kind: "welcome",
+      title: "Welcome to SameThing.",
+      body: "Thanks for joining us — we're so glad you're here. You're never the only one.",
+      link: "/notifications",
+    } as never);
+    if (error) throw error;
+    return { created: true };
+  });
+
 export const markSystemMessageRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => z.object({ id: z.string().uuid() }).parse(i))
@@ -37,29 +61,4 @@ export const markSystemMessageRead = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("recipient_id", context.userId);
     return { ok: true };
-  });
-
-/** Creates the first-account welcome message once, after a new user reaches the app. */
-export const ensureWelcomeSystemMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const existing = await supabaseAdmin
-      .from("system_messages" as never)
-      .select("id")
-      .eq("recipient_id", context.userId)
-      .eq("kind", "welcome")
-      .limit(1);
-
-    if (existing.data && existing.data.length > 0) return { created: false };
-
-    const { error } = await supabaseAdmin.from("system_messages" as never).insert({
-      recipient_id: context.userId,
-      kind: "welcome",
-      title: "Welcome to SameThing.",
-      body: "Thanks for joining us. Leave a small thought when it feels right — someone may feel it too.",
-      link: "/",
-    } as never);
-
-    return { created: !error, error: error?.message ?? null };
   });

@@ -1,10 +1,37 @@
 {
+  "id": "/",
   "name": "SameThing.",
   "short_name": "SameThing.",
-  "description": "You're not the only one.",
+  "description": "A quieter social space for the thoughts that make us feel less alone.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
-  "display": "standalone",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "window-controls-overlay"],
+  "orientation": "portrait-primary",
   "background_color": "#0f0e0c",
   "theme_color": "#0f0e0c",
-  "icons": []
+  "categories": ["social", "lifestyle"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

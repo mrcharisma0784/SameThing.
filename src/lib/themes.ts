@@ -1,5 +1,5 @@
 // App themes. "ember" is the original, free theme. Others are PremiumThing only.
-export type ThemeKey = "ember" | "midnight" | "paper";
+export type ThemeKey = "ember" | "midnight" | "paper" | "moss" | "plum" | "noir";
 
 export const THEMES: Array<{
   key: ThemeKey;
@@ -25,9 +25,30 @@ export const THEMES: Array<{
   {
     key: "paper",
     name: "Paper.",
-    hint: "Light, printed, almost analogue.",
+    hint: "Off-white, printed, almost analogue.",
     premium: true,
-    swatch: ["#f6f2ea", "#fffdf8", "#8a6a45"],
+    swatch: ["#f6f4ee", "#fffdf8", "#8a6a45"],
+  },
+  {
+    key: "moss",
+    name: "Moss.",
+    hint: "Forest dark, quiet green glow.",
+    premium: true,
+    swatch: ["#07120f", "#10352a", "#8fd9b3"],
+  },
+  {
+    key: "plum",
+    name: "Plum.",
+    hint: "Late-night violet, soft and moody.",
+    premium: true,
+    swatch: ["#100b1d", "#25163b", "#b58bea"],
+  },
+  {
+    key: "noir",
+    name: "Noir.",
+    hint: "Pure monochrome. Nothing but contrast.",
+    premium: true,
+    swatch: ["#070707", "#151515", "#f1f1ef"],
   },
 ];
 

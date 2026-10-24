@@ -1,7 +1,15 @@
+/* eslint-disable react-hooks/rules-of-hooks -- TanStack Start's server session helper is intentionally called from a server utility. */
 // Admin panel session — shared-password gate, separate from user auth.
 import { useSession } from "@tanstack/react-start/server";
 
-export type AdminSession = { unlocked?: boolean; at?: number };
+export type AdminSession = {
+  unlocked?: boolean;
+  at?: number;
+  actor_user_id?: string;
+  username?: string;
+  permissions?: string[];
+  mode?: "account" | "breakglass";
+};
 
 export async function getAdminSession() {
   return useSession<AdminSession>({

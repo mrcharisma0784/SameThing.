@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "pnpm install --frozen-lockfile --ignore-scripts",
+  "framework": "vite"
+}

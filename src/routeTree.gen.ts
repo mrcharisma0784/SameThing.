@@ -11,23 +11,48 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResearchApiRouteImport } from './routes/research-api'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
+import { Route as AuthenticatedApiDashboardRouteImport } from './routes/_authenticated/api-dashboard'
+import { Route as AuthenticatedAppearanceRouteImport } from './routes/_authenticated/appearance'
+import { Route as AuthenticatedCapsulesRouteImport } from './routes/_authenticated/capsules'
+import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedDropRouteImport } from './routes/_authenticated/drop'
 import { Route as AuthenticatedFeedPrefsRouteImport } from './routes/_authenticated/feed-prefs'
+import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedNotifPrefsRouteImport } from './routes/_authenticated/notif-prefs'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedReferenceRouteImport } from './routes/_authenticated/reference'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStreakRouteImport } from './routes/_authenticated/streak'
+import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
+import { Route as AuthenticatedTestUsersRouteImport } from './routes/_authenticated/test-users'
+import { Route as AuthenticatedTwinRouteImport } from './routes/_authenticated/twin'
+import { Route as ConnectionsUsernameRouteImport } from './routes/connections.$username'
+import { Route as QuoteIdRouteImport } from './routes/quote.$id'
 import { Route as ThingIdRouteImport } from './routes/thing.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as ApiV1HealthRouteImport } from './routes/api.v1.health'
+import { Route as ApiV1MetadataRouteImport } from './routes/api.v1.metadata'
+import { Route as ApiV1MetricsRouteImport } from './routes/api.v1.metrics'
+import { Route as ApiV1OpenapiDotjsonRouteImport } from './routes/api.v1.openapi[.]json'
+import { Route as ApiV1QuotesRouteImport } from './routes/api.v1.quotes'
+import { Route as ApiV1ThingsRouteImport } from './routes/api.v1.things'
+import { Route as ApiV1QuotesIdRouteImport } from './routes/api.v1.quotes.$id'
+import { Route as ApiV1ThingsIdRouteImport } from './routes/api.v1.things.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -38,6 +63,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -46,6 +76,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentationRoute = DocumentationRouteImport.update({
+  id: '/documentation',
+  path: '/documentation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -63,6 +98,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResearchApiRoute = ResearchApiRouteImport.update({
+  id: '/research-api',
+  path: '/research-api',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -78,6 +118,33 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAchievementsRoute =
+  AuthenticatedAchievementsRouteImport.update({
+    id: '/achievements',
+    path: '/achievements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedApiDashboardRoute =
+  AuthenticatedApiDashboardRouteImport.update({
+    id: '/api-dashboard',
+    path: '/api-dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAppearanceRoute = AuthenticatedAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCapsulesRoute = AuthenticatedCapsulesRouteImport.update({
+  id: '/capsules',
+  path: '/capsules',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDropRoute = AuthenticatedDropRouteImport.update({
   id: '/drop',
   path: '/drop',
@@ -88,6 +155,12 @@ const AuthenticatedFeedPrefsRoute = AuthenticatedFeedPrefsRouteImport.update({
   path: '/feed-prefs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLeaderboardRoute =
+  AuthenticatedLeaderboardRouteImport.update({
+    id: '/leaderboard',
+    path: '/leaderboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   id: '/me',
   path: '/me',
@@ -104,6 +177,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedReferenceRoute = AuthenticatedReferenceRouteImport.update({
+  id: '/reference',
+  path: '/reference',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -113,6 +191,42 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStreakRoute = AuthenticatedStreakRouteImport.update({
+  id: '/streak',
+  path: '/streak',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSubscriptionRoute =
+  AuthenticatedSubscriptionRouteImport.update({
+    id: '/subscription',
+    path: '/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTestUsersRoute = AuthenticatedTestUsersRouteImport.update({
+  id: '/test-users',
+  path: '/test-users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTwinRoute = AuthenticatedTwinRouteImport.update({
+  id: '/twin',
+  path: '/twin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ConnectionsUsernameRoute = ConnectionsUsernameRouteImport.update({
+  id: '/connections/$username',
+  path: '/connections/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuoteIdRoute = QuoteIdRouteImport.update({
+  id: '/quote/$id',
+  path: '/quote/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ThingIdRoute = ThingIdRouteImport.update({
   id: '/thing/$id',
@@ -124,145 +238,346 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
+  id: '/api/v1/health',
+  path: '/api/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MetadataRoute = ApiV1MetadataRouteImport.update({
+  id: '/api/v1/metadata',
+  path: '/api/v1/metadata',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MetricsRoute = ApiV1MetricsRouteImport.update({
+  id: '/api/v1/metrics',
+  path: '/api/v1/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1OpenapiDotjsonRoute = ApiV1OpenapiDotjsonRouteImport.update({
+  id: '/api/v1/openapi.json',
+  path: '/api/v1/openapi.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1QuotesRoute = ApiV1QuotesRouteImport.update({
+  id: '/api/v1/quotes',
+  path: '/api/v1/quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ThingsRoute = ApiV1ThingsRouteImport.update({
+  id: '/api/v1/things',
+  path: '/api/v1/things',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1QuotesIdRoute = ApiV1QuotesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1QuotesRoute,
+} as any)
+const ApiV1ThingsIdRoute = ApiV1ThingsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiV1ThingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/documentation': typeof DocumentationRoute
   '/faq': typeof FaqRoute
   '/premium': typeof PremiumRoute
   '/privacy': typeof PrivacyRoute
+  '/research-api': typeof ResearchApiRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
+  '/api-dashboard': typeof AuthenticatedApiDashboardRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
+  '/capsules': typeof AuthenticatedCapsulesRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/drop': typeof AuthenticatedDropRoute
   '/feed-prefs': typeof AuthenticatedFeedPrefsRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/me': typeof AuthenticatedMeRoute
   '/notif-prefs': typeof AuthenticatedNotifPrefsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/reference': typeof AuthenticatedReferenceRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/streak': typeof AuthenticatedStreakRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/test-users': typeof AuthenticatedTestUsersRoute
+  '/twin': typeof AuthenticatedTwinRoute
+  '/connections/$username': typeof ConnectionsUsernameRoute
+  '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/v1/health': typeof ApiV1HealthRoute
+  '/api/v1/metadata': typeof ApiV1MetadataRoute
+  '/api/v1/metrics': typeof ApiV1MetricsRoute
+  '/api/v1/openapi.json': typeof ApiV1OpenapiDotjsonRoute
+  '/api/v1/quotes': typeof ApiV1QuotesRouteWithChildren
+  '/api/v1/things': typeof ApiV1ThingsRouteWithChildren
+  '/api/v1/quotes/$id': typeof ApiV1QuotesIdRoute
+  '/api/v1/things/$id': typeof ApiV1ThingsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/documentation': typeof DocumentationRoute
   '/faq': typeof FaqRoute
   '/premium': typeof PremiumRoute
   '/privacy': typeof PrivacyRoute
+  '/research-api': typeof ResearchApiRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/achievements': typeof AuthenticatedAchievementsRoute
+  '/api-dashboard': typeof AuthenticatedApiDashboardRoute
+  '/appearance': typeof AuthenticatedAppearanceRoute
+  '/capsules': typeof AuthenticatedCapsulesRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/drop': typeof AuthenticatedDropRoute
   '/feed-prefs': typeof AuthenticatedFeedPrefsRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/me': typeof AuthenticatedMeRoute
   '/notif-prefs': typeof AuthenticatedNotifPrefsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/reference': typeof AuthenticatedReferenceRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/streak': typeof AuthenticatedStreakRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/support': typeof AuthenticatedSupportRoute
+  '/test-users': typeof AuthenticatedTestUsersRoute
+  '/twin': typeof AuthenticatedTwinRoute
+  '/connections/$username': typeof ConnectionsUsernameRoute
+  '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/v1/health': typeof ApiV1HealthRoute
+  '/api/v1/metadata': typeof ApiV1MetadataRoute
+  '/api/v1/metrics': typeof ApiV1MetricsRoute
+  '/api/v1/openapi.json': typeof ApiV1OpenapiDotjsonRoute
+  '/api/v1/quotes': typeof ApiV1QuotesRouteWithChildren
+  '/api/v1/things': typeof ApiV1ThingsRouteWithChildren
+  '/api/v1/quotes/$id': typeof ApiV1QuotesIdRoute
+  '/api/v1/things/$id': typeof ApiV1ThingsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/documentation': typeof DocumentationRoute
   '/faq': typeof FaqRoute
   '/premium': typeof PremiumRoute
   '/privacy': typeof PrivacyRoute
+  '/research-api': typeof ResearchApiRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
+  '/_authenticated/api-dashboard': typeof AuthenticatedApiDashboardRoute
+  '/_authenticated/appearance': typeof AuthenticatedAppearanceRoute
+  '/_authenticated/capsules': typeof AuthenticatedCapsulesRoute
+  '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/drop': typeof AuthenticatedDropRoute
   '/_authenticated/feed-prefs': typeof AuthenticatedFeedPrefsRoute
+  '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/notif-prefs': typeof AuthenticatedNotifPrefsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/reference': typeof AuthenticatedReferenceRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/streak': typeof AuthenticatedStreakRoute
+  '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
+  '/_authenticated/test-users': typeof AuthenticatedTestUsersRoute
+  '/_authenticated/twin': typeof AuthenticatedTwinRoute
+  '/connections/$username': typeof ConnectionsUsernameRoute
+  '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/v1/health': typeof ApiV1HealthRoute
+  '/api/v1/metadata': typeof ApiV1MetadataRoute
+  '/api/v1/metrics': typeof ApiV1MetricsRoute
+  '/api/v1/openapi.json': typeof ApiV1OpenapiDotjsonRoute
+  '/api/v1/quotes': typeof ApiV1QuotesRouteWithChildren
+  '/api/v1/things': typeof ApiV1ThingsRouteWithChildren
+  '/api/v1/quotes/$id': typeof ApiV1QuotesIdRoute
+  '/api/v1/things/$id': typeof ApiV1ThingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
     | '/auth'
+    | '/documentation'
     | '/faq'
     | '/premium'
     | '/privacy'
+    | '/research-api'
     | '/sitemap.xml'
     | '/terms'
     | '/account'
+    | '/achievements'
+    | '/api-dashboard'
+    | '/appearance'
+    | '/capsules'
+    | '/credits'
     | '/drop'
     | '/feed-prefs'
+    | '/leaderboard'
     | '/me'
     | '/notif-prefs'
     | '/notifications'
+    | '/reference'
     | '/search'
     | '/settings'
+    | '/streak'
+    | '/subscription'
+    | '/support'
+    | '/test-users'
+    | '/twin'
+    | '/connections/$username'
+    | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/v1/health'
+    | '/api/v1/metadata'
+    | '/api/v1/metrics'
+    | '/api/v1/openapi.json'
+    | '/api/v1/quotes'
+    | '/api/v1/things'
+    | '/api/v1/quotes/$id'
+    | '/api/v1/things/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/admin'
     | '/auth'
+    | '/documentation'
     | '/faq'
     | '/premium'
     | '/privacy'
+    | '/research-api'
     | '/sitemap.xml'
     | '/terms'
     | '/account'
+    | '/achievements'
+    | '/api-dashboard'
+    | '/appearance'
+    | '/capsules'
+    | '/credits'
     | '/drop'
     | '/feed-prefs'
+    | '/leaderboard'
     | '/me'
     | '/notif-prefs'
     | '/notifications'
+    | '/reference'
     | '/search'
     | '/settings'
+    | '/streak'
+    | '/subscription'
+    | '/support'
+    | '/test-users'
+    | '/twin'
+    | '/connections/$username'
+    | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/v1/health'
+    | '/api/v1/metadata'
+    | '/api/v1/metrics'
+    | '/api/v1/openapi.json'
+    | '/api/v1/quotes'
+    | '/api/v1/things'
+    | '/api/v1/quotes/$id'
+    | '/api/v1/things/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/admin'
     | '/auth'
+    | '/documentation'
     | '/faq'
     | '/premium'
     | '/privacy'
+    | '/research-api'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/account'
+    | '/_authenticated/achievements'
+    | '/_authenticated/api-dashboard'
+    | '/_authenticated/appearance'
+    | '/_authenticated/capsules'
+    | '/_authenticated/credits'
     | '/_authenticated/drop'
     | '/_authenticated/feed-prefs'
+    | '/_authenticated/leaderboard'
     | '/_authenticated/me'
     | '/_authenticated/notif-prefs'
     | '/_authenticated/notifications'
+    | '/_authenticated/reference'
     | '/_authenticated/search'
     | '/_authenticated/settings'
+    | '/_authenticated/streak'
+    | '/_authenticated/subscription'
+    | '/_authenticated/support'
+    | '/_authenticated/test-users'
+    | '/_authenticated/twin'
+    | '/connections/$username'
+    | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/v1/health'
+    | '/api/v1/metadata'
+    | '/api/v1/metrics'
+    | '/api/v1/openapi.json'
+    | '/api/v1/quotes'
+    | '/api/v1/things'
+    | '/api/v1/quotes/$id'
+    | '/api/v1/things/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  DocumentationRoute: typeof DocumentationRoute
   FaqRoute: typeof FaqRoute
   PremiumRoute: typeof PremiumRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResearchApiRoute: typeof ResearchApiRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ConnectionsUsernameRoute: typeof ConnectionsUsernameRoute
+  QuoteIdRoute: typeof QuoteIdRoute
   ThingIdRoute: typeof ThingIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiV1HealthRoute: typeof ApiV1HealthRoute
+  ApiV1MetadataRoute: typeof ApiV1MetadataRoute
+  ApiV1MetricsRoute: typeof ApiV1MetricsRoute
+  ApiV1OpenapiDotjsonRoute: typeof ApiV1OpenapiDotjsonRoute
+  ApiV1QuotesRoute: typeof ApiV1QuotesRouteWithChildren
+  ApiV1ThingsRoute: typeof ApiV1ThingsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -281,6 +596,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -293,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentation': {
+      id: '/documentation'
+      path: '/documentation'
+      fullPath: '/documentation'
+      preLoaderRoute: typeof DocumentationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -316,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/research-api': {
+      id: '/research-api'
+      path: '/research-api'
+      fullPath: '/research-api'
+      preLoaderRoute: typeof ResearchApiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -337,6 +673,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/achievements': {
+      id: '/_authenticated/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AuthenticatedAchievementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/api-dashboard': {
+      id: '/_authenticated/api-dashboard'
+      path: '/api-dashboard'
+      fullPath: '/api-dashboard'
+      preLoaderRoute: typeof AuthenticatedApiDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/appearance': {
+      id: '/_authenticated/appearance'
+      path: '/appearance'
+      fullPath: '/appearance'
+      preLoaderRoute: typeof AuthenticatedAppearanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/capsules': {
+      id: '/_authenticated/capsules'
+      path: '/capsules'
+      fullPath: '/capsules'
+      preLoaderRoute: typeof AuthenticatedCapsulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/credits': {
+      id: '/_authenticated/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof AuthenticatedCreditsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/drop': {
       id: '/_authenticated/drop'
       path: '/drop'
@@ -349,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/feed-prefs'
       fullPath: '/feed-prefs'
       preLoaderRoute: typeof AuthenticatedFeedPrefsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leaderboard': {
+      id: '/_authenticated/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AuthenticatedLeaderboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/me': {
@@ -372,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reference': {
+      id: '/_authenticated/reference'
+      path: '/reference'
+      fullPath: '/reference'
+      preLoaderRoute: typeof AuthenticatedReferenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/search': {
       id: '/_authenticated/search'
       path: '/search'
@@ -385,6 +770,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/streak': {
+      id: '/_authenticated/streak'
+      path: '/streak'
+      fullPath: '/streak'
+      preLoaderRoute: typeof AuthenticatedStreakRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/subscription': {
+      id: '/_authenticated/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/test-users': {
+      id: '/_authenticated/test-users'
+      path: '/test-users'
+      fullPath: '/test-users'
+      preLoaderRoute: typeof AuthenticatedTestUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/twin': {
+      id: '/_authenticated/twin'
+      path: '/twin'
+      fullPath: '/twin'
+      preLoaderRoute: typeof AuthenticatedTwinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/connections/$username': {
+      id: '/connections/$username'
+      path: '/connections/$username'
+      fullPath: '/connections/$username'
+      preLoaderRoute: typeof ConnectionsUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quote/$id': {
+      id: '/quote/$id'
+      path: '/quote/$id'
+      fullPath: '/quote/$id'
+      preLoaderRoute: typeof QuoteIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/thing/$id': {
       id: '/thing/$id'
@@ -400,46 +834,161 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/health': {
+      id: '/api/v1/health'
+      path: '/api/v1/health'
+      fullPath: '/api/v1/health'
+      preLoaderRoute: typeof ApiV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/metadata': {
+      id: '/api/v1/metadata'
+      path: '/api/v1/metadata'
+      fullPath: '/api/v1/metadata'
+      preLoaderRoute: typeof ApiV1MetadataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/metrics': {
+      id: '/api/v1/metrics'
+      path: '/api/v1/metrics'
+      fullPath: '/api/v1/metrics'
+      preLoaderRoute: typeof ApiV1MetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/openapi.json': {
+      id: '/api/v1/openapi.json'
+      path: '/api/v1/openapi.json'
+      fullPath: '/api/v1/openapi.json'
+      preLoaderRoute: typeof ApiV1OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/quotes': {
+      id: '/api/v1/quotes'
+      path: '/api/v1/quotes'
+      fullPath: '/api/v1/quotes'
+      preLoaderRoute: typeof ApiV1QuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/things': {
+      id: '/api/v1/things'
+      path: '/api/v1/things'
+      fullPath: '/api/v1/things'
+      preLoaderRoute: typeof ApiV1ThingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/quotes/$id': {
+      id: '/api/v1/quotes/$id'
+      path: '/$id'
+      fullPath: '/api/v1/quotes/$id'
+      preLoaderRoute: typeof ApiV1QuotesIdRouteImport
+      parentRoute: typeof ApiV1QuotesRoute
+    }
+    '/api/v1/things/$id': {
+      id: '/api/v1/things/$id'
+      path: '/$id'
+      fullPath: '/api/v1/things/$id'
+      preLoaderRoute: typeof ApiV1ThingsIdRouteImport
+      parentRoute: typeof ApiV1ThingsRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
+  AuthenticatedApiDashboardRoute: typeof AuthenticatedApiDashboardRoute
+  AuthenticatedAppearanceRoute: typeof AuthenticatedAppearanceRoute
+  AuthenticatedCapsulesRoute: typeof AuthenticatedCapsulesRoute
+  AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDropRoute: typeof AuthenticatedDropRoute
   AuthenticatedFeedPrefsRoute: typeof AuthenticatedFeedPrefsRoute
+  AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedNotifPrefsRoute: typeof AuthenticatedNotifPrefsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedReferenceRoute: typeof AuthenticatedReferenceRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStreakRoute: typeof AuthenticatedStreakRoute
+  AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
+  AuthenticatedTestUsersRoute: typeof AuthenticatedTestUsersRoute
+  AuthenticatedTwinRoute: typeof AuthenticatedTwinRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
+  AuthenticatedApiDashboardRoute: AuthenticatedApiDashboardRoute,
+  AuthenticatedAppearanceRoute: AuthenticatedAppearanceRoute,
+  AuthenticatedCapsulesRoute: AuthenticatedCapsulesRoute,
+  AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDropRoute: AuthenticatedDropRoute,
   AuthenticatedFeedPrefsRoute: AuthenticatedFeedPrefsRoute,
+  AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedNotifPrefsRoute: AuthenticatedNotifPrefsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedReferenceRoute: AuthenticatedReferenceRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStreakRoute: AuthenticatedStreakRoute,
+  AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
+  AuthenticatedTestUsersRoute: AuthenticatedTestUsersRoute,
+  AuthenticatedTwinRoute: AuthenticatedTwinRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiV1QuotesRouteChildren {
+  ApiV1QuotesIdRoute: typeof ApiV1QuotesIdRoute
+}
+
+const ApiV1QuotesRouteChildren: ApiV1QuotesRouteChildren = {
+  ApiV1QuotesIdRoute: ApiV1QuotesIdRoute,
+}
+
+const ApiV1QuotesRouteWithChildren = ApiV1QuotesRoute._addFileChildren(
+  ApiV1QuotesRouteChildren,
+)
+
+interface ApiV1ThingsRouteChildren {
+  ApiV1ThingsIdRoute: typeof ApiV1ThingsIdRoute
+}
+
+const ApiV1ThingsRouteChildren: ApiV1ThingsRouteChildren = {
+  ApiV1ThingsIdRoute: ApiV1ThingsIdRoute,
+}
+
+const ApiV1ThingsRouteWithChildren = ApiV1ThingsRoute._addFileChildren(
+  ApiV1ThingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  DocumentationRoute: DocumentationRoute,
   FaqRoute: FaqRoute,
   PremiumRoute: PremiumRoute,
   PrivacyRoute: PrivacyRoute,
+  ResearchApiRoute: ResearchApiRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ConnectionsUsernameRoute: ConnectionsUsernameRoute,
+  QuoteIdRoute: QuoteIdRoute,
   ThingIdRoute: ThingIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiV1HealthRoute: ApiV1HealthRoute,
+  ApiV1MetadataRoute: ApiV1MetadataRoute,
+  ApiV1MetricsRoute: ApiV1MetricsRoute,
+  ApiV1OpenapiDotjsonRoute: ApiV1OpenapiDotjsonRoute,
+  ApiV1QuotesRoute: ApiV1QuotesRouteWithChildren,
+  ApiV1ThingsRoute: ApiV1ThingsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

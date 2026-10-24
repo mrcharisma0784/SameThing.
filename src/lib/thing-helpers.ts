@@ -11,15 +11,13 @@ export const TAGS = [
 
 export type Tag = (typeof TAGS)[number];
 
-export function similarityLabel(score: number, totalVotes: number, lang: "en" | "tr" = "en"): string {
-  if (totalVotes === 0) {
-    return lang === "tr" ? "Henüz kimse oy vermedi." : "No one has voted yet.";
-  }
-  if (score === 0) return lang === "tr" ? "Bu evrende, sadece sen." : "Just you, in this universe.";
-  if (score <= 30) return lang === "tr" ? "Küçük, sessiz bir kulüp." : "A small, quiet club.";
-  if (score <= 60) return lang === "tr" ? "Sandığından daha yaygın." : "More common than you thought.";
-  if (score <= 85) return lang === "tr" ? "Yalnız olmaktan çok uzaksın." : "You're far from alone.";
-  return lang === "tr" ? "Neredeyse herkes hissetmiş." : "A near-universal feeling.";
+export function similarityLabel(score: number, totalVotes: number): string {
+  if (totalVotes === 0) return "No one has voted yet.";
+  if (score === 0) return "Just you, in this universe.";
+  if (score <= 30) return "A small, quiet club.";
+  if (score <= 60) return "More common than you thought.";
+  if (score <= 85) return "You're far from alone.";
+  return "A near-universal feeling.";
 }
 
 export function formatCount(n: number): string {
@@ -29,20 +27,20 @@ export function formatCount(n: number): string {
   return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
 }
 
-export function relativeTime(iso: string, lang: "en" | "tr" = "en"): string {
+export function relativeTime(iso: string): string {
   const d = new Date(iso).getTime();
   const diff = Date.now() - d;
   const s = Math.floor(diff / 1000);
-  if (s < 10) return lang === "tr" ? "az önce" : "just now";
-  if (s < 60) return lang === "tr" ? `${s} sn` : `${s} sec`;
+  if (s < 10) return "just now";
+  if (s < 60) return `${s} sec`;
   const m = Math.floor(s / 60);
-  if (m < 60) return lang === "tr" ? `${m} dk` : `${m} min`;
+  if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
-  if (h < 24) return lang === "tr" ? `${h} sa` : `${h} ${h === 1 ? "hour" : "hours"}`;
+  if (h < 24) return `${h} ${h === 1 ? "hour" : "hours"}`;
   const days = Math.floor(h / 24);
-  if (days < 7) return lang === "tr" ? `${days} gün` : `${days} ${days === 1 ? "day" : "days"}`;
+  if (days < 7) return `${days} ${days === 1 ? "day" : "days"}`;
   const w = Math.floor(days / 7);
-  return lang === "tr" ? `${w} hafta` : `${w} ${w === 1 ? "week" : "weeks"}`;
+  return `${w} ${w === 1 ? "week" : "weeks"}`;
 }
 
 export function isBadgeActive(sameCount: number, totalVotes: number): boolean {

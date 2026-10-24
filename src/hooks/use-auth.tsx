@@ -2,9 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile } from "@/lib/api/me.functions";
-import { ensureWelcomeSystemMessage } from "@/lib/api/system-messages.functions";
-
-const WELCOME_PENDING_KEY = "samething:welcome-message-pending";
 
 type Profile = {
   id: string;
@@ -17,8 +14,13 @@ type Profile = {
   onboarded_at: string | null;
   custom_tags?: string[];
   warnings_count?: number;
+  banned_at?: string | null;
   muted_until?: string | null;
   plan?: "free" | "premium";
+  premium_until?: string | null;
+  referral_code?: string | null;
+  same_credits?: number;
+  tour_completed_at?: string | null;
   messages_open?: boolean;
   username_changed_at?: string | null;
   inbox_seen_at?: string | null;
@@ -29,8 +31,11 @@ type Profile = {
   theme?: string | null;
   feed_tags?: string[] | null;
   notification_prefs?: Record<string, boolean> | null;
+  is_test_user?: boolean;
+  test_user_until?: string | null;
+  test_user_label?: string | null;
+  same_credits_unlimited?: boolean;
 };
-
 
 type AuthContextValue = {
   user: User | null;
@@ -52,11 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadProfile = async () => {
     try {
       const { profile } = await getMyProfile();
-      setProfile(profile as Profile | null);
-      if (profile && typeof window !== "undefined" && localStorage.getItem(WELCOME_PENDING_KEY) === "1") {
-        const result = await ensureWelcomeSystemMessage();
-        if (!result.error) localStorage.removeItem(WELCOME_PENDING_KEY);
+      const nextProfile = profile as Profile | null;
+      if (nextProfile?.banned_at) {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("samething:ban-notice", nextProfile.banned_at);
+        }
+        setProfile(null);
+        await supabase.auth.signOut();
+        if (typeof window !== "undefined") {
+          window.location.assign("/auth?banned=1");
+        }
+        return;
       }
+      setProfile(nextProfile);
     } catch (e) {
       console.error("loadProfile", e);
       setProfile(null);
@@ -65,11 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => { void loadProfile(); }, 0);
+        setTimeout(() => {
+          void loadProfile();
+        }, 0);
       } else {
         setProfile(null);
       }
@@ -92,8 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         loading,
-        refreshProfile: async () => { if (user) await loadProfile(); },
-        signOut: async () => { await supabase.auth.signOut(); },
+        refreshProfile: async () => {
+          if (user) await loadProfile();
+        },
+        signOut: async () => {
+          await supabase.auth.signOut();
+        },
       }}
     >
       {children}

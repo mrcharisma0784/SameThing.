@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Textarea } from "@/components/ui/textarea";
 import { suggestMentions } from "@/lib/api/mentions.functions";
+import { ProfileGlyph } from "@/components/ProfileGlyph";
 
 type Props = {
   value: string;
@@ -13,7 +14,13 @@ type Props = {
 };
 
 /** Textarea with a lightweight @username popover suggestion list. */
-export function MentionTextarea({ value, onChange, placeholder, className, maxLength = 500 }: Props) {
+export function MentionTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+  maxLength = 500,
+}: Props) {
   const suggest = useServerFn(suggestMentions);
   const ref = useRef<HTMLTextAreaElement>(null);
   const [query, setQuery] = useState<string | null>(null);
@@ -21,17 +28,31 @@ export function MentionTextarea({ value, onChange, placeholder, className, maxLe
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    if (query === null) { setUsers([]); return; }
+    if (query === null) {
+      setUsers([]);
+      return;
+    }
     const q = query.trim();
-    if (!q) { setUsers([]); return; }
+    if (!q) {
+      setUsers([]);
+      return;
+    }
     let cancelled = false;
     const t = window.setTimeout(async () => {
       try {
         const res = await suggest({ data: { q } });
-        if (!cancelled) { setUsers(res.users); setActive(0); }
-      } catch { /* noop */ }
+        if (!cancelled) {
+          setUsers(res.users);
+          setActive(0);
+        }
+      } catch {
+        /* noop */
+      }
     }, 120);
-    return () => { cancelled = true; window.clearTimeout(t); };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
   }, [query, suggest]);
 
   const detectQuery = (text: string, caret: number) => {
@@ -56,19 +77,30 @@ export function MentionTextarea({ value, onChange, placeholder, className, maxLe
     const replaced = before.replace(/@([a-z0-9_]{0,24})$/i, `@${uname} `);
     const next = replaced + after;
     onChange(next.slice(0, maxLength));
-    setQuery(null); setUsers([]);
+    setQuery(null);
+    setUsers([]);
     requestAnimationFrame(() => {
       const pos = replaced.length;
-      el.focus(); el.setSelectionRange(pos, pos);
+      el.focus();
+      el.setSelectionRange(pos, pos);
     });
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (!users.length) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => (i + 1) % users.length); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => (i - 1 + users.length) % users.length); }
-    else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(users[active].username); }
-    else if (e.key === "Escape") { setQuery(null); setUsers([]); }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => (i + 1) % users.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => (i - 1 + users.length) % users.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      insertMention(users[active].username);
+    } else if (e.key === "Escape") {
+      setQuery(null);
+      setUsers([]);
+    }
   };
 
   return (
@@ -87,10 +119,15 @@ export function MentionTextarea({ value, onChange, placeholder, className, maxLe
             <button
               key={u.username}
               type="button"
-              onMouseDown={(e) => { e.preventDefault(); insertMention(u.username); }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                insertMention(u.username);
+              }}
               className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm ${i === active ? "bg-accent/15 text-foreground" : "text-muted-foreground hover:bg-secondary/40"}`}
             >
-              <span className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">{u.emoji}</span>
+              <span className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">
+                <ProfileGlyph value={u.emoji} className="h-3.5 w-3.5" />
+              </span>
               <span>@{u.username}</span>
             </button>
           ))}
@@ -132,8 +169,9 @@ export function renderWithMentions(text: string, validUsernames?: Set<string>) {
         to="/u/$username"
         params={{ username: uname }}
         className="rounded bg-accent/10 px-1 text-accent hover:bg-accent/20"
-      >@{p.u}</Link>
+      >
+        @{p.u}
+      </Link>
     );
   });
 }
-

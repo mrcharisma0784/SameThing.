@@ -4,18 +4,26 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Check, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const Route = createFileRoute("/premium")({
   head: () => ({
     meta: [
       { title: "PremiumThing. — themes, icons & more · SameThing." },
-      { name: "description", content: "PremiumThing. unlocks app themes, exclusive profile icons, the golden ring and deeper feed controls on SameThing." },
+      {
+        name: "description",
+        content:
+          "PremiumThing. unlocks app themes, exclusive profile icons, monthly Credits, Streak Freeze protection and deeper controls on SameThing.",
+      },
       { property: "og:title", content: "PremiumThing. · SameThing." },
-      { property: "og:description", content: "Unlock themes, exclusive icons and the golden ring on SameThing." },
+      {
+        property: "og:description",
+        content: "Unlock themes, exclusive icons and the golden ring on SameThing.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://samething.lovable.app/premium" }],
+    links: [{ rel: "canonical", href: getSiteUrl("/premium") }],
   }),
   component: PremiumPage,
 });
@@ -42,13 +50,14 @@ const PERKS = [
   "PremiumThing. badge on your profile and things",
   "15 custom tags instead of 5",
   "AI tag suggestions while you write",
-  "All app themes — Midnight. and Paper.",
+  "All app themes — Midnight., Paper., Moss. and Plum.",
   "Exclusive profile icons",
   "Golden ring around your icon, everywhere",
   "Full feed filter control",
+  "Three included Streak Freezes",
+  "Monthly Same Credits and zero-cost premium paths",
   "Priority on feedback replies",
 ];
-
 
 function PremiumPage() {
   const { profile } = useAuth();
@@ -60,13 +69,17 @@ function PremiumPage() {
         PremiumThing<span className="dot">.</span>
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        {isPremium ? "You're in. Thank you for keeping this place quiet and ad-free." : "Small price. Nicer place."}
+        {isPremium
+          ? "You're in. Thank you for keeping this place quiet and ad-free."
+          : "Small price. Nicer place."}
       </p>
 
       {isPremium && (
         <div className="mt-5 rounded-2xl border border-[color:var(--rare)]/40 bg-card p-5 text-center">
           <p className="brand-mark text-2xl text-[color:var(--rare)]">✦ Active</p>
-          <p className="mt-1 text-xs text-muted-foreground">Manage or cancel any time from Settings.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Manage or cancel any time from Settings.
+          </p>
         </div>
       )}
 
@@ -96,7 +109,11 @@ function PremiumPage() {
             <p className="mt-1 text-xs text-muted-foreground">{p.note}</p>
             <Button
               disabled={isPremium}
-              onClick={() => toast.info("Card payments are being set up — you'll be able to subscribe here shortly.")}
+              onClick={() =>
+                toast.info(
+                  "Card payments are being set up — you'll be able to subscribe here shortly.",
+                )
+              }
               className="mt-4 w-full rounded-full bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-50"
             >
               {isPremium ? "Current plan" : `Subscribe — ${p.price}`}
@@ -110,8 +127,13 @@ function PremiumPage() {
       </p>
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
-        <Link to="/terms" className="hover:text-foreground">Terms</Link> ·{" "}
-        <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+        <Link to="/terms" className="hover:text-foreground">
+          Terms
+        </Link>{" "}
+        ·{" "}
+        <Link to="/privacy" className="hover:text-foreground">
+          Privacy
+        </Link>
       </p>
     </AppShell>
   );
