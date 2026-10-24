@@ -1,0 +1,283 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ===========================================================
+   SameThing. design system
+   - dark, warm, beige-accented
+   - serif headings (Instrument Serif), sans body (DM Sans)
+   - all values in oklch
+=========================================================== */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-same: var(--same);
+  --color-same-foreground: var(--same-foreground);
+  --color-nah: var(--nah);
+  --color-nah-foreground: var(--nah-foreground);
+  --color-rare: var(--rare);
+  --color-rare-foreground: var(--rare-foreground);
+  --color-success: var(--success);
+  --color-error: var(--error);
+
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Base — dark warm */
+  --background: oklch(0.16 0.005 70);            /* #0f0e0c-ish */
+  --foreground: oklch(0.95 0.012 85);            /* cream */
+  --card: oklch(0.21 0.006 70);                  /* #1a1917 */
+  --card-foreground: oklch(0.95 0.012 85);
+  --popover: oklch(0.21 0.006 70);
+  --popover-foreground: oklch(0.95 0.012 85);
+
+  --primary: oklch(0.82 0.045 80);               /* warm beige #c8b8a2 */
+  --primary-foreground: oklch(0.16 0.005 70);
+  --secondary: oklch(0.27 0.008 70);
+  --secondary-foreground: oklch(0.95 0.012 85);
+
+  --muted: oklch(0.27 0.008 70);
+  --muted-foreground: oklch(0.62 0.015 75);      /* #6b6560 */
+
+  --accent: oklch(0.82 0.045 80);                /* same as primary */
+  --accent-foreground: oklch(0.16 0.005 70);
+
+  --destructive: oklch(0.62 0.13 25);            /* warm red */
+  --destructive-foreground: oklch(0.97 0.005 85);
+
+  --border: oklch(0.28 0.008 75 / 70%);
+  --input: oklch(0.28 0.008 75);
+  --ring: oklch(0.82 0.045 80);
+
+  /* Brand semantic */
+  --same: oklch(0.86 0.05 85);                   /* #d4c5a9 warm cream */
+  --same-foreground: oklch(0.16 0.005 70);
+  --nah: oklch(0.32 0.006 70);                   /* #3a3835 */
+  --nah-foreground: oklch(0.85 0.01 85);
+
+  --rare: oklch(0.78 0.13 75);                   /* amber gold */
+  --rare-foreground: oklch(0.16 0.005 70);
+
+  --success: oklch(0.72 0.08 160);
+  --error: oklch(0.65 0.14 25);
+
+  color-scheme: dark;
+}
+
+/* Force dark — SameThing. has no light mode */
+.dark { }
+
+@layer base {
+  * { border-color: var(--color-border); }
+
+  html, body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 35%, transparent);
+    color: var(--foreground);
+  }
+}
+
+/* Brand mark — the period is always accent */
+.brand-mark {
+  font-family: var(--font-serif);
+  letter-spacing: -0.015em;
+}
+.brand-mark .dot {
+  color: var(--accent);
+}
+
+/* Card hover lift */
+.thing-card {
+  transition: transform 280ms cubic-bezier(.2,.7,.2,1),
+              border-color 280ms ease,
+              box-shadow 280ms ease;
+}
+@media (hover: hover) {
+  .thing-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+    box-shadow: 0 12px 40px -20px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+}
+
+/* AI thinking pulse */
+@keyframes ai-pulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40%           { opacity: 1;    transform: scale(1); }
+}
+.ai-dot {
+  width: 6px; height: 6px; border-radius: 999px;
+  background: var(--accent);
+  display: inline-block;
+  animation: ai-pulse 1.2s infinite ease-in-out both;
+}
+.ai-dot:nth-child(2) { animation-delay: 0.15s; }
+.ai-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* Similarity bar fill */
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.bar-fill {
+  transform-origin: left;
+  animation: bar-grow 0.7s cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* Badge appear */
+@keyframes badge-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.badge-in { animation: badge-in 320ms cubic-bezier(.2,1.4,.4,1) both; }
+
+/* Hide scrollbar in pill row */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* PremiumThing. — golden ring around profile icons */
+.premium-ring {
+  position: relative;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--rare) 85%, transparent),
+    0 0 14px -4px color-mix(in oklab, var(--rare) 60%, transparent);
+}
+
+/* ===========================================================
+   Themes (PremiumThing.)  — data-theme on <html>
+=========================================================== */
+
+/* Midnight. — cool slate blue */
+[data-theme="midnight"] {
+  --background: oklch(0.16 0.02 250);
+  --foreground: oklch(0.95 0.012 250);
+  --card: oklch(0.21 0.025 250);
+  --card-foreground: oklch(0.95 0.012 250);
+  --popover: oklch(0.21 0.025 250);
+  --popover-foreground: oklch(0.95 0.012 250);
+
+  --primary: oklch(0.78 0.07 245);
+  --primary-foreground: oklch(0.16 0.02 250);
+  --secondary: oklch(0.27 0.03 250);
+  --secondary-foreground: oklch(0.95 0.012 250);
+
+  --muted: oklch(0.27 0.03 250);
+  --muted-foreground: oklch(0.64 0.03 250);
+
+  --accent: oklch(0.78 0.07 245);
+  --accent-foreground: oklch(0.14 0.02 250);
+
+  --destructive: oklch(0.62 0.15 20);
+  --destructive-foreground: oklch(0.97 0.005 250);
+
+  --border: oklch(0.3 0.03 250 / 70%);
+  --input: oklch(0.3 0.03 250);
+  --ring: oklch(0.78 0.07 245);
+
+  --same: oklch(0.83 0.07 240);
+  --same-foreground: oklch(0.15 0.02 250);
+  --nah: oklch(0.31 0.02 250);
+  --nah-foreground: oklch(0.85 0.01 250);
+
+  --rare: oklch(0.8 0.11 210);
+  --rare-foreground: oklch(0.15 0.02 250);
+
+  color-scheme: dark;
+}
+
+/* Paper. — light, printed */
+[data-theme="paper"] {
+  --background: oklch(0.96 0.012 85);
+  --foreground: oklch(0.24 0.015 70);
+  --card: oklch(0.99 0.008 85);
+  --card-foreground: oklch(0.24 0.015 70);
+  --popover: oklch(0.99 0.008 85);
+  --popover-foreground: oklch(0.24 0.015 70);
+
+  --primary: oklch(0.5 0.06 65);
+  --primary-foreground: oklch(0.98 0.008 85);
+  --secondary: oklch(0.92 0.014 85);
+  --secondary-foreground: oklch(0.28 0.015 70);
+
+  --muted: oklch(0.92 0.014 85);
+  --muted-foreground: oklch(0.48 0.02 70);
+
+  --accent: oklch(0.5 0.06 65);
+  --accent-foreground: oklch(0.98 0.008 85);
+
+  --destructive: oklch(0.55 0.16 25);
+  --destructive-foreground: oklch(0.98 0.005 85);
+
+  --border: oklch(0.83 0.015 80 / 90%);
+  --input: oklch(0.83 0.015 80);
+  --ring: oklch(0.5 0.06 65);
+
+  --same: oklch(0.55 0.07 70);
+  --same-foreground: oklch(0.98 0.008 85);
+  --nah: oklch(0.88 0.012 85);
+  --nah-foreground: oklch(0.3 0.015 70);
+
+  --rare: oklch(0.6 0.12 70);
+  --rare-foreground: oklch(0.98 0.008 85);
+
+  color-scheme: light;
+}
+
+
+@keyframes swipePreview {
+  0%, 100% { transform: translateX(-18px); opacity: 0.55; }
+  50% { transform: translateX(18px); opacity: 1; }
+}
+
+.swipe-preview {
+  animation: swipePreview 1.7s ease-in-out infinite;
+}

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /me
+Disallow: /settings
+Disallow: /drop
+Disallow: /search
+Disallow: /notifications
+
+Sitemap: https://samething.lovable.app/sitemap.xml

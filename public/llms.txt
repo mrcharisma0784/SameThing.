@@ -1,0 +1,10 @@
+# SameThing.
+
+> A social app where you drop a thought, feeling, or habit anonymously and others vote Same or Nah — so you can discover you're not the only one.
+
+SameThing. simplifies what you write into a shared, universal feeling, then surfaces how many others have felt the same. Posts can be anonymous, open to chat, or tagged into categories.
+
+## Pages
+
+- [Home feed](/): Browse today's and trending things from the community.
+- [Sign in](/auth): Create an account or sign in to drop your own thing.

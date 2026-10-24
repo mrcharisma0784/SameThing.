@@ -1,0 +1,10 @@
+{
+  "name": "SameThing.",
+  "short_name": "SameThing.",
+  "description": "You're not the only one.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0e0c",
+  "theme_color": "#0f0e0c",
+  "icons": []
+}
