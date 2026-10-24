@@ -13,12 +13,9 @@ import { addCustomTag, getMyProfile } from "@/lib/api/me.functions";
 import { suggestTags, scanContent } from "@/lib/api/ai.functions";
 import { TAGS } from "@/lib/thing-helpers";
 import { cn } from "@/lib/utils";
-import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { Plus, Sparkles } from "lucide-react";
-
-const EMPTY_TAGS: string[] = [];
 
 export const Route = createFileRoute("/_authenticated/drop")({
   head: () => ({ meta: [{ title: "Drop a Thing · SameThing." }] }),
@@ -33,95 +30,61 @@ function DropPage() {
   const fetchProfile = useServerFn(getMyProfile);
   const suggest = useServerFn(suggestTags);
   const scan = useServerFn(scanContent);
-
   const [warnings, setWarnings] = useState<string[]>([]);
   const [blocked, setBlocked] = useState(false);
 
   const [raw, setRaw] = useState("");
+  const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [suggested, setSuggested] = useState<string[]>([]);
   const [thinking, setThinking] = useState(false);
-  const [safetyStatus, setSafetyStatus] = useState<
-    "idle" | "scanning" | "safe" | "blocked" | "review"
-  >("idle");
   const [anonymous, setAnonymous] = useState(false);
   const [commentsClosed, setCommentsClosed] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [addingTag, setAddingTag] = useState(false);
-  const [dropComplete, setDropComplete] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scanRunRef = useRef(0);
 
   const { data: profileData } = useQuery({
     queryKey: ["my-profile"],
     queryFn: () => fetchProfile(),
   });
-  const customTags: string[] = ((profileData?.profile as { custom_tags?: string[] } | null)?.custom_tags ?? EMPTY_TAGS);
-  const isPremium = effectivePlan(profileData?.profile);
+  const customTags: string[] = (profileData?.profile?.custom_tags as string[] | undefined) ?? [];
+  const isPremium = (profileData?.profile?.plan as string | undefined) === "premium";
   const tagLimit = isPremium ? 15 : 5;
 
   // Debounced AI tag suggestion (premium) + content scan
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const runId = ++scanRunRef.current;
-    if (raw.trim().length < 3) {
-      setSuggested([]);
-      setThinking(false);
-      setSafetyStatus("idle");
-      setWarnings([]);
-      setBlocked(false);
-      return;
-    }
+    if (raw.trim().length < 3) { setSuggested([]); setThinking(false); setWarnings([]); setBlocked(false); return; }
     setThinking(true);
-    setSafetyStatus("scanning");
     debounceRef.current = setTimeout(async () => {
       try {
         const [tagRes, scanRes] = await Promise.all([
-          isPremium && raw.trim().length >= 8
-            ? suggest({ data: { text: raw, extra_tags: customTags } })
-            : Promise.resolve({ tags: [] as string[] }),
+          isPremium && raw.trim().length >= 8 ? suggest({ data: { text: raw, extra_tags: customTags } }) : Promise.resolve({ tags: [] as string[] }),
           scan({ data: { text: raw } }),
         ]);
-        if (runId !== scanRunRef.current) return;
         setSuggested(tagRes.tags ?? []);
         setWarnings(scanRes.warnings ?? []);
         setBlocked(!!scanRes.block);
-        setSafetyStatus(scanRes.safety ?? (scanRes.block ? "blocked" : "safe"));
-      } catch {
-        if (runId !== scanRunRef.current) return;
-        setSuggested([]);
-        setWarnings([]);
-        setBlocked(false);
-        setSafetyStatus("review");
-      } finally {
-        if (runId === scanRunRef.current) setThinking(false);
-      }
+      } catch { setSuggested([]); setWarnings([]); setBlocked(false); }
+      finally { setThinking(false); }
     }, 700);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [raw, suggest, scan, customTags, isPremium]);
 
+
   const toggleTag = (t: string) => {
-    setTags((cur) =>
-      cur.includes(t) ? cur.filter((x) => x !== t) : cur.length >= 3 ? cur : [...cur, t],
-    );
+    setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : cur.length >= 3 ? cur : [...cur, t]));
   };
 
   const handleAddTag = async () => {
     const t = newTag.trim().toLowerCase();
     if (!t) return;
-    if (!/^[a-z0-9 _-]+$/.test(t)) {
-      toast.error("Letters, numbers, dashes only.");
-      return;
-    }
+    if (!/^[a-z0-9 _-]+$/.test(t)) { toast.error("Letters, numbers, dashes only."); return; }
     setAddingTag(true);
     const res = await addTag({ data: { tag: t } });
     setAddingTag(false);
-    if (res.error) {
-      toast.error(res.error);
-      return;
-    }
+    if (res.error) { toast.error(res.error); return; }
     setNewTag("");
     toast.success("Tag saved.");
     void qc.invalidateQueries({ queryKey: ["my-profile"] });
@@ -133,19 +96,18 @@ function DropPage() {
       const res = await drop({
         data: {
           raw_text: raw,
+          title: title || null,
           tags,
           is_anonymous: anonymous,
           comments_closed: commentsClosed,
-          ai_review: safetyStatus === "safe" ? "safe" : "review",
         },
       });
       if (res.error) throw new Error(res.error);
       return res.thing;
     },
     onSuccess: () => {
-      setDropComplete(true);
       toast.success("Dropped.");
-      window.setTimeout(() => navigate({ to: "/" }), 420);
+      navigate({ to: "/" });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -163,10 +125,21 @@ function DropPage() {
 
         <div className="mt-5 space-y-4">
           <div>
-            <Label
-              htmlFor="raw"
-              className="text-xs uppercase tracking-widest text-muted-foreground"
-            >
+            <Label htmlFor="title" className="text-xs uppercase tracking-widest text-muted-foreground">
+              Title <span className="lowercase text-muted-foreground/60">(optional)</span>
+            </Label>
+            <Input
+              id="title"
+              maxLength={80}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Leave blank — we'll pick one"
+              className="mt-1 bg-card"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="raw" className="text-xs uppercase tracking-widest text-muted-foreground">
               The thing
             </Label>
             <MentionTextarea
@@ -180,25 +153,17 @@ function DropPage() {
               <span>{charCount}/1000</span>
               {thinking && (
                 <span className="flex items-center gap-1">
-                  <span className="ai-dot" />
-                  <span className="ai-dot" />
-                  <span className="ai-dot" />
+                  <span className="ai-dot" /><span className="ai-dot" /><span className="ai-dot" />
                   <span className="ml-1">reading…</span>
                 </span>
               )}
             </div>
             {warnings.length > 0 && (
-              <div
-                className={cn(
-                  "mt-2 rounded-xl border px-3 py-2 text-xs",
-                  blocked
-                    ? "border-destructive/60 bg-destructive/10 text-destructive"
-                    : "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                )}
-              >
-                {warnings.map((w, i) => (
-                  <p key={i}>· {w}</p>
-                ))}
+              <div className={cn(
+                "mt-2 rounded-xl border px-3 py-2 text-xs",
+                blocked ? "border-destructive/60 bg-destructive/10 text-destructive" : "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              )}>
+                {warnings.map((w, i) => <p key={i}>· {w}</p>)}
               </div>
             )}
           </div>
@@ -215,10 +180,7 @@ function DropPage() {
                 </span>
               )}
               {!isPremium && (
-                <Link
-                  to="/premium"
-                  className="flex items-center gap-1 text-accent/80 hover:text-accent"
-                >
+                <Link to="/premium" className="flex items-center gap-1 text-accent/80 hover:text-accent">
                   <Sparkles className="h-3 w-3" /> ✦ ai tag suggestions — premium
                 </Link>
               )}
@@ -266,12 +228,7 @@ function DropPage() {
               <Input
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value.slice(0, 24))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void handleAddTag();
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleAddTag(); } }}
                 placeholder="add your own tag…"
                 className="h-9 flex-1 bg-background text-sm"
               />
@@ -291,12 +248,11 @@ function DropPage() {
               {!isPremium && (
                 <>
                   {" · "}
-                  <Link to="/premium" className="text-accent">
-                    ✦ premium: 15
-                  </Link>
+                  <Link to="/premium" className="text-accent">✦ premium: 15</Link>
                 </>
               )}
             </p>
+
             </div>
           </div>
 
@@ -318,65 +274,18 @@ function DropPage() {
           <Button
             onClick={() => {
               if (m.isPending) return;
-              if (raw.trim().length < 3) {
-                toast.error("Write your thing first (at least 3 characters).");
-                return;
-              }
-              if (tags.length < 1) {
-                toast.error("Pick at least 1 tag.");
-                return;
-              }
-              if (tags.length > 3) {
-                toast.error("Up to 3 tags only.");
-                return;
-              }
-              if (safetyStatus === "scanning") {
-                toast.error("Wait for the safety check to finish.");
-                return;
-              }
-              if (safetyStatus === "blocked") {
-                toast.error(warnings[0] ?? "Please fix the highlighted issue.");
-                return;
-              }
+              if (raw.trim().length < 3) { toast.error("Write your thing first (at least 3 characters)."); return; }
+              if (tags.length < 1) { toast.error("Pick at least 1 tag."); return; }
+              if (tags.length > 3) { toast.error("Up to 3 tags only."); return; }
+              if (blocked) { toast.error(warnings[0] ?? "Please fix the highlighted issue."); return; }
               m.mutate();
             }}
-            disabled={
-              m.isPending ||
-              thinking ||
-              safetyStatus === "scanning" ||
-              safetyStatus === "blocked" ||
-              raw.trim().length < 3 ||
-              tags.length < 1 ||
-              tags.length > 3 ||
-              blocked
-            }
-            data-inactive={
-              m.isPending ||
-              thinking ||
-              safetyStatus === "scanning" ||
-              safetyStatus === "blocked" ||
-              raw.trim().length < 3 ||
-              tags.length < 1 ||
-              tags.length > 3 ||
-              blocked
-                ? "true"
-                : undefined
-            }
-            className={cn(
-              "pressable drop-action w-full rounded-full bg-accent py-6 text-base font-medium text-accent-foreground hover:bg-accent/90 data-[inactive=true]:bg-muted data-[inactive=true]:text-muted-foreground data-[inactive=true]:hover:bg-muted",
-              dropComplete && "drop-action-success",
-            )}
+            data-inactive={raw.trim().length < 3 || tags.length < 1 || tags.length > 3 || blocked ? "true" : undefined}
+            className="w-full rounded-full bg-accent py-6 text-base font-medium text-accent-foreground hover:bg-accent/90 data-[inactive=true]:bg-muted data-[inactive=true]:text-muted-foreground data-[inactive=true]:hover:bg-muted"
           >
-            {dropComplete
-              ? "Dropped."
-              : m.isPending
-                ? "Posting…"
-                : thinking || safetyStatus === "scanning"
-                  ? "Reading safety…"
-                  : blocked
-                    ? "Fix issues to drop"
-                    : "Drop it →"}
+            {m.isPending ? "Dropping…" : blocked ? "Fix issues to drop" : "Drop it →"}
           </Button>
+
         </div>
       </AppShell>
     </OnboardingGate>
@@ -384,23 +293,13 @@ function DropPage() {
 }
 
 function ToggleRow({
-  label,
-  hint,
-  checked,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+  label, hint, checked, onChange,
+}: { label: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
   const id = `toggle-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div className="flex items-center justify-between gap-3">
       <div>
-        <Label htmlFor={id} className="text-sm text-foreground">
-          {label}
-        </Label>
+        <Label htmlFor={id} className="text-sm text-foreground">{label}</Label>
         <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
       <Switch id={id} checked={checked} onCheckedChange={onChange} aria-label={label} />
