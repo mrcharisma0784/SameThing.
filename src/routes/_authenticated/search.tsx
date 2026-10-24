@@ -31,7 +31,59 @@ function SearchPage() {
   const { profile } = useAuth();
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [demoText, setDemoText] = useState("");
   const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const demoStarted = useRef(false);
+
+  useEffect(() => {
+    if (!profile?.onboarded_at || !profile.demographics_completed_at || demoStarted.current) return;
+    const seenKey = "samething:search-type-demo:v1";
+    try {
+      if (localStorage.getItem(seenKey)) return;
+    } catch {
+      // Continue without persistence when storage is unavailable.
+    }
+    demoStarted.current = true;
+
+    const sample = "@usernanme";
+    let typed = 0;
+    let erased = sample.length;
+    let typeTimer: number | undefined;
+    let pauseTimer: number | undefined;
+    let eraseTimer: number | undefined;
+
+    const startTimer = window.setTimeout(() => {
+      typeTimer = window.setInterval(() => {
+        typed += 1;
+        setDemoText(sample.slice(0, typed));
+        if (typed >= sample.length) {
+          window.clearInterval(typeTimer);
+          pauseTimer = window.setTimeout(() => {
+            eraseTimer = window.setInterval(() => {
+              erased -= 1;
+              setDemoText(sample.slice(0, erased));
+              if (erased <= 0) {
+                window.clearInterval(eraseTimer);
+                setDemoText("");
+                try {
+                  localStorage.setItem(seenKey, "done");
+                } catch {
+                  // The animation can still complete without persistence.
+                }
+              }
+            }, 75);
+          }, 500);
+        }
+      }, 95);
+    }, 500);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      if (typeTimer !== undefined) window.clearInterval(typeTimer);
+      if (pauseTimer !== undefined) window.clearTimeout(pauseTimer);
+      if (eraseTimer !== undefined) window.clearInterval(eraseTimer);
+    };
+  }, [profile?.demographics_completed_at, profile?.onboarded_at]);
 
   useEffect(() => {
     if (t.current) clearTimeout(t.current);
@@ -71,13 +123,8 @@ function SearchPage() {
         <h1 className="brand-mark text-4xl text-foreground">
           Search<span className="dot">.</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Title, content, or tag — or type <span className="font-mono text-foreground">@</span> to
-          find people.
-        </p>
-
         <div className="mt-5 relative">
-          {isUserMode ? (
+          {isUserMode || demoText.startsWith("@") ? (
             <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
           ) : (
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -86,7 +133,9 @@ function SearchPage() {
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value.slice(0, 80))}
-            placeholder={isUserMode ? "@username" : "What are you looking for?"}
+            placeholder={
+              q ? "" : demoText || (isUserMode ? "@username" : "What are you looking for?")
+            }
             className="bg-card pl-9 pr-9 py-6 text-base"
           />
           {q && (

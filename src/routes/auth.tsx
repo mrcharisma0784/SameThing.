@@ -13,6 +13,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
     mode: z.enum(["signin", "signup"]).optional(),
     next: z.enum(["/", "/search", "/api-dashboard"]).optional(),
+    recovery: z.enum(["1"]).optional(),
   }),
   head: () => ({
     meta: [
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { mode: requestedMode, next } = Route.useSearch();
+  const { mode: requestedMode, next, recovery } = Route.useSearch();
   const nextPath = next === "/api-dashboard" || next === "/search" ? next : "/";
   const [mode, setMode] = useState<"signin" | "signup">(
     requestedMode === "signup" ? "signup" : "signin",
@@ -40,6 +41,9 @@ function AuthPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [banNotice, setBanNotice] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetPasswordMode, setResetPasswordMode] = useState(recovery === "1");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -57,13 +61,57 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (user && profile && !profile.banned_at) navigate({ to: nextPath, replace: true });
-  }, [user, profile, navigate, nextPath]);
+    if (recovery === "1") setResetPasswordMode(true);
+  }, [recovery]);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("signin");
+        setShowForgotPassword(false);
+        setResetPasswordMode(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && profile && !profile.banned_at && !resetPasswordMode) {
+      navigate({ to: nextPath, replace: true });
+    }
+  }, [user, profile, navigate, nextPath, resetPasswordMode]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      if (resetPasswordMode) {
+        if (password.length < 6) throw new Error("Password must be at least 6 characters.");
+        if (password !== confirmPassword) throw new Error("The passwords do not match.");
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Your password has been updated.");
+        setResetPasswordMode(false);
+        setPassword("");
+        setConfirmPassword("");
+        navigate({ to: nextPath, replace: true });
+        return;
+      }
+
+      if (showForgotPassword) {
+        const cleanEmail = email.trim();
+        if (!cleanEmail) throw new Error("Enter your email address first.");
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: new URL("/auth?recovery=1", window.location.origin).toString(),
+        });
+        if (error) throw error;
+        toast.success("If an account exists for this email, a reset link is on its way.");
+        setShowForgotPassword(false);
+        return;
+      }
+
       if (mode === "signup") {
         if (!acceptedTerms) {
           toast.error("Please accept the Terms & Privacy to continue.");
@@ -165,112 +213,199 @@ function AuthPage() {
           )}
 
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 md:mt-0">
-            <button
-              type="button"
-              onClick={google}
-              disabled={loading || (mode === "signup" && !acceptedTerms)}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
-            >
-              Continue with Google
-            </button>
+            {!showForgotPassword && !resetPasswordMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={google}
+                  disabled={loading || (mode === "signup" && !acceptedTerms)}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+                >
+                  Continue with Google
+                </button>
 
-            <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-              <span className="h-px flex-1 bg-border" /> or email{" "}
-              <span className="h-px flex-1 bg-border" />
-            </div>
+                <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" /> or email{" "}
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              </>
+            )}
 
             <form onSubmit={submit} className="space-y-3">
-              <div>
-                <Label
-                  htmlFor="email"
-                  className="text-xs uppercase tracking-widest text-muted-foreground"
-                >
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label
-                  htmlFor="password"
-                  className="text-xs uppercase tracking-widest text-muted-foreground"
-                >
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              {mode === "signup" && (
+              {!resetPasswordMode && (
                 <div>
                   <Label
-                    htmlFor="referral"
+                    htmlFor="email"
                     className="text-xs uppercase tracking-widest text-muted-foreground"
                   >
-                    Reference code{" "}
-                    <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                    Email
                   </Label>
                   <Input
-                    id="referral"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value.slice(0, 80))}
-                    placeholder="Paste a friend’s code"
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="mt-1"
                   />
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    One-time reward: you receive 5 Same credits.
-                  </p>
                 </div>
               )}
-              {mode === "signup" && (
-                <label className="flex items-start gap-2 pt-1 text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-[color:var(--accent)]"
-                  />
-                  <span>
-                    I agree to the{" "}
-                    <a href="/terms?minimal=1" className="text-foreground underline">
-                      Terms
-                    </a>{" "}
-                    and{" "}
-                    <a href="/privacy?minimal=1" className="text-foreground underline">
-                      Privacy
-                    </a>
-                    .
-                  </span>
-                </label>
+
+              {resetPasswordMode ? (
+                <>
+                  <div>
+                    <Label
+                      htmlFor="new-password"
+                      className="text-xs uppercase tracking-widest text-muted-foreground"
+                    >
+                      New password
+                    </Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="confirm-password"
+                      className="text-xs uppercase tracking-widest text-muted-foreground"
+                    >
+                      Confirm new password
+                    </Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </>
+              ) : showForgotPassword ? (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  We’ll send a secure password reset link to this email address.
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <Label
+                      htmlFor="password"
+                      className="text-xs uppercase tracking-widest text-muted-foreground"
+                    >
+                      Password
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="block w-full text-right text-xs text-muted-foreground underline decoration-transparent underline-offset-4 transition-colors hover:text-foreground hover:decoration-current"
+                    >
+                      Forgot your password?
+                    </button>
+                  )}
+                  {mode === "signup" && (
+                    <div>
+                      <Label
+                        htmlFor="referral"
+                        className="text-xs uppercase tracking-widest text-muted-foreground"
+                      >
+                        Reference code{" "}
+                        <span className="normal-case tracking-normal opacity-70">(optional)</span>
+                      </Label>
+                      <Input
+                        id="referral"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value.slice(0, 80))}
+                        placeholder="Paste a friend’s code"
+                        className="mt-1"
+                      />
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        One-time reward: you receive 5 Same credits.
+                      </p>
+                    </div>
+                  )}
+                  {mode === "signup" && (
+                    <label className="flex items-start gap-2 pt-1 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={acceptedTerms}
+                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-[color:var(--accent)]"
+                      />
+                      <span>
+                        I agree to the{" "}
+                        <a href="/terms?minimal=1" className="text-foreground underline">
+                          Terms
+                        </a>{" "}
+                        and{" "}
+                        <a href="/privacy?minimal=1" className="text-foreground underline">
+                          Privacy
+                        </a>
+                        .
+                      </span>
+                    </label>
+                  )}
+                </>
               )}
+
               <Button
                 type="submit"
-                disabled={loading || (mode === "signup" && !acceptedTerms)}
+                disabled={
+                  loading ||
+                  (!showForgotPassword && !resetPasswordMode && mode === "signup" && !acceptedTerms)
+                }
                 className="w-full rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
               >
-                {mode === "signup" ? "Create account" : "Sign in"}
+                {resetPasswordMode
+                  ? "Update password"
+                  : showForgotPassword
+                    ? "Send reset link"
+                    : mode === "signup"
+                      ? "Create account"
+                      : "Sign in"}
               </Button>
             </form>
 
-            <button
-              type="button"
-              onClick={() => setMode((m) => (m === "signin" ? "signup" : "signin"))}
-              className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
-            >
-              {mode === "signin" ? "New here? Create an account." : "Have an account? Sign in."}
-            </button>
+            {showForgotPassword || resetPasswordMode ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setResetPasswordMode(false);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setMode("signin");
+                }}
+                className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMode((m) => (m === "signin" ? "signup" : "signin"))}
+                className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+              >
+                {mode === "signin" ? "New here? Create an account." : "Have an account? Sign in."}
+              </button>
+            )}
           </div>
         </div>
       </div>
