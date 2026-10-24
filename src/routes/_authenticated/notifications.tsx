@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { OnboardingGate } from "@/components/OnboardingGate";
+import { useAuth } from "@/hooks/use-auth";
 import {
   getMyNotifications,
   markInboxSeen,
@@ -172,6 +173,7 @@ function Row({
 function NotificationsPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadSet(DISMISS_KEY));
   const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => loadSet(PIN_KEY));
   const [rowDx, setRowDx] = useState<Record<string, number>>({});
@@ -238,7 +240,7 @@ function NotificationsPage() {
   );
 
   useEffect(() => {
-    if (isLoading || !data) return;
+    if (isLoading || !data || !profile?.onboarded_at || !profile.demographics_completed_at) return;
     const welcome = data.find(
       (n) =>
         n.kind === "system" &&
@@ -263,7 +265,7 @@ function NotificationsPage() {
       window.setTimeout(() => setTutorialId(null), 3350),
     ];
     return () => timers.forEach(window.clearTimeout);
-  }, [data, isLoading]);
+  }, [data, isLoading, profile?.demographics_completed_at, profile?.onboarded_at]);
 
   const onDown = (_id: string) => (e: React.PointerEvent) => {
     startX.current = e.clientX;
