@@ -41,16 +41,17 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const errorMessage = error instanceof Error ? error.message : undefined;
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="font-serif text-2xl italic text-foreground">Something cracked.</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {error.message || "An unexpected error happened."}
+          {errorMessage || "An unexpected error happened."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
