@@ -45,6 +45,7 @@ import { Route as ConnectionsUsernameRouteImport } from './routes/connections.$u
 import { Route as QuoteIdRouteImport } from './routes/quote.$id'
 import { Route as ThingIdRouteImport } from './routes/thing.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as ApiCronRetentionRouteImport } from './routes/api.cron.retention'
 import { Route as ApiV1HealthRouteImport } from './routes/api.v1.health'
 import { Route as ApiV1MetadataRouteImport } from './routes/api.v1.metadata'
 import { Route as ApiV1MetricsRouteImport } from './routes/api.v1.metrics'
@@ -238,6 +239,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronRetentionRoute = ApiCronRetentionRouteImport.update({
+  id: '/api/cron/retention',
+  path: '/api/cron/retention',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
   id: '/api/v1/health',
   path: '/api/v1/health',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/metadata': typeof ApiV1MetadataRoute
   '/api/v1/metrics': typeof ApiV1MetricsRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/metadata': typeof ApiV1MetadataRoute
   '/api/v1/metrics': typeof ApiV1MetricsRoute
@@ -407,6 +415,7 @@ export interface FileRoutesById {
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/metadata': typeof ApiV1MetadataRoute
   '/api/v1/metrics': typeof ApiV1MetricsRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/cron/retention'
     | '/api/v1/health'
     | '/api/v1/metadata'
     | '/api/v1/metrics'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/cron/retention'
     | '/api/v1/health'
     | '/api/v1/metadata'
     | '/api/v1/metrics'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/quote/$id'
     | '/thing/$id'
     | '/u/$username'
+    | '/api/cron/retention'
     | '/api/v1/health'
     | '/api/v1/metadata'
     | '/api/v1/metrics'
@@ -572,6 +584,7 @@ export interface RootRouteChildren {
   QuoteIdRoute: typeof QuoteIdRoute
   ThingIdRoute: typeof ThingIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiCronRetentionRoute: typeof ApiCronRetentionRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1MetadataRoute: typeof ApiV1MetadataRoute
   ApiV1MetricsRoute: typeof ApiV1MetricsRoute
@@ -834,6 +847,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/retention': {
+      id: '/api/cron/retention'
+      path: '/api/cron/retention'
+      fullPath: '/api/cron/retention'
+      preLoaderRoute: typeof ApiCronRetentionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/health': {
       id: '/api/v1/health'
       path: '/api/v1/health'
@@ -983,6 +1003,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuoteIdRoute: QuoteIdRoute,
   ThingIdRoute: ThingIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiCronRetentionRoute: ApiCronRetentionRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1MetadataRoute: ApiV1MetadataRoute,
   ApiV1MetricsRoute: ApiV1MetricsRoute,

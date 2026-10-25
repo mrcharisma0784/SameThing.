@@ -7,14 +7,11 @@ import {
   CircleHelp,
   FileCode2,
   FileText,
-  Heart,
   LockKeyhole,
   Menu,
   MessageCircle,
   Orbit,
   Search,
-  Sparkles,
-  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -50,39 +47,9 @@ const menuItems: Array<{
   icon: LucideIcon;
 }> = [
   { label: "Documentation", description: "The thinking behind the product", icon: BookOpen },
-  { label: "Research API", description: "Apply for scoped pilot access", icon: FileCode2 },
+  { label: "Research API", description: "Under development", icon: FileCode2 },
   { label: "About SameThing.", description: "A little more about the space", icon: Orbit },
-  { label: "Contact", description: "hello@samething.app", icon: MessageCircle },
-];
-
-const features: Array<{
-  eyebrow: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  tint: string;
-}> = [
-  {
-    eyebrow: "01 / drop",
-    title: "Say the quiet part.",
-    description: "Leave a small observation, feeling or idea. No performance required.",
-    icon: Sparkles,
-    tint: "text-accent",
-  },
-  {
-    eyebrow: "02 / resonate",
-    title: "Find the same.",
-    description: "Vote Same or Nah and see where a thought lands with other people.",
-    icon: Users,
-    tint: "text-same",
-  },
-  {
-    eyebrow: "03 / return",
-    title: "Come back tomorrow.",
-    description: "A daily quote, a slower feed and the relief of knowing it is not just you.",
-    icon: Heart,
-    tint: "text-rare",
-  },
+  { label: "Contact", description: "samething@bot.cue.im", icon: MessageCircle },
 ];
 
 function MenuItem({ item, onClose }: { item: (typeof menuItems)[number]; onClose: () => void }) {
@@ -102,20 +69,10 @@ function MenuItem({ item, onClose }: { item: (typeof menuItems)[number]; onClose
     </>
   );
 
-  if (
-    item.label === "Documentation" ||
-    item.label === "Research API" ||
-    item.label === "About SameThing."
-  ) {
+  if (item.label === "Documentation" || item.label === "About SameThing.") {
     return (
       <Link
-        to={
-          item.label === "Documentation"
-            ? "/documentation"
-            : item.label === "Research API"
-              ? "/research-api"
-              : "/about"
-        }
+        to={item.label === "Documentation" ? "/documentation" : "/about"}
         onClick={onClose}
         className="group flex w-full items-center gap-4 rounded-2xl border border-transparent p-3 text-left transition-colors hover:border-border hover:bg-background/50"
       >
@@ -299,13 +256,13 @@ export function PublicLanding() {
       </div>
 
       <main className="relative z-10">
-        <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-14 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:px-8 lg:pb-20 lg:pt-16">
-          <div className="max-w-2xl">
+        <section className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-16 lg:pt-16">
+          <div className="max-w-4xl">
             <h1 className="landing-reveal landing-reveal-delay-1 mt-5 max-w-3xl font-serif text-[clamp(3rem,8vw,6.6rem)] leading-[0.86] tracking-[-0.045em] text-foreground">
               You&apos;re not the
               <span className="block italic text-accent">only one.</span>
             </h1>
-            <p className="landing-reveal landing-reveal-delay-2 mt-5 max-w-md text-sm leading-6 text-muted-foreground sm:text-base">
+            <p className="landing-reveal landing-reveal-delay-2 mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
               A small place for the thoughts that usually stay in your head. Drop what you notice,
               find what resonates, and leave a little less alone than you arrived.
             </p>
@@ -327,100 +284,6 @@ export function PublicLanding() {
               Leave it unfinished. Let the room meet you there.
             </p>
           </div>
-
-          <div className="relative mx-auto w-full max-w-[26rem] lg:max-w-none">
-            <div className="landing-hero-art relative aspect-square overflow-hidden rounded-[2rem] border border-accent/20 bg-card/60 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.2)] sm:p-6">
-              <div className="landing-grid absolute inset-0 opacity-40" aria-hidden="true" />
-              <div className="landing-orbit landing-orbit-one" aria-hidden="true" />
-              <div className="landing-orbit landing-orbit-two" aria-hidden="true" />
-              <div className="landing-orbit landing-orbit-three" aria-hidden="true" />
-              <div className="landing-orbit landing-orbit-four" aria-hidden="true" />
-              <svg
-                className="landing-card-link pointer-events-none absolute inset-x-[18%] top-[27%] h-[56%] w-[64%]"
-                viewBox="0 0 100 100"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path d="M6 0 C 18 14, 23 30, 38 42 S 65 80, 94 100" />
-              </svg>
-              <div className="pointer-events-none absolute inset-0" aria-hidden="true" />
-              <div className="landing-float-card landing-float-card-one absolute left-3 top-7 max-w-[8.5rem] rounded-xl border border-border bg-background/90 p-2.5 shadow-lg sm:left-6 sm:top-12">
-                <p className="text-[8px] uppercase tracking-[0.16em] text-accent">
-                  today&apos;s thought
-                </p>
-                <p className="mt-1.5 font-serif text-base leading-tight text-foreground">
-                  Maybe it counts if nobody sees it.
-                </p>
-              </div>
-              <div className="landing-float-card landing-float-card-two absolute bottom-5 right-3 rounded-xl border border-border bg-background/90 px-2.5 py-2 shadow-lg sm:bottom-8 sm:right-6">
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <span className="grid h-5 w-5 place-items-center rounded-full border border-accent/35 text-accent">
-                    @
-                  </span>
-                  <span>someone felt the same</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-y border-border/60 bg-card/25">
-          <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-3 sm:px-6 sm:py-8 lg:px-8">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-accent">The premise</p>
-              <p className="mt-1.5 font-serif text-xl italic text-foreground">
-                Start before it becomes a post.
-              </p>
-            </div>
-            <p className="max-w-md text-[13px] leading-5 text-muted-foreground sm:col-span-2 sm:justify-self-end">
-              This is the moment before a thought needs to become a performance, a caption or a
-              conclusion. Leave it close to the way you found it.
-            </p>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
-          <div className="max-w-xl">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-accent">What lives here</p>
-            <h2 className="mt-3 font-serif text-3xl leading-tight text-foreground sm:text-4xl">
-              Three small ways in.
-            </h2>
-          </div>
-          <div className="mt-7 grid gap-3 lg:grid-cols-3">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <article
-                  key={feature.eyebrow}
-                  className="landing-feature-card landing-scroll-reveal group rounded-2xl border border-border bg-card/50 p-4 sm:p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <span
-                      className={cn(
-                        "grid h-9 w-9 place-items-center rounded-xl border border-border bg-background",
-                        feature.tint,
-                      )}
-                    >
-                      <Icon className="h-4 w-4" strokeWidth={1.55} />
-                    </span>
-                    <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-                      {feature.eyebrow}
-                    </span>
-                  </div>
-                  <h3 className="mt-6 font-serif text-xl italic text-foreground">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-                    {feature.description}
-                  </p>
-                  <div className="mt-3 flex h-3 items-center gap-2 text-[9px] uppercase tracking-[0.16em] text-accent opacity-0 transition-opacity group-hover:opacity-100">
-                    <span>learn the rhythm</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </div>
-                </article>
-              );
-            })}
-          </div>
         </section>
 
         <section className="border-y border-border/60 bg-card/20">
@@ -430,20 +293,22 @@ export function PublicLanding() {
                 <FileCode2 className="h-3.5 w-3.5" /> API & research
               </p>
               <h2 className="mt-3 max-w-md font-serif text-3xl leading-tight text-foreground sm:text-4xl">
-                Public patterns, handled with care.
+                Research API is under development.
               </h2>
             </div>
             <div className="max-w-xl">
               <p className="text-[13px] leading-6 text-muted-foreground">
-                We are preparing a small, read-only Research API for approved researchers. Apply
-                with your question and the smallest useful scope; no key or private data is issued
-                automatically.
+                Access to the Research API page, workspace and related information is temporarily
+                unavailable while development continues.
               </p>
               <Link
                 to="/research-api"
-                className="pressable mt-5 inline-flex items-center gap-2 rounded-full border border-accent/35 px-4 py-2.5 text-xs text-foreground transition-colors hover:border-accent hover:bg-accent/10"
+                onClick={(event) => event.preventDefault()}
+                aria-disabled="true"
+                tabIndex={-1}
+                className="mt-5 inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-accent/35 px-4 py-2.5 text-xs text-muted-foreground opacity-60"
               >
-                Read the access notes <ArrowRight className="h-3.5 w-3.5 text-accent" />
+                Under development <ArrowRight className="h-3.5 w-3.5 text-accent" />
               </Link>
             </div>
           </div>
@@ -457,18 +322,14 @@ export function PublicLanding() {
                 Notice. Drop. Recognise.
               </h2>
               <p className="mt-4 max-w-sm text-[13px] leading-5 text-muted-foreground">
-                There is no feed to keep up with before you join. Start with one thought and let the
-                room meet you there.
+                Write a short Thing, see Same or Nah responses, and join the conversation when you
+                choose.
               </p>
             </div>
             <div className="grid gap-3">
               {[
                 ["01", "Notice something", "A feeling, a pattern, a sentence you cannot shake."],
-                [
-                  "02",
-                  "Drop a Thing",
-                  "Give it a few honest words. Anonymous is always an option when available.",
-                ],
+                ["02", "Drop a Thing", "Give it a few honest words."],
                 [
                   "03",
                   "See what resonates",
@@ -497,7 +358,7 @@ export function PublicLanding() {
           <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
               <p className="text-[10px] uppercase tracking-[0.22em] text-accent">
-                Three unfinished thoughts
+                Example thoughts
               </p>
               <h2 className="mt-3 font-serif text-3xl leading-tight text-foreground sm:text-4xl">
                 Some thoughts arrive quietly.
@@ -515,7 +376,7 @@ export function PublicLanding() {
                 >
                   <p className="font-serif text-lg leading-tight text-foreground">“{quote}”</p>
                   <p className="mt-4 text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
-                    left here / 0{index + 1}
+                    example / 0{index + 1}
                   </p>
                 </div>
               ))}
@@ -568,7 +429,13 @@ export function PublicLanding() {
               <Link to="/documentation" className="w-fit hover:text-foreground">
                 Documentation
               </Link>
-              <Link to="/research-api" className="w-fit hover:text-foreground">
+              <Link
+                to="/research-api"
+                onClick={(event) => event.preventDefault()}
+                aria-disabled="true"
+                tabIndex={-1}
+                className="w-fit cursor-not-allowed opacity-60"
+              >
                 Research API
               </Link>
               <Link to="/faq" search={{ minimal: "true" }} className="w-fit hover:text-foreground">
@@ -579,7 +446,7 @@ export function PublicLanding() {
           <div>
             <p className="text-[10px] uppercase tracking-[0.22em] text-accent">Elsewhere</p>
             <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-              <a href="mailto:hello@samething.app" className="w-fit hover:text-foreground">
+              <a href="mailto:samething@bot.cue.im" className="w-fit hover:text-foreground">
                 Contact
               </a>
               <Link

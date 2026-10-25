@@ -5,6 +5,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { isLabThingActive } from "@/lib/test-user";
 import { z } from "zod";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import {
+  RESEARCH_API_AVAILABLE,
+  RESEARCH_API_PAUSE_MESSAGE,
+} from "@/lib/api/research-availability";
 
 async function assertAdmin(
   permission: import("@/lib/admin-rbac.server").AdminPermission = "admin:read",
@@ -1185,6 +1189,8 @@ export const adminUpdateApiAccessRequest = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await assertAdmin("api:write");
     await recordAdminAction("adminUpdateApiAccessRequest", "api:write");
+    if (!RESEARCH_API_AVAILABLE) return { ok: false as const, error: RESEARCH_API_PAUSE_MESSAGE };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: item, error } = await (supabaseAdmin as any)
       .from("api_access_requests")

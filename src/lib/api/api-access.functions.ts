@@ -3,6 +3,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  RESEARCH_API_AVAILABLE,
+  RESEARCH_API_PAUSE_MESSAGE,
+} from "@/lib/api/research-availability";
+import {
   API_CREDIT_PACKS,
   API_CREDIT_WELCOME,
   API_SCOPES,
@@ -87,6 +91,8 @@ function ratePlanFromVolume(volume: "pilot" | "standard" | "bulk") {
 
 /** Issues one encrypted, owner-readable key after an approved request. Admin never calls this directly. */
 export async function issueApiKeyForApprovedRequest(requestId: string) {
+  if (!RESEARCH_API_AVAILABLE) return { ok: false as const, error: RESEARCH_API_PAUSE_MESSAGE };
+
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const db = supabaseAdmin as any;
   const { data: request, error: requestError } = await db
@@ -153,6 +159,8 @@ export const submitApiAccessRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => ApiAccessRequestInput.parse(input))
   .handler(async ({ data, context }) => {
+    if (!RESEARCH_API_AVAILABLE) return { ok: false as const, error: RESEARCH_API_PAUSE_MESSAGE };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const authEmail =
@@ -215,6 +223,8 @@ export const submitApiAccessRequest = createServerFn({ method: "POST" })
 export const getMyApiDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (!RESEARCH_API_AVAILABLE) throw new Error(RESEARCH_API_PAUSE_MESSAGE);
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const [{ data: requests, error: requestError }, { data: profile, error: profileError }] =
@@ -302,6 +312,8 @@ export const createApiCreditPurchaseIntent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => ApiCreditPackInput.parse(input))
   .handler(async ({ data, context }) => {
+    if (!RESEARCH_API_AVAILABLE) return { ok: false as const, error: RESEARCH_API_PAUSE_MESSAGE };
+
     const pack = API_CREDIT_PACKS.find((item) => item.key === data.pack_key) as
       (typeof API_CREDIT_PACKS)[number] | undefined;
     if (!pack) return { ok: false as const, error: "That API Credit pack is not available." };
@@ -331,6 +343,8 @@ export const createApiCreditPurchaseIntent = createServerFn({ method: "POST" })
 export const listMyApiCreditPurchases = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (!RESEARCH_API_AVAILABLE) throw new Error(RESEARCH_API_PAUSE_MESSAGE);
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("api_credit_purchase_intents")

@@ -13,14 +13,18 @@ import {
 import { useEffect } from "react";
 import { Brand } from "@/components/Brand";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  RESEARCH_API_AVAILABLE,
+  RESEARCH_API_PAUSE_MESSAGE,
+} from "@/lib/api/research-availability";
 
 export const Route = createFileRoute("/research-api")({
   head: () => ({
     meta: [
-      { title: "Research API · SameThing." },
+      { title: "Research API · Under development · SameThing." },
       {
         name: "description",
-        content: "Read-only public-pattern data for careful research and product analysis.",
+        content: "The Research API is under development and temporarily unavailable.",
       },
     ],
   }),
@@ -106,6 +110,34 @@ const errors = [
 ] as const;
 
 function ResearchApiPage() {
+  if (RESEARCH_API_AVAILABLE) return <ResearchApiDetailsPage />;
+
+  return (
+    <main className="grid min-h-dvh place-items-center bg-background px-5 py-12 text-foreground">
+      <section className="w-full max-w-lg rounded-3xl border border-border bg-card/70 p-7 text-center shadow-[0_20px_80px_rgba(0,0,0,0.16)] sm:p-10">
+        <Brand size="lg" />
+        <span className="mx-auto mt-8 grid h-12 w-12 place-items-center rounded-full border border-accent/35 bg-accent/10 text-accent">
+          <FileCode2 className="h-5 w-5" />
+        </span>
+        <p className="mt-6 text-[10px] uppercase tracking-[0.25em] text-accent">
+          Under development
+        </p>
+        <h1 className="mt-3 font-serif text-3xl leading-tight text-foreground sm:text-4xl">
+          Research API is under development.
+        </h1>
+        <p className="mt-4 text-sm leading-6 text-muted-foreground">{RESEARCH_API_PAUSE_MESSAGE}</p>
+        <Link
+          to="/"
+          className="mt-7 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs text-foreground transition-colors hover:border-accent/50"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to SameThing.
+        </Link>
+      </section>
+    </main>
+  );
+}
+
+function ResearchApiDetailsPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
@@ -210,9 +242,10 @@ function ResearchApiPage() {
               Start with a quiet request.
             </h2>
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-              API access is tied to your SameThing. account. Sign in or register here and you will
-              land directly in the API Dashboard. After approval, a scoped key is created
-              automatically and shown only to its owner.
+              Pilot applications are open, but new requests join the waitlist. We review each
+              requested scope manually. If approved, a scoped API key is created automatically and
+              appears in the workspace owner&apos;s Dashboard; no key is issued before approval.
+              Sign in or register here to submit your request and open the Dashboard.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link
@@ -367,7 +400,7 @@ function ResearchApiPage() {
           </div>
           <div className="grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-2">
             {[
-              "No profile names, email addresses or auth IDs",
+              "No profile names, email addresses or account identifiers",
               "No private messages, comments or moderation records",
               "No raw IPs, payment data, API keys or credit ledger data",
               "No write endpoints: the API is read-only by design",

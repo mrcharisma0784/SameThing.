@@ -6,9 +6,7 @@ import {
   Compass,
   Heart,
   Orbit,
-  Quote,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 import { Brand } from "@/components/Brand";
@@ -32,30 +30,6 @@ export const Route = createFileRoute("/about")({
   }),
   component: AboutSameThingPage,
 });
-
-const principles = [
-  {
-    number: "01",
-    title: "Notice first.",
-    text: "A Thing can be a small observation, a feeling without a conclusion, or a sentence you almost kept to yourself.",
-    icon: Sparkles,
-    tone: "text-accent",
-  },
-  {
-    number: "02",
-    title: "Share lightly.",
-    text: "There is no pressure to perform, explain everything or turn a moment into a polished post. Leave it close to how you found it.",
-    icon: Quote,
-    tone: "text-same",
-  },
-  {
-    number: "03",
-    title: "Find the same.",
-    text: "A Same, a Nah, a comment or a quiet return can show that a thought did not stop with you.",
-    icon: Heart,
-    tone: "text-rare",
-  },
-];
 
 const values = [
   {
@@ -112,9 +86,9 @@ function AboutSameThingPage() {
               <span className="block italic text-accent">unfinished thought.</span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              SameThing. began with a simple feeling: some of the things that matter most are too
-              small, strange or unfinished to become a performance. This is a quieter place to leave
-              them, and to discover who else understands.
+              SameThing. is a social space for short observations, feelings and ideas. Browse public
+              Things and Quotes without an account; sign in when you want to publish, vote or join a
+              conversation.
             </p>
           </div>
 
@@ -143,35 +117,46 @@ function AboutSameThingPage() {
         </section>
 
         <section className="mt-16 border-t border-border/70 pt-8 sm:mt-24 sm:pt-10">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-accent">The rhythm</p>
-              <h2 className="mt-2 font-serif text-3xl tracking-[-0.03em] sm:text-4xl">
-                Three small ways in.
-              </h2>
-            </div>
-            <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-              There is no correct way to use the room. Start with the part that feels closest today.
+          <div className="max-w-2xl">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-accent">
+              What makes it different
             </p>
+            <h2 className="mt-2 font-serif text-3xl tracking-[-0.03em] sm:text-4xl">
+              Less performance. More recognition.
+            </h2>
           </div>
           <div className="mt-7 grid gap-3 md:grid-cols-3">
-            {principles.map((principle) => {
-              const Icon = principle.icon;
+            {[
+              {
+                title: "Browse before joining",
+                text: "Public Things and Quotes can be read without an account. Sign-in is needed to publish or take part.",
+                icon: Compass,
+              },
+              {
+                title: "Resonance, not a verdict",
+                text: "Same and Nah show how a thought lands with people; they are not claims that it is true or universally popular.",
+                icon: Heart,
+              },
+              {
+                title: "Control over comments",
+                text: "Open comments on public Things are visible to guests and signed-in readers. If the owner closes comments, the entire section—including older comments—is hidden from everyone until reopened.",
+                icon: ShieldCheck,
+              },
+            ].map((item, index) => {
+              const Icon = item.icon;
               return (
                 <article
-                  key={principle.number}
-                  className="group rounded-[1.35rem] border border-border bg-card/55 p-5 transition-transform duration-200 hover:-translate-y-1 hover:border-accent/35 sm:p-6"
+                  key={item.title}
+                  className="rounded-[1.35rem] border border-border bg-card/55 p-5 sm:p-6"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                      {principle.number}
+                      0{index + 1}
                     </span>
-                    <Icon className={`h-5 w-5 ${principle.tone}`} strokeWidth={1.5} />
+                    <Icon className="h-5 w-5 text-accent" strokeWidth={1.5} />
                   </div>
-                  <h3 className="mt-8 font-serif text-2xl tracking-[-0.025em]">
-                    {principle.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{principle.text}</p>
+                  <h3 className="mt-7 font-serif text-xl tracking-[-0.025em]">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
                 </article>
               );
             })}
@@ -225,6 +210,34 @@ function AboutSameThingPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-16 border-y border-border/70 py-10 sm:mt-24 sm:py-12">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-accent">Product status</p>
+          <h2 className="mt-2 font-serif text-3xl tracking-[-0.03em] sm:text-4xl">
+            What is available today.
+          </h2>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card/50 p-4">
+              <h3 className="text-sm font-medium">Core space</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Public browsing, Things, Same/Nah responses and comments are live.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card/50 p-4">
+              <h3 className="text-sm font-medium">Research API</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Under development. The page, workspace, related information and endpoints are
+                temporarily unavailable.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card/50 p-4">
+              <h3 className="text-sm font-medium">Paid plans</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Payment collection and subscription activation are not enabled in this release.
+              </p>
             </div>
           </div>
         </section>

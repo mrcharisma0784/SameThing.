@@ -690,13 +690,13 @@ export const completeServiceTour = createServerFn({ method: "POST" })
     return { error: error ? "Could not save tour preference." : null };
   });
 
-// ---- Delete account ----------------------------------------------
+// ---- Delete account for the under-13 onboarding gate ----------------
 export const deleteMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const uid = context.userId;
-    // Wipe user-owned content first (cascades handle most links).
+    // Under-13 onboarding must immediately block access and remove the account.
     await supabaseAdmin.from("things").delete().eq("user_id", uid);
     await supabaseAdmin.from("comments").delete().eq("user_id", uid);
     await supabaseAdmin.from("votes").delete().eq("user_id", uid);

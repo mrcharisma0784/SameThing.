@@ -41,7 +41,7 @@ function TermsPage() {
         Terms<span className="dot">.</span>
       </h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-        Terms of Service · Last updated: August 2026
+        Terms of Service · Last updated: October 2026
       </p>
 
       <article className="prose prose-invert mt-6 max-w-none text-sm leading-relaxed text-foreground">
@@ -168,14 +168,10 @@ function TermsPage() {
             issued only through the in-app claim flow and are subject to the displayed rules.
           </p>
           <p>
-            The Research API is a controlled read-only service rather than unrestricted database
-            access. Start from the public Research API page; its sign-in link takes a new or
-            existing account directly to API Dashboard. Approved applicants receive only the scopes,
-            expiry and rate limits shown for their approval; keys can be revoked and requests are
-            logged for operational security. Public-content projections and anonymous aggregates
-            exclude profiles, private messages, comments, moderation records, credits, payment data
-            and admin data. The API programme may be changed or paused, and its access rules and
-            data-use terms will be updated before a material expansion.
+            The Research API and API Dashboard are under development and temporarily unavailable.
+            New applications cannot be submitted, existing workspace tools cannot be accessed, and
+            API requests are not served while this pause is in effect. If the service becomes
+            available again, the applicable terms and access conditions will be shown before use.
           </p>
         </Section>
 
@@ -232,9 +228,9 @@ function TermsPage() {
           <p>
             PremiumThing. currently includes the Premium icon and share-card catalogue, AI tag
             suggestions, larger custom-tag room, Credit-free supported Boost and Time Capsule paths,
-            free saved share-card theme changes and a monthly Same Credit allowance. Premium does
-            not remove read-only API limits or the API Credit cost of an API request. The exact
-            active features and price shown in the product control the applicable plan at the time.
+            free saved share-card theme changes and a monthly Same Credit allowance. The Research
+            API is under development and temporarily unavailable. The exact active features and
+            price shown in the product control the applicable plan at the time.
           </p>
           <p>
             Same Credits are an internal, non-cash feature balance. Free accounts may spend them on
@@ -242,23 +238,8 @@ function TermsPage() {
             five-year Time Capsule option uses 60 Same Credits. The Credit screen may show purchase
             packages and create a pending checkout intent, but it does not charge a card or grant
             purchased Credits until a supported payment provider is explicitly connected and the
-            payment is confirmed. API Credits are a separate balance: an approved API workspace
-            receives a one-time 500-credit welcome allowance, and each successful API request uses
-            one API Credit.
-          </p>
-          <p>
-            The authenticated API Dashboard is the only user-facing application and key workspace. A
-            request identifies a research purpose, requested public scopes and expected volume. If
-            approved, a scoped key is generated automatically for the signed-in workspace; Admin
-            cannot manually issue or reveal that key. Pending and reviewing applications remain
-            visible until processed. An approved, waitlisted or declined result is shown in the
-            Application area once and then hidden after the Dashboard atomically acknowledges the
-            notice. A new request is not accepted while another request is pending, reviewing or
-            approved; after a waitlist or decline, re-application becomes available after a
-            several-day cooldown shown by the Dashboard (currently 72 hours). API access is
-            read-only, rate-limited and limited to public projections and anonymous aggregates. API
-            usage, key state and Credit activity may be recorded for security, billing readiness,
-            rate enforcement and support.
+            payment is confirmed. Research API and API Credit features are currently unavailable
+            while that service is under development.
           </p>
           <p>
             Card details must be entered through the payment processor&apos;s secure, tokenised
@@ -305,13 +286,12 @@ function TermsPage() {
           </p>
         </Section>
 
-        <Section title="17. Maintenance and operational controls">
+        <Section title="17. Maintenance">
           <p>
-            We may temporarily place user-facing pages and user actions into Maintenance Mode for
-            releases, database work, safety response or incident recovery. During Maintenance Mode,
-            visitors may see a service message and the administrative control area may remain
-            available to authorised operators. This does not delete content or change account
-            ownership; it only limits availability while the mode is active.
+            We may temporarily make the service or a feature unavailable for maintenance, safety
+            work or incident recovery. The affected page may show a notice while authorised
+            operators address the issue. A maintenance pause does not delete content or change
+            account ownership; it only limits availability while active.
           </p>
         </Section>
 

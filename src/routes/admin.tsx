@@ -2661,7 +2661,7 @@ function MaintenancePanel() {
   useEffect(() => {
     getStatus()
       .then(applyStatus)
-      .catch(() => toast.error("Maintain status could not be loaded."))
+      .catch(() => toast.error("Maintenance status could not be loaded."))
       .finally(() => setLoading(false));
   }, [getStatus]);
 
@@ -2674,9 +2674,9 @@ function MaintenancePanel() {
     setBusy(true);
     try {
       applyStatus(await setMode({ data: { enabled: false, note: note.trim() || null } }));
-      toast.success("Maintain is off.");
+      toast.success("Maintenance is off.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Maintain could not be updated.");
+      toast.error(error instanceof Error ? error.message : "Maintenance could not be updated.");
     } finally {
       setBusy(false);
     }
@@ -2687,9 +2687,9 @@ function MaintenancePanel() {
     try {
       applyStatus(await setMode({ data: { enabled: true, note: note.trim() || null } }));
       setPendingGlobal(false);
-      toast.success("Maintain is on for all user-facing pages.");
+      toast.success("Maintenance is on for all user-facing pages.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Maintain could not be updated.");
+      toast.error(error instanceof Error ? error.message : "Maintenance could not be updated.");
     } finally {
       setBusy(false);
     }
@@ -2720,10 +2720,12 @@ function MaintenancePanel() {
       });
       applyStatus(status);
       setPendingTarget(null);
-      toast.success(`${pendingTarget.label} ${nextEnabled ? "is in Maintain." : "is live again."}`);
+      toast.success(
+        `${pendingTarget.label} ${nextEnabled ? "is under maintenance." : "is live again."}`,
+      );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Page Maintain status could not be updated.",
+        error instanceof Error ? error.message : "Page maintenance status could not be updated.",
       );
     } finally {
       setBusy(false);
@@ -2737,7 +2739,7 @@ function MaintenancePanel() {
           <img src="/pp-logo.png" alt="SameThing." className="h-full w-full object-contain" />
         </div>
         <div>
-          <h2 className="text-lg font-medium">Maintain</h2>
+          <h2 className="text-lg font-medium">Maintenance</h2>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
             Pause the whole room or only the pages that need a little quiet work. The admin area
             always stays available.
@@ -2837,7 +2839,7 @@ function MaintenancePanel() {
 
       <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
         Admin remains exempt. You can pause multiple selected pages at once; a paused page shows a
-        small Maintain screen while the rest of the site stays live.
+        maintenance notice while the rest of the site stays live.
       </p>
 
       {(pendingTarget || pendingGlobal) && (
@@ -2849,12 +2851,14 @@ function MaintenancePanel() {
               </span>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {pendingGlobal ? "Pause the whole room?" : `${pendingTarget?.label} · Maintain`}
+                  {pendingGlobal
+                    ? "Pause the whole room?"
+                    : `${pendingTarget?.label} · Maintenance`}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {pendingGlobal
-                    ? "Every user-facing page will show the Maintain screen. Only Admin will remain available."
-                    : `${pendingTarget?.label} will show the Maintain screen while the other selected pages stay live.`}
+                    ? "Every user-facing page will show a maintenance notice. Only authorised Admin access will remain available."
+                    : `${pendingTarget?.label} will show a maintenance notice while the other selected pages stay live.`}
                 </p>
               </div>
             </div>

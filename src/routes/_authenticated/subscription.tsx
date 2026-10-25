@@ -190,7 +190,7 @@ function SubscriptionPage() {
               "Boost MyThing. and Time Capsule without spending Same Credits.",
               `${PREMIUM_MONTHLY_SAME_CREDITS} Same Credits once per active month for other in-app paths.`,
               "Premium styling on your public profile and eligible content surfaces.",
-              "API usage still consumes API Credits; Premium does not bypass read-only API limits.",
+              "The Research API is under development and temporarily unavailable.",
             ].map((feature) => (
               <div
                 key={feature}

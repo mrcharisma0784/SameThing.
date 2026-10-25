@@ -104,7 +104,7 @@ function SettingsPage() {
   const maintenanceAdornment = (path: string) =>
     isMaintenancePaused(path) ? (
       <span className="rounded-full bg-muted px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">
-        Maintain
+        Maintenance
       </span>
     ) : null;
 
@@ -234,7 +234,7 @@ function SettingsPage() {
               label="Reference"
               hint={
                 isMaintenancePaused("/reference")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "Invite once · +10 Credits / +5 for them"
               }
               disabled={isMaintenancePaused("/reference")}
@@ -255,7 +255,7 @@ function SettingsPage() {
               label="Streak"
               hint={
                 isMaintenancePaused("/streak")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "Start when you are ready, then return daily"
               }
               disabled={isMaintenancePaused("/streak")}
@@ -267,7 +267,7 @@ function SettingsPage() {
               label="Achievements"
               hint={
                 isMaintenancePaused("/achievements")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "One-time, daily & weekly Same Credits"
               }
               disabled={isMaintenancePaused("/achievements")}
@@ -287,7 +287,7 @@ function SettingsPage() {
               label="Leaderboard"
               hint={
                 isMaintenancePaused("/leaderboard")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "Weekly leagues for Things, Quotes & People"
               }
               disabled={isMaintenancePaused("/leaderboard")}
@@ -299,7 +299,7 @@ function SettingsPage() {
               label="Find my twin"
               hint={
                 isMaintenancePaused("/twin")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "Meet someone who sees things like you"
               }
               disabled={isMaintenancePaused("/twin")}
@@ -311,7 +311,7 @@ function SettingsPage() {
               label="Time Capsule"
               hint={
                 isMaintenancePaused("/capsules")
-                  ? "Temporarily in Maintain"
+                  ? "Temporarily unavailable"
                   : "Seal a Thing for your future self"
               }
               disabled={isMaintenancePaused("/capsules")}

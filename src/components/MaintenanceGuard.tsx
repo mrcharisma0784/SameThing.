@@ -22,7 +22,7 @@ function MaintenanceView({
           />
         </div>
         <h1 className="mt-7 font-serif text-4xl italic text-foreground">
-          Maintain<span className="dot">.</span>
+          Maintenance<span className="dot">.</span>
         </h1>
         {targetLabel && (
           <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-accent">{targetLabel}</p>

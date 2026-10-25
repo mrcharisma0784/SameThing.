@@ -37,7 +37,7 @@ function PrivacyPage() {
         Privacy<span className="dot">.</span>
       </h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-        Privacy Policy · Last updated: August 2026
+        Privacy Policy · Last updated: October 2026
       </p>
 
       <article className="mt-6 space-y-6 text-sm leading-relaxed text-foreground">
@@ -77,7 +77,7 @@ function PrivacyPage() {
             </li>
             <li>
               <strong>Safety and service data:</strong> warning, mute, suspension and ban state;
-              system messages; rate-limit and fraud-prevention records; error and audit logs.
+              system messages, security and service-operation records.
             </li>
             <li>
               <strong>Technical data:</strong> device/browser information, timestamps, approximate
@@ -162,13 +162,12 @@ function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="6. Notification retention">
+        <Section title="6. Inbox visibility and deletion">
           <p className="text-muted-foreground">
-            You can choose to keep inbox notifications for 24 hours, 7 days, 15 days or 30 days.
-            Older persisted system notifications are automatically removed by a scheduled cleanup,
-            and the Inbox applies the same retention filter when reading. Comments and votes remain
-            content/activity records rather than separate notification copies and are not deleted
-            merely because an inbox retention period expires.
+            You can choose to show Inbox notifications from the last 24 hours, 7 days, 15 days or 30
+            days. Older items leave your Inbox at that cutoff. Expired notification records are
+            removed in the next daily cleanup, which can take up to about one extra day. Comments
+            and votes are separate records and are not removed by this setting.
           </p>
         </Section>
 
@@ -180,7 +179,7 @@ function PrivacyPage() {
             an unrelated page load. You can revoke permission from browser or device settings. The
             current implementation uses an authenticated app session and does not promise delivery
             when the browser has been fully closed; a future Push API service would require a
-            separate subscription, key and retention design.
+            separate setup and a clear notice before it is introduced.
           </p>
         </Section>
 
@@ -220,21 +219,30 @@ function PrivacyPage() {
         <Section title="11. Retention schedule">
           <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
             <li>
-              Account and profile data: while the account is active, then deleted or anonymised
-              according to the account-deletion process.
+              Account and profile data: while the account is active. A deletion request starts a
+              30-day period in which it can be cancelled; if it is not cancelled, account-linked
+              personal data and user-created content are deleted with the account.
             </li>
             <li>
-              Public content: until you delete it or it is removed, except for limited backups,
-              safety records, legal claims or copies shared by others.
-            </li>
-            <li>Inbox system notifications: according to your 24h/7d/15d/30d setting.</li>
-            <li>
-              Reports, moderation decisions and security records: only as long as reasonably
-              necessary for safety, legal obligations, dispute resolution and abuse prevention.
+              Individual content: removed from ordinary views when you delete it. Copies already
+              shared outside SameThing. cannot be recalled.
             </li>
             <li>
-              Backups: retained for the service&apos;s backup cycle and placed beyond ordinary use
-              after a valid deletion process where immediate overwrite is not technically possible.
+              Inbox notifications: deleted during the daily cleanup after your selected 24-hour,
+              7-day, 15-day or 30-day window. They may remain stored for up to about one extra day.
+            </li>
+            <li>
+              Previously created Research API request logs: kept for 7 days, then removed in the
+              next daily cleanup (so they may remain for up to about 8 days from the request). No
+              new Research API requests are served while the service is under development.
+            </li>
+            <li>
+              Reports, moderation and legal records, support correspondence, and reward or credit
+              ledgers: retained indefinitely as service records and are not deleted with an account.
+            </li>
+            <li>
+              Backups: SameThing. does not currently maintain a separate product backup archive.
+              Hosting or database providers may operate their own backups under their terms.
             </li>
           </ul>
         </Section>
@@ -281,35 +289,19 @@ function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="16. API Dashboard, API Credits and research access">
+        <Section title="16. Research API availability">
           <p className="text-muted-foreground">
-            If you apply for Research API access, we process the application details you submit,
-            including your name, organisation, research purpose, requested public scopes and
-            expected volume. The request is tied to your signed-in account so that an approved
-            workspace can see its own status, key state, rate plan and usage without exposing those
-            details to other users or Admin views.
+            The Research API and API Dashboard are under development and temporarily unavailable.
+            The public information page, new application flow, workspace tools and API endpoints are
+            paused. We are not accepting new Research API applications or serving API requests while
+            this pause is in effect.
           </p>
           <p className="text-muted-foreground">
-            Approved access keys are generated server-side. The service stores a one-way hash and
-            short prefix for request authentication and operational identification, and keeps the
-            encrypted key material needed to show the key to its owner in the authenticated API
-            Dashboard. Admin sees safe metadata only; credentials are not placed in audit logs. API
-            requests are rate-limited and usage logs may include key reference, endpoint, response
-            status, request ID and timing, but not private profile or content fields outside the
-            approved public projection. Pending and reviewing applications remain visible until
-            processed. Approved, waitlisted and declined results are shown once in the Application
-            area and then hidden after an atomic notice acknowledgement. New requests are blocked
-            during pending, reviewing or approved access; after a decline or waitlist, the account
-            has a currently configured 72-hour re-application cooldown.
-          </p>
-          <p className="text-muted-foreground">
-            API Credits are a separate account-level balance. We store balance adjustments and usage
-            ledger entries so the workspace can see consumption and so we can prevent duplicate or
-            unauthorised charges. An approved workspace may receive a one-time 500-credit welcome
-            allowance; each successful API request consumes one API Credit. The API Dashboard may
-            also store a pending purchase intent containing pack, amount, currency and provider
-            status. Until a payment provider is connected and payment is confirmed, no card is
-            charged and no purchased Credits are granted.
+            If your workspace previously submitted an application or used the service, associated
+            account, access, usage and credit records may still be retained to operate, secure or
+            account for that earlier activity. Previously created request logs follow the 7-day
+            retention period above. This Privacy Policy continues to apply to those existing
+            records.
           </p>
         </Section>
 
@@ -322,52 +314,21 @@ function PrivacyPage() {
             published monthly Same Credit allowance once per active month; the grant is recorded in
             the Same Credit ledger. Non-Premium accounts spend 5 Same Credits for an actual saved
             Feed filter pill configuration change; Premium accounts can edit those filters without a
-            debit. Referral and achievement data is retained with the related account and moderation
-            records for the period reasonably needed to operate, audit and protect the programme.
+            debit. Reward, referral and credit records are retained indefinitely as service records
+            and are not deleted with an account.
           </p>
         </Section>
 
-        <Section title="18. Maintenance and operations">
+        <Section title="18. Service availability">
           <p className="text-muted-foreground">
-            An authorised operator may enable Maintenance Mode for releases, data work, safety
-            response or incident recovery. The setting and its update time are stored as an
-            operational service record. During the mode, user-facing pages and actions are blocked
-            or replaced with a maintenance view, while the administrative area remains available to
-            authorised operators. The selectable first target set can include Leaderboard, Time
-            Capsule, Find my twin, Achievements, Reference, Credit, Research API, API Dashboard and
-            Documentation; Account & Privacy, Subscription & payment, Appearance and
-            Support/Feedback remain intentionally outside that first set. This operational control
-            does not change the retention of content or account data.
+            We may temporarily make the service or a feature unavailable for maintenance, safety
+            work or incident recovery. The affected page may show a notice while authorised
+            operators address the issue. A maintenance pause does not by itself delete content or
+            change account ownership.
           </p>
         </Section>
 
-        <Section title="19. Admin and operational security">
-          <p className="text-muted-foreground">
-            Administrative access is a separate restricted operational session and is not granted
-            merely because a person is signed in to a SameThing. account. Access requires authorised
-            credentials and server-side verification; credentials are not stored in the browser,
-            content database or audit metadata. Admin actions may create an operational audit record
-            containing the action, time, actor label and limited target reference. We do not place
-            credentials, bearer secrets or full payment data in those logs.
-          </p>
-        </Section>
-
-        <Section title="20. Researcher data access status">
-          <p className="text-muted-foreground">
-            SameThing. operates a controlled, read-only Research API. A company or research team
-            must start from the Research API page, sign in or register, and continue directly to API
-            Dashboard to submit a workspace application. An approved application may receive a
-            scoped bearer key; the key is shown only to its owner, while the service stores a
-            one-way hash, encrypted owner-display material and operational metadata. Available
-            projections are limited to public Things, public Quotes, metadata and anonymous
-            aggregate metrics, subject to expiry, revocation, rate limits,
-            one-credit-per-successful-request usage and request logging. The API does not expose
-            profiles, email addresses, auth IDs, private messages, comments, moderation records,
-            safety flags, credits, payment data, admin data or other private fields.
-          </p>
-        </Section>
-
-        <Section title="21. Changes and contact">
+        <Section title="19. Changes and contact">
           <p className="text-muted-foreground">
             We review this Policy when our data flows, features or legal obligations change. We will
             update the effective date and provide a reasonable notice for material changes.

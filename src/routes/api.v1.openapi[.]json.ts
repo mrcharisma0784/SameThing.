@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { apiCorsHeaders } from "@/lib/api/v1/auth.server";
 import { apiResponse, createRequestId } from "@/lib/api/v1/response";
+import { apiUnavailable } from "@/lib/api/v1/handler.server";
+import { RESEARCH_API_AVAILABLE } from "@/lib/api/research-availability";
 import { getSiteUrl } from "@/lib/site-url";
 
 const apiCreditsExhausted = {
@@ -114,12 +116,14 @@ export const Route = createFileRoute("/api/v1/openapi.json")({
       OPTIONS: ({ request }) =>
         new Response(null, { status: 204, headers: apiCorsHeaders(request) }),
       GET: ({ request }) =>
-        apiResponse(document, createRequestId(), {
-          headers: {
-            ...apiCorsHeaders(request),
-            "Content-Type": "application/json; charset=utf-8",
-          },
-        }),
+        RESEARCH_API_AVAILABLE
+          ? apiResponse(document, createRequestId(), {
+              headers: {
+                ...apiCorsHeaders(request),
+                "Content-Type": "application/json; charset=utf-8",
+              },
+            })
+          : apiUnavailable(request),
     },
   },
 });

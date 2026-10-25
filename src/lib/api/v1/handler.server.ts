@@ -5,6 +5,10 @@ import {
   type ApiKeyContext,
 } from "@/lib/api/v1/auth.server";
 import { apiError, createRequestId } from "@/lib/api/v1/response";
+import {
+  RESEARCH_API_AVAILABLE,
+  RESEARCH_API_PAUSE_MESSAGE,
+} from "@/lib/api/research-availability";
 
 export type ApiHandlerContext = {
   request: Request;
@@ -18,12 +22,24 @@ export function apiOptions(request: Request): Response {
   return new Response(null, { status: 204, headers: apiCorsHeaders(request) });
 }
 
+export function apiUnavailable(request: Request): Response {
+  return apiError(
+    503,
+    "service_unavailable",
+    RESEARCH_API_PAUSE_MESSAGE,
+    createRequestId(),
+    apiCorsHeaders(request),
+  );
+}
+
 export async function withApiKey(
   request: Request,
   endpoint: string,
   requiredScope: string,
   handler: (context: ApiHandlerContext) => Promise<ApiHandlerResult>,
 ): Promise<Response> {
+  if (!RESEARCH_API_AVAILABLE) return apiUnavailable(request);
+
   const requestId = createRequestId();
   const startedAt = performance.now();
   const auth = await authenticateApiRequest(request, requestId, requiredScope);

@@ -250,7 +250,7 @@ function NotifPrefsPage() {
 
         <section className="mt-5 rounded-3xl border border-border/80 bg-card p-6">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            Keep notifications for
+            Show Inbox notifications from
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {RETENTION_OPTIONS.map((option) => (
@@ -270,7 +270,8 @@ function NotifPrefsPage() {
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Older notifications are cleared automatically. Default is 30 days.
+            Older items leave your Inbox at the selected cutoff. Stored records are removed in the
+            next daily cleanup, which can take up to about one extra day. Default is 30 days.
           </p>
         </section>
 

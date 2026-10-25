@@ -427,8 +427,9 @@ function AccountPage() {
         <section className="mt-6 rounded-2xl border border-border bg-card p-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Your data</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Request a copy of your account data by email, or ask us to delete it. We review requests
-            and complete them within several business days; deletion is permanent after approval.
+            Request a copy of your account data by email, or submit an account deletion request.
+            Requests are reviewed manually; submitting one does not immediately delete your account.
+            You can follow its status below.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <button

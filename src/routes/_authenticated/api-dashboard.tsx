@@ -22,6 +22,10 @@ import { OnboardingGate } from "@/components/OnboardingGate";
 import { useAuth } from "@/hooks/use-auth";
 import { getSiteUrl } from "@/lib/site-url";
 import {
+  RESEARCH_API_AVAILABLE,
+  RESEARCH_API_PAUSE_MESSAGE,
+} from "@/lib/api/research-availability";
+import {
   API_CREDIT_PACKS,
   API_RATE_PLANS,
   API_SCOPE_DETAILS,
@@ -41,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/api-dashboard")({
       { title: "API Dashboard · SameThing." },
       {
         name: "description",
-        content: "Manage your approved, read-only SameThing. Research API workspace.",
+        content: "The Research API workspace is under development and temporarily unavailable.",
       },
     ],
     links: [{ rel: "canonical", href: getSiteUrl("/api-dashboard") }],
@@ -135,7 +139,7 @@ function ApiDashboardPage() {
   const dashboardQuery = useQuery({
     queryKey: ["api-dashboard", user?.id],
     queryFn: () => getDashboard(),
-    enabled: Boolean(user),
+    enabled: Boolean(user) && RESEARCH_API_AVAILABLE,
     staleTime: 15_000,
   });
   const [formOpen, setFormOpen] = useState(false);
@@ -238,6 +242,31 @@ function ApiDashboardPage() {
     if (!result.ok) toast.error(result.error);
     else toast.info(result.message);
   };
+
+  if (!RESEARCH_API_AVAILABLE) {
+    return (
+      <AppShell>
+        <section className="mx-auto mt-8 max-w-xl rounded-3xl border border-border bg-card/70 p-7 text-center sm:p-10">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-accent/35 bg-accent/10 text-accent">
+            <FileCode2 className="h-5 w-5" />
+          </span>
+          <p className="mt-6 text-[10px] uppercase tracking-[0.25em] text-accent">
+            Under development
+          </p>
+          <h1 className="mt-3 font-serif text-3xl text-foreground">API Dashboard</h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">
+            {RESEARCH_API_PAUSE_MESSAGE}
+          </p>
+          <Link
+            to="/"
+            className="mt-7 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs text-foreground transition-colors hover:border-accent/50"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to the room
+          </Link>
+        </section>
+      </AppShell>
+    );
+  }
 
   return (
     <OnboardingGate>

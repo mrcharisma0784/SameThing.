@@ -335,7 +335,7 @@ const DOC_GROUPS: DocGroup[] = [
       {
         id: "credits",
         title: "Same Credits",
-        eyebrow: "Your account / 03",
+        eyebrow: "Your account / 04",
         icon: Heart,
         intro:
           "Same Credits are the product’s internal reward balance. They are not cash, do not represent a withdrawal right and currently unlock only selected feature paths.",
@@ -362,7 +362,7 @@ const DOC_GROUPS: DocGroup[] = [
       {
         id: "notifications",
         title: "Notifications & inbox",
-        eyebrow: "Your account / 04",
+        eyebrow: "Your account / 05",
         icon: CircleHelp,
         intro:
           "Inbox signals are meant to help you return to a conversation, not to create constant pressure.",
@@ -372,7 +372,7 @@ const DOC_GROUPS: DocGroup[] = [
             bullets: [
               "Notification preferences can be adjusted by category.",
               "Follow and watcher updates can be turned off without removing the underlying relationship.",
-              "Older notifications are automatically removed according to the retention setting in Notification preferences.",
+              "The selected 24-hour, 7-day, 15-day or 30-day window controls Inbox visibility. Expired notification records are removed in the next daily cleanup, which can take up to about one extra day.",
               "Unread indicators disappear when the relevant surface has been read or claimed.",
             ],
           },
@@ -402,7 +402,7 @@ const DOC_GROUPS: DocGroup[] = [
           {
             heading: "Comment controls",
             bullets: [
-              "Comment visibility follows the owner’s open/closed setting.",
+              "Open comments on public Things are readable by guests and signed-in visitors. When an owner closes comments, the whole section—including older comments—is hidden from everyone until reopened.",
               "Your own comments can be edited or deleted from the edit control.",
               "Edited comments show a compact Edited marker next to the time.",
               "Report and moderation paths remain available when a comment breaks the room’s rules.",
@@ -542,7 +542,7 @@ const DOC_GROUPS: DocGroup[] = [
           {
             heading: "Requests",
             paragraphs: [
-              "Data requests may require several business days. Safety, fraud-prevention, legal-claim and backup records may be retained where required or permitted by applicable law. The Privacy Policy is the authoritative product notice for the current release.",
+              "Account and data requests are reviewed manually. You can follow a request's status in Account & privacy. Some records may be retained where required or permitted by applicable law; see the Privacy Policy.",
             ],
           },
         ],
@@ -553,80 +553,31 @@ const DOC_GROUPS: DocGroup[] = [
         eyebrow: "Trust & safety / 03",
         icon: ShieldCheck,
         intro:
-          "Reporting routes a concern to the Admin moderation queue. Blocking changes your own view and interaction surface; it is not a public verdict.",
+          "Reporting sends a concern to the moderation team. Blocking changes your own view and interaction surface; it is not a public verdict.",
         sections: [
           {
             heading: "What happens after a report",
             paragraphs: [
-              "A report can identify a Thing, Quote, comment or user and include a reason. Authorised admins can review the reported target, send a system message, warn, hide or delete content, and apply account restrictions where appropriate.",
-              "Moderation actions are recorded as operational events. A user may see a system message when an action affects their content or account.",
+              "A report can identify a Thing, Quote, comment or user and include a reason. The moderation team reviews the concern and may remove content or restrict an account when appropriate.",
+              "If an action affects your content or account, we may notify you in your inbox.",
             ],
           },
         ],
       },
       {
         id: "maintenance",
-        title: "Maintain & availability",
+        title: "Maintenance",
         eyebrow: "Trust & safety / 04",
         icon: Orbit,
         intro:
-          "Maintain is an operational control for careful releases, incidents and focused work. It does not delete content or change account ownership.",
+          "A maintenance pause can make the full service or a feature temporarily unavailable. It does not delete content or change account ownership.",
         sections: [
           {
             heading: "Two levels",
             bullets: [
-              "Global Maintain can replace all user-facing pages while Admin remains available.",
-              "Page-level Maintain can pause selected Settings pages while the rest of the site stays live.",
-              "Multiple page targets can be paused at once.",
-              "Support/Feedback, Account & privacy, Subscription & payment and Appearance remain open in the current first target set.",
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "admin",
-    label: "Admin & operations",
-    pages: [
-      {
-        id: "admin-overview",
-        title: "Admin overview",
-        eyebrow: "Admin & operations / 01",
-        icon: ShieldCheck,
-        intro:
-          "The Admin panel is a restricted operational surface. It is separate from the public product navigation and remains exempt from Maintain.",
-        sections: [
-          {
-            heading: "Operational areas",
-            bullets: [
-              "Overview and account-level health signals.",
-              "Users, Things, reports, support, feedback queues and in-app Ads prompts.",
-              "System messages, banned words and moderation actions.",
-              "Maintain controls for global and page-level pauses.",
-            ],
-          },
-          {
-            heading: "Founder-only access",
-            paragraphs: [
-              "The Admin control room is a separate restricted operational area. Every session requires authorised credentials and server-side verification; a normal signed-in user session does not unlock Admin.",
-              "Administrative actions are audit-logged with an actor label, timestamp and limited target reference; credentials and secrets are excluded from those records.",
-            ],
-          },
-        ],
-      },
-      {
-        id: "admin-reports",
-        title: "Reports & support",
-        eyebrow: "Admin & operations / 02",
-        icon: CircleHelp,
-        intro:
-          "Reports and Support requests are reviewed in the Admin panel rather than handled by an opaque public action.",
-        sections: [
-          {
-            heading: "Review discipline",
-            paragraphs: [
-              "A reviewer should inspect the full target, author context and report reason before acting. Hide, delete, warn, system message and ban have different consequences and should not be treated as interchangeable buttons.",
+              "A maintenance notice may temporarily replace the full service or an affected page.",
+              "Some parts of the service may remain available while another feature is paused.",
+              "Existing content and account ownership are not changed by a maintenance pause.",
             ],
           },
         ],
@@ -639,55 +590,15 @@ const DOC_GROUPS: DocGroup[] = [
     pages: [
       {
         id: "api-status",
-        title: "Research API status",
+        title: "Research API",
         eyebrow: "API & research / 01",
         icon: FileCode2,
-        intro:
-          "The Research API accepts carefully scoped access requests and serves an approved, read-only public data service.",
+        intro: "The Research API is under development and temporarily unavailable.",
         sections: [
           {
-            heading: "Current status",
+            heading: "Under development",
             paragraphs: [
-              "Open Research API and choose Sign in to open Dashboard. After sign-in or registration, SameThing. routes directly to API Dashboard, where a workspace application records the research question, requested public scope and expected volume. After approval, a scoped bearer key is generated automatically for that workspace and appears only to its owner; Admin can review safe metadata or revoke access but cannot manually create or reveal the key.",
-            ],
-          },
-          {
-            heading: "How access works",
-            bullets: [
-              "Access requires an explicit key, scope, expiry/revoke state and fixed per-key rate limits.",
-              "Available resources are public Things, public Quotes, metadata and anonymous aggregate metrics.",
-              "The API is read-only and never exposes profiles, emails, auth IDs, comments, moderation, credits, payment or admin data.",
-              "User-generated content is not research data by default; only public, moderation-safe projections are eligible.",
-            ],
-          },
-          {
-            heading: "Key lifecycle and responsible use",
-            paragraphs: [
-              "A signed-in workspace submits a research purpose, organisation context, requested scopes and expected volume. An authorised review can approve, narrow, waitlist or decline the request. Approval triggers key generation; the owner can copy the key from API Dashboard while Admin sees only safe metadata. Pending and reviewing applications remain visible. Approved, waitlisted and declined results are displayed once in the Application area and then hidden after an atomic notice acknowledgement. Re-application is blocked while an application is pending, reviewing or approved and opens after the current 72-hour decline/waitlist cooldown.",
-              "Each successful API request consumes one API Credit and remains subject to the approved rate plan. The workspace shows balance, scopes, limits, key state and recent usage. API Credits are separate from Same Credits; approved workspaces start with a one-time 500-credit welcome allowance, while future purchases require a connected payment provider. Requests are authenticated, rate-limited and logged without returning private account data. Keys can be revoked at any time for misuse, unexpected volume or safety concerns. The service is not a replacement for a direct database export and does not grant write access.",
-            ],
-          },
-        ],
-      },
-      {
-        id: "data-model",
-        title: "Data model in plain language",
-        eyebrow: "API & research / 02",
-        icon: FileCode2,
-        intro:
-          "SameThing. separates identity, content, interactions, rewards and operational records so each surface can apply the right access boundary.",
-        sections: [
-          {
-            heading: "Core records",
-            bullets: [
-              "Profiles describe account-level presentation and plan state.",
-              "Things and Quotes hold user-generated content and ownership.",
-              "Comments, likes, votes and follows hold interaction edges.",
-              "Same Credit ledger entries explain balance changes.",
-              "API Credit ledger entries explain workspace request consumption and approved welcome allowance.",
-              "API purchase intents record checkout preparation without granting balance before payment confirmation.",
-              "Achievement claims and events explain task rewards.",
-              "Reports, support requests and admin events hold operational workflows.",
+              "The Research API page, workspace, related information and endpoints are temporarily unavailable while development continues.",
             ],
           },
         ],
