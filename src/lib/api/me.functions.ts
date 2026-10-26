@@ -8,6 +8,10 @@ import { getVisibilityContext, isVisibleTarget } from "@/lib/content-visibility.
 
 const PROFILE_COLS =
   "id, username, emoji, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited, deletion_scheduled_for, deletion_cancelled_until";
+const PROFILE_COLS_LEGACY = PROFILE_COLS.replace(
+  ", deletion_scheduled_for, deletion_cancelled_until",
+  "",
+);
 
 type HiddenContentItem = {
   report_id: string;
@@ -41,7 +45,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = (await supabaseAdmin
+    const firstRead = (await supabaseAdmin
       .from("profiles")
       .select(PROFILE_COLS)
       .eq("id", context.userId)
@@ -49,9 +53,23 @@ export const getMyProfile = createServerFn({ method: "GET" })
       data: Record<string, unknown> | null;
       error: { message: string } | null;
     };
+    let data = firstRead.data;
+    const error = firstRead.error;
     if (error) {
-      console.error("getMyProfile", error);
-      return { profile: null };
+      // Keep existing accounts usable while a production migration is being applied.
+      const legacy = (await supabaseAdmin
+        .from("profiles")
+        .select(PROFILE_COLS_LEGACY)
+        .eq("id", context.userId)
+        .maybeSingle()) as unknown as {
+        data: Record<string, unknown> | null;
+        error: { message: string } | null;
+      };
+      if (legacy.error) {
+        console.error("getMyProfile", error);
+        return { profile: null };
+      }
+      data = legacy.data;
     }
     if (!data) return { profile: null };
     const profile = { ...data, plan: effectivePlan(data) };
