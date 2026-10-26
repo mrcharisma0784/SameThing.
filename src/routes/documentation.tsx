@@ -607,7 +607,7 @@ function DocumentationPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(DOC_GROUPS.map((group) => [group.id, false])),
+    Object.fromEntries(DOC_GROUPS.map((group) => [group.id, group.id === "start"])),
   );
   const touchStartX = useRef<number | null>(null);
   const previewCloseTimer = useRef<number | null>(null);
@@ -631,7 +631,7 @@ function DocumentationPage() {
 
   useEffect(() => {
     const mobile = window.matchMedia("(max-width: 1023px)");
-    const seenKey = "samething:documentation-sidebar-preview";
+    const seenKey = "samething:documentation-sidebar-preview:v2";
     if (!mobile.matches) return;
     try {
       if (window.localStorage.getItem(seenKey)) return;
@@ -639,8 +639,8 @@ function DocumentationPage() {
     } catch {
       return;
     }
-    const openTimer = window.setTimeout(() => setSidebarOpen(true), 550);
-    previewCloseTimer.current = window.setTimeout(() => setSidebarOpen(false), 1550);
+    const openTimer = window.setTimeout(() => setSidebarOpen(true), 600);
+    previewCloseTimer.current = window.setTimeout(() => setSidebarOpen(false), 2200);
     return () => {
       window.clearTimeout(openTimer);
       if (previewCloseTimer.current !== null) {
@@ -685,13 +685,17 @@ function DocumentationPage() {
       onTouchStart={(event) => {
         const start = event.touches[0]?.clientX ?? 999;
         const edgeSwipe = !sidebarOpen && start <= 28;
+        const sidebarSwipe =
+          sidebarOpen && event.target instanceof Element && Boolean(event.target.closest("aside"));
         if (edgeSwipe) keepSidebarOpenOnInteraction();
-        touchStartX.current = edgeSwipe ? start : null;
+        if (sidebarSwipe) keepSidebarOpenOnInteraction();
+        touchStartX.current = edgeSwipe || sidebarSwipe ? start : null;
       }}
       onTouchEnd={(event) => {
         if (touchStartX.current === null) return;
         const end = event.changedTouches[0]?.clientX ?? touchStartX.current;
-        if (end - touchStartX.current > 64) setSidebarOpen(true);
+        if (!sidebarOpen && end - touchStartX.current > 64) setSidebarOpen(true);
+        if (sidebarOpen && touchStartX.current - end > 64) setSidebarOpen(false);
         touchStartX.current = null;
       }}
     >
@@ -736,7 +740,7 @@ function DocumentationPage() {
           onPointerDown={keepSidebarOpenOnInteraction}
           onKeyDown={keepSidebarOpenOnInteraction}
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[min(18rem,88vw)] overflow-y-auto border-r border-border/70 bg-card/95 pt-[4.1rem] shadow-2xl transition-transform duration-200 lg:sticky lg:top-[4.1rem] lg:block lg:h-[calc(100dvh-4.1rem)] lg:w-auto lg:translate-x-0 lg:overflow-y-auto lg:bg-card/20 lg:pt-0 lg:shadow-none",
+            "fixed inset-y-0 left-0 z-50 w-[min(18rem,88vw)] overflow-y-auto border-r border-border/70 bg-card/95 pt-[4.1rem] shadow-2xl transition-transform duration-[350ms] ease-in-out motion-reduce:transition-none lg:sticky lg:top-[4.1rem] lg:block lg:h-[calc(100dvh-4.1rem)] lg:w-auto lg:translate-x-0 lg:overflow-y-auto lg:bg-card/20 lg:pt-0 lg:shadow-none",
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           )}
         >

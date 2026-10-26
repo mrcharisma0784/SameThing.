@@ -35,3 +35,15 @@
 ## Documentation navigation and first-entry motion — Complete in source; build validated
 - Remove the top-right menu button while preserving the existing right-swipe gesture that opens the side menu. Place the “Back to the room” button at the far right.
 - On a visitor’s first Documentation visit, animate the side menu open and then closed, like the Inbox tutorial. Keep navigation groups collapsed by default so the sidebar starts in compact mode.
+
+## Settings disabled-row descriptions — Complete in source; build validated
+- Show Streak’s earlier hint, “Start when you are ready, then return daily,” and Test Users’ earlier hint, “Early access trials and feedback,” replacing the longer “Currently unavailable; …” messages while keeping both rows disabled.
+
+## Credit activity history — Complete in source; build validated
+- Remove the “Latest checkout intent …” status line from the credit-buy page and remove the “Shaping next” area.
+- Initially show the latest 10 activity entries. “Show more” reveals the remaining entries; “Show less” returns the list to the latest 10.
+
+## Documentation sidebar refinements — Complete in source; build validated
+- When the side menu opens, expand “Start here” by default and keep the other groups compact unless opened or matched by a search.
+- On the first Documentation visit, make the open-close sidebar animation slightly longer and softer than the current version.
+- Allow a leftward swipe from within the open sidebar to close it, while preserving the existing rightward swipe to open it.

@@ -256,7 +256,7 @@ function SettingsPage() {
               hint={
                 isMaintenancePaused("/streak")
                   ? "Temporarily unavailable"
-                  : "Currently unavailable; Streak data is preserved"
+                  : "Start when you are ready, then return daily"
               }
               disabled={true}
               onClick={() => {}}
@@ -376,7 +376,7 @@ function SettingsPage() {
             <Row
               icon={<FlaskConical className="h-4 w-4" />}
               label="Test Users"
-              hint="Currently unavailable; existing records are preserved"
+              hint="Early access trials and feedback"
               disabled={true}
               onClick={() => {}}
             />

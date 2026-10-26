@@ -12,7 +12,6 @@ import {
   CreditCard,
   Gift,
   History,
-  Info,
   ShieldCheck,
   Sparkles,
   Wallet,
@@ -23,11 +22,7 @@ import { OnboardingGate } from "@/components/OnboardingGate";
 import { useAuth } from "@/hooks/use-auth";
 import { getSiteUrl } from "@/lib/site-url";
 import { isLabThingActive } from "@/lib/test-user";
-import {
-  createSameCreditPurchaseIntent,
-  getCreditLedger,
-  listSameCreditPurchaseIntents,
-} from "@/lib/api/credits.functions";
+import { createSameCreditPurchaseIntent, getCreditLedger } from "@/lib/api/credits.functions";
 import {
   formatUsdCents,
   PREMIUM_MONTHLY_SAME_CREDITS,
@@ -77,8 +72,8 @@ function CreditsPage() {
   const { profile } = useAuth();
   const getLedger = useServerFn(getCreditLedger);
   const createPurchase = useServerFn(createSameCreditPurchaseIntent);
-  const listPurchases = useServerFn(listSameCreditPurchaseIntents);
   const [purchaseBusy, setPurchaseBusy] = useState<string | null>(null);
+  const [showAllEntries, setShowAllEntries] = useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["credits", "ledger"],
     queryFn: () => getLedger(),
@@ -86,12 +81,6 @@ function CreditsPage() {
     staleTime: 20_000,
   });
 
-  const purchasesQuery = useQuery({
-    queryKey: ["credits", "purchases"],
-    queryFn: () => listPurchases(),
-    enabled: Boolean(profile),
-    staleTime: 30_000,
-  });
   const entries = useMemo(() => (data?.entries ?? []) as LedgerEntry[], [data?.entries]);
   const unlimitedCredits = Boolean(isLabThingActive(profile));
   const requestPurchase = async (packKey: "small" | "medium" | "large") => {
@@ -103,7 +92,6 @@ function CreditsPage() {
       return;
     }
     toast.info(result.message);
-    await purchasesQuery.refetch();
   };
   const totals = useMemo(() => {
     return entries.reduce(
@@ -213,28 +201,6 @@ function CreditsPage() {
               ))}
             </div>
           )}
-          {!unlimitedCredits && (
-            <>
-              {(
-                (purchasesQuery.data?.items ?? []) as Array<{
-                  id: string;
-                  pack_key: string;
-                  status: string;
-                  created_at: string;
-                }>
-              )
-                .slice(0, 1)
-                .map((purchase) => (
-                  <p
-                    key={purchase.id}
-                    className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground"
-                  >
-                    Latest checkout intent · {purchase.pack_key} · {purchase.status} ·{" "}
-                    {formatDate(purchase.created_at)}
-                  </p>
-                ))}
-            </>
-          )}
           {data?.premium && !unlimitedCredits && (
             <p className="mt-3 rounded-xl border border-accent/20 bg-accent/5 px-3 py-2 text-xs leading-5 text-foreground">
               PremiumThing. includes {PREMIUM_MONTHLY_SAME_CREDITS} Same Credits once per active
@@ -273,30 +239,15 @@ function CreditsPage() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-dashed border-border bg-background/30 p-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            <Info className="h-3.5 w-3.5" /> shaping next
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-foreground">
-            Credi is designed to stay useful without turning SameThing. into a shop.
-          </p>
-          <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-            <Idea label="Replay a past capsule preview" />
-            <Idea label="A one-time profile aura" />
-            <Idea label="Deeper reflection tools, later" />
-          </div>
-          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-            Future ideas only · no extra feature is charged or activated here
-          </p>
-        </section>
-
         <section className="mt-5 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               <History className="h-3.5 w-3.5" /> activity
             </div>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              latest 100
+              {isLoading
+                ? "latest 10"
+                : `latest ${showAllEntries ? entries.length : Math.min(entries.length, 10)}`}
             </span>
           </div>
           {isError ? (
@@ -323,7 +274,7 @@ function CreditsPage() {
                       <div className="h-3 w-12 rounded-full bg-secondary" />
                     </div>
                   ))
-                : entries.map((entry) => (
+                : (showAllEntries ? entries : entries.slice(0, 10)).map((entry) => (
                     <div key={entry.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm text-foreground">
@@ -343,6 +294,15 @@ function CreditsPage() {
                   ))}
             </div>
           )}
+          {!isLoading && !isError && entries.length > 10 ? (
+            <button
+              type="button"
+              onClick={() => setShowAllEntries((showing) => !showing)}
+              className="mt-3 text-[10px] uppercase tracking-widest text-accent hover:text-foreground"
+            >
+              {showAllEntries ? "Show less" : "Show more"}
+            </button>
+          ) : null}
         </section>
       </AppShell>
     </OnboardingGate>
@@ -432,15 +392,6 @@ function PurchasePackCard({
       >
         {busy ? "Preparing…" : "Continue to checkout"}
       </button>
-    </div>
-  );
-}
-
-function Idea({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/50 px-3 py-2">
-      <span className="h-1 w-1 rounded-full bg-accent" />
-      <span>{label}</span>
     </div>
   );
 }
