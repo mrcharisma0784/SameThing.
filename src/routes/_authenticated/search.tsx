@@ -10,6 +10,7 @@ import { ThingCard, type ThingCardData } from "@/components/ThingCard";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { useAuth } from "@/hooks/use-auth";
 import { profileDisplayTags } from "@/lib/test-user";
+import { displayBio } from "@/lib/profile-display";
 
 export const Route = createFileRoute("/_authenticated/search")({
   head: () => ({ meta: [{ title: "Search · SameThing." }] }),
@@ -204,7 +205,7 @@ function SearchPage() {
                         </span>
                       ))}
                     </div>
-                    {u.bio && <p className="truncate text-xs text-muted-foreground">{u.bio}</p>}
+                    <p className="truncate text-xs text-muted-foreground">{displayBio(u.bio)}</p>
                   </div>
                 </Link>
               );

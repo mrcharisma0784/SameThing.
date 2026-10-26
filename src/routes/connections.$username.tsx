@@ -7,6 +7,7 @@ import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { getProfileConnections } from "@/lib/api/social.functions";
 import { effectivePlan } from "@/lib/premium";
 import { z } from "zod";
+import { displayBio } from "@/lib/profile-display";
 
 export const Route = createFileRoute("/connections/$username")({
   validateSearch: z.object({
@@ -109,11 +110,9 @@ function ConnectionsPage() {
                 <span className="flex items-center gap-2">
                   <span className="truncate text-sm text-foreground">@{person.username}</span>
                 </span>
-                {person.bio && (
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                    {person.bio}
-                  </span>
-                )}
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                  {displayBio(person.bio)}
+                </span>
               </span>
               <span className="text-muted-foreground">›</span>
             </Link>

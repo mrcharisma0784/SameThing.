@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { profileDisplayTags } from "@/lib/test-user";
+import { displayBio } from "@/lib/profile-display";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -193,9 +194,7 @@ function PublicProfilePage() {
                     );
                   })}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {profile.bio?.trim() || "A little mystery leaves room for connection."}
-                </p>
+                <p className="mt-1 text-sm text-muted-foreground">{displayBio(profile.bio)}</p>
               </div>
               {!isSelf && (
                 <DropdownMenu>

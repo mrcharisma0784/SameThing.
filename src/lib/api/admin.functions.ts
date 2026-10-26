@@ -1337,7 +1337,62 @@ export const adminListApiKeys = createServerFn({ method: "GET" }).handler(async 
     )
     .order("created_at", { ascending: false })
     .limit(200);
-  return { items: data ?? [], error: error?.message ?? null };
+  if (error) return { items: [], error: error.message };
+  const keys = (data ?? []) as Array<{ id: string }>;
+  const usageByKey = new Map<
+    string,
+    {
+      request_count: number;
+      success_count: number;
+      error_count: number;
+      rows_returned: number;
+      last_request_at: string | null;
+    }
+  >();
+  if (keys.length) {
+    const { data: logs } = await (supabaseAdmin as any)
+      .from("api_request_logs")
+      .select("api_key_id, status_code, rows_returned, created_at")
+      .in(
+        "api_key_id",
+        keys.map((key) => key.id),
+      )
+      .order("created_at", { ascending: false })
+      .limit(10_000);
+    for (const log of (logs ?? []) as Array<{
+      api_key_id: string;
+      status_code: number;
+      rows_returned: number | null;
+      created_at: string;
+    }>) {
+      const current = usageByKey.get(log.api_key_id) ?? {
+        request_count: 0,
+        success_count: 0,
+        error_count: 0,
+        rows_returned: 0,
+        last_request_at: null,
+      };
+      current.request_count += 1;
+      if (log.status_code >= 200 && log.status_code < 400) current.success_count += 1;
+      else current.error_count += 1;
+      current.rows_returned += Math.max(0, Number(log.rows_returned ?? 0));
+      if (!current.last_request_at) current.last_request_at = log.created_at;
+      usageByKey.set(log.api_key_id, current);
+    }
+  }
+  return {
+    items: (data ?? []).map((key: { id: string }) => ({
+      ...key,
+      usage: usageByKey.get(key.id) ?? {
+        request_count: 0,
+        success_count: 0,
+        error_count: 0,
+        rows_returned: 0,
+        last_request_at: null,
+      },
+    })),
+    error: null,
+  };
 });
 
 export const adminRevokeApiKey = createServerFn({ method: "POST" })

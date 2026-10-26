@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { displayBio } from "@/lib/profile-display";
 import { AVATARS } from "@/lib/avatars";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
 import {
@@ -231,7 +232,9 @@ function AdminPage() {
                     ? "Admin Logs"
                     : t === "access"
                       ? "Admin Access"
-                      : t}
+                      : t === "banned"
+                        ? "Filter"
+                        : t}
             </button>
           ))}
         </nav>
@@ -825,7 +828,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="col-span-2 rounded-xl border border-border/70 bg-background/60 px-3 py-2">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Bio</p>
               <p className="mt-1 break-words text-sm leading-5 text-foreground">
-                {(p?.bio as string) ?? "—"}
+                {displayBio(p?.bio as string | null | undefined)}
               </p>
             </div>
             {isBanned && (
@@ -863,10 +866,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <div className="flex flex-wrap gap-2">
               {d.tags.length ? (
                 d.tags.slice(0, 20).map((t) => (
-                  <span
-                    key={t.tag}
-                    className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
-                  >
+                  <span key={t.tag} className="text-xs text-foreground">
                     {t.tag} · {t.count}
                   </span>
                 ))
@@ -2112,8 +2112,6 @@ function AdsPanel() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [buttonLabel, setButtonLabel] = useState("Send feedback");
-  const [active, setActive] = useState(true);
-  const [duration, setDuration] = useState<"1h" | "7d" | "14d" | "custom" | "forever">("forever");
   const [customDurationValue, setCustomDurationValue] = useState(1);
   const [customDurationUnit, setCustomDurationUnit] = useState<
     "minutes" | "hours" | "days" | "weeks" | "months"
@@ -2148,8 +2146,6 @@ function AdsPanel() {
     setTitle("");
     setBody("");
     setButtonLabel("Send feedback");
-    setActive(true);
-    setDuration("forever");
     setCustomDurationValue(1);
     setCustomDurationUnit("hours");
   };
@@ -2159,19 +2155,8 @@ function AdsPanel() {
     setTitle(item.title);
     setBody(item.body);
     setButtonLabel(item.button_label);
-    setActive(item.active);
     const remaining = item.expires_at ? new Date(item.expires_at).getTime() - Date.now() : 0;
-    setDuration(
-      !item.expires_at
-        ? "forever"
-        : remaining <= 2 * 60 * 60 * 1000
-          ? "1h"
-          : remaining <= 8 * 24 * 60 * 60 * 1000
-            ? "7d"
-            : "14d",
-    );
-    if (item.expires_at && remaining > 8 * 24 * 60 * 60 * 1000) {
-      setDuration("custom");
+    if (item.expires_at && remaining > 0) {
       const days = Math.max(1, Math.ceil(remaining / (24 * 60 * 60 * 1000)));
       if (days % 30 === 0) {
         setCustomDurationValue(days / 30);
@@ -2199,7 +2184,7 @@ function AdsPanel() {
     setResponses(result.items as typeof responses);
   };
 
-  const submit = async () => {
+  const submit = async (nextActive: boolean) => {
     setBusy(true);
     const result = await save({
       data: {
@@ -2207,10 +2192,10 @@ function AdsPanel() {
         title,
         body,
         button_label: buttonLabel,
-        active,
-        duration,
-        custom_duration_value: duration === "custom" ? customDurationValue : undefined,
-        custom_duration_unit: duration === "custom" ? customDurationUnit : undefined,
+        active: nextActive,
+        duration: "custom",
+        custom_duration_value: customDurationValue,
+        custom_duration_unit: customDurationUnit,
       },
     });
     setBusy(false);
@@ -2218,7 +2203,7 @@ function AdsPanel() {
       toast.error(result.error);
       return;
     }
-    toast.success(active ? "Feedback prompt is live." : "Feedback prompt saved as draft.");
+    toast.success(nextActive ? "Feedback prompt is live." : "Feedback prompt saved as draft.");
     clearForm();
     load();
   };
@@ -2245,94 +2230,65 @@ function AdsPanel() {
             rows={4}
             className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
           />
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="grid gap-3">
             <input
               value={buttonLabel}
               onChange={(event) => setButtonLabel(event.target.value.slice(0, 40))}
               placeholder="Button label"
               className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
             />
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={active}
-                onChange={(event) => setActive(event.target.checked)}
-              />
-              Publish now
-            </label>
           </div>
-          <label className="grid gap-1 text-xs uppercase tracking-widest text-muted-foreground">
-            Show for
-            <select
-              value={duration}
-              onChange={(event) =>
-                setDuration(event.target.value as "1h" | "7d" | "14d" | "custom" | "forever")
-              }
-              className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground"
-            >
-              <option value="1h">1 hour</option>
-              <option value="7d">7 days</option>
-              <option value="14d">2 weeks</option>
-              <option value="custom">Custom duration</option>
-              <option value="forever">Until stopped</option>
-            </select>
-          </label>
-          {duration === "custom" && (
-            <div className="rounded-2xl border border-accent/25 bg-accent/5 p-3">
-              <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-accent">
-                Site duration picker
-              </p>
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={525600}
-                  value={customDurationValue}
-                  onChange={(event) =>
-                    setCustomDurationValue(
-                      Math.max(1, Number.parseInt(event.target.value, 10) || 1),
-                    )
-                  }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
-                  aria-label="Custom duration amount"
-                />
-                <select
-                  value={customDurationUnit}
-                  onChange={(event) =>
-                    setCustomDurationUnit(
-                      event.target.value as "minutes" | "hours" | "days" | "weeks" | "months",
-                    )
-                  }
-                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
-                  aria-label="Custom duration unit"
-                >
-                  <option value="minutes">minutes</option>
-                  <option value="hours">hours</option>
-                  <option value="days">days</option>
-                  <option value="weeks">weeks</option>
-                  <option value="months">months</option>
-                </select>
-              </div>
-              <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-                The prompt stops automatically after this duration. Use Until stopped when there is
-                no expiry.
-              </p>
+          <div className="rounded-2xl border border-accent/25 bg-accent/5 p-3">
+            <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-accent">Show for</p>
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2">
+              <input
+                type="number"
+                min={1}
+                max={525600}
+                value={customDurationValue}
+                onChange={(event) =>
+                  setCustomDurationValue(Math.max(1, Number.parseInt(event.target.value, 10) || 1))
+                }
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+                aria-label="Custom duration amount"
+              />
+              <select
+                value={customDurationUnit}
+                onChange={(event) =>
+                  setCustomDurationUnit(
+                    event.target.value as "minutes" | "hours" | "days" | "weeks" | "months",
+                  )
+                }
+                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+                aria-label="Custom duration unit"
+              >
+                <option value="minutes">minutes</option>
+                <option value="hours">hours</option>
+                <option value="days">days</option>
+                <option value="weeks">weeks</option>
+                <option value="months">months</option>
+              </select>
             </div>
-          )}
+            <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+              The prompt stops automatically after this custom duration.
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
               disabled={busy || title.trim().length < 3 || body.trim().length < 3}
-              onClick={() => void submit()}
+              onClick={() => void submit(true)}
               className="rounded-full bg-accent px-4 py-2 text-xs font-medium text-accent-foreground disabled:opacity-50"
             >
-              {busy
-                ? "Saving…"
-                : editingId
-                  ? "Update prompt"
-                  : active
-                    ? "Publish prompt"
-                    : "Save draft"}
+              {busy ? "Saving…" : editingId ? "Update & publish" : "Publish prompt"}
+            </button>
+            <button
+              type="button"
+              disabled={busy || title.trim().length < 3 || body.trim().length < 3}
+              onClick={() => void submit(false)}
+              className="rounded-full border border-border px-4 py-2 text-xs text-muted-foreground hover:border-accent/50 hover:text-foreground disabled:opacity-50"
+            >
+              Save as draft
             </button>
             {editingId && (
               <button
@@ -2352,33 +2308,55 @@ function AdsPanel() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="rounded-2xl border border-border bg-background/40 p-3 transition-colors hover:border-accent/50"
+              className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/50"
             >
-              <div className="flex items-start gap-3">
-                <span
-                  className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${item.active ? "bg-accent" : "bg-muted-foreground/30"}`}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-serif text-base text-foreground">{item.title}</span>
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {item.response_count} responses
-                      {item.average_rating ? ` · ${item.average_rating.toFixed(1)}/5` : ""}
-                    </span>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`h-2 w-2 rounded-full ${item.active ? "bg-accent" : "bg-muted-foreground/40"}`}
+                    />
+                    <span className="font-serif text-lg text-foreground">{item.title}</span>
                   </div>
-                  <span className="mt-1 block truncate text-xs text-muted-foreground">
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground/90">
                     {item.body}
-                  </span>
-                  <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-widest ${item.active ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"}`}
+                >
+                  {item.active ? "Live" : "Draft / stopped"}
+                </span>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Responses
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">{item.response_count}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Average rating
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">
+                    {item.average_rating ? `${item.average_rating.toFixed(1)} / 5` : "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Visibility
+                  </p>
+                  <p className="mt-1 text-xs text-foreground">
                     {item.active
                       ? item.expires_at
-                        ? `Live until ${new Date(item.expires_at).toLocaleString()}`
-                        : "Live until stopped"
-                      : "Stopped"}
+                        ? `Until ${new Date(item.expires_at).toLocaleString()}`
+                        : "Until stopped"
+                      : "Not shown"}
                   </p>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
                 <button
                   type="button"
                   onClick={() => edit(item)}
@@ -2393,6 +2371,9 @@ function AdsPanel() {
                 >
                   View responses
                 </button>
+                <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                  Updated {new Date(item.updated_at).toLocaleDateString("en-US")}
+                </span>
               </div>
             </div>
           ))}
@@ -2469,6 +2450,13 @@ type ApiKeyItem = {
   last_used_at?: string | null;
   expires_at?: string | null;
   revoked_at?: string | null;
+  usage: {
+    request_count: number;
+    success_count: number;
+    error_count: number;
+    rows_returned: number;
+    last_request_at: string | null;
+  };
 };
 
 function ApiAccessPanel() {
@@ -2656,6 +2644,36 @@ function ApiAccessPanel() {
                 </span>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">{item.scopes.join(" · ")}</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="rounded-xl border border-border/70 bg-background/50 px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    Requests
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">{item.usage.request_count}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    Success
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">{item.usage.success_count}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    Errors
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">{item.usage.error_count}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 px-2.5 py-2">
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    Last request
+                  </p>
+                  <p className="mt-1 truncate text-xs text-foreground">
+                    {item.usage.last_request_at
+                      ? new Date(item.usage.last_request_at).toLocaleString("en-US")
+                      : "Never"}
+                  </p>
+                </div>
+              </div>
               <div className="mt-3 flex items-center justify-between gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
                 <span>
                   Created {new Date(item.created_at).toLocaleDateString("en-US")}
@@ -2783,65 +2801,76 @@ function BannedPanel() {
     reload(); /* eslint-disable-next-line */
   }, []);
   return (
-    <Card title="Forbidden words">
-      <p className="mb-3 text-xs text-muted-foreground">
-        "warn" sends a system message to the user but the post goes through. "block" additionally
-        prevents the post/comment from being saved.
-      </p>
-      <div className="mb-4 flex gap-2">
-        <input
-          value={word}
-          onChange={(e) => setWord(e.target.value)}
-          placeholder="word or phrase"
-          className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
-        />
-        <select
-          value={severity}
-          onChange={(e) => setSeverity(e.target.value as "warn" | "block")}
-          className="rounded-md border border-border bg-background px-2 py-2 text-sm"
-        >
-          <option value="warn">warn</option>
-          <option value="block">block</option>
-        </select>
-        <button
-          disabled={!word.trim()}
-          onClick={async () => {
-            const r = await add({ data: { word: word.trim(), severity } });
-            if (r.ok) {
-              setWord("");
-              reload();
-            } else toast.error(r.error ?? "Failed.");
-          }}
-          className="rounded-md bg-accent px-3 py-2 text-sm text-accent-foreground disabled:opacity-50"
-        >
-          Add
-        </button>
+    <Card title="Filter">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border/70 pb-4">
+        <div>
+          <h2 className="text-base font-medium text-foreground">Forbidden words</h2>
+          <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
+            Warn sends a system message and allows the content. Block prevents the post or comment
+            from being saved.
+          </p>
+        </div>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {items.length} rules
+        </span>
       </div>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((b) => (
-          <li
-            key={b.id}
-            className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background/40 p-3.5 text-sm"
+      <div className="mt-4 rounded-2xl border border-border/70 bg-background/40 p-3">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_130px_auto]">
+          <input
+            value={word}
+            onChange={(e) => setWord(e.target.value)}
+            placeholder="Add a word or phrase"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-accent/60"
+          />
+          <select
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value as "warn" | "block")}
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/60"
           >
-            <span className="min-w-0">
-              <span className="block truncate font-medium text-foreground">{b.word}</span>
-              <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-widest">
+            <option value="warn">Warn</option>
+            <option value="block">Block</option>
+          </select>
+          <button
+            disabled={!word.trim()}
+            onClick={async () => {
+              const r = await add({ data: { word: word.trim(), severity } });
+              if (r.ok) {
+                setWord("");
+                reload();
+              } else toast.error(r.error ?? "Failed.");
+            }}
+            className="rounded-xl bg-accent px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+          >
+            Add rule
+          </button>
+        </div>
+      </div>
+      <ul className="mt-4 divide-y divide-border/70 rounded-2xl border border-border/70 bg-background/30">
+        {items.map((b) => (
+          <li key={b.id} className="flex items-center justify-between gap-4 px-3 py-3 text-sm">
+            <span className="min-w-0 truncate font-medium text-foreground">{b.word}</span>
+            <span className="flex shrink-0 items-center gap-3">
+              <span
+                className={`text-[10px] uppercase tracking-widest ${b.severity === "block" ? "text-destructive" : "text-muted-foreground"}`}
+              >
                 {b.severity}
               </span>
+              <button
+                onClick={async () => {
+                  await del({ data: { id: b.id } });
+                  reload();
+                }}
+                className="text-xs text-muted-foreground hover:text-destructive"
+              >
+                Remove
+              </button>
             </span>
-            <button
-              onClick={async () => {
-                await del({ data: { id: b.id } });
-                reload();
-              }}
-              className="text-xs text-destructive hover:underline"
-            >
-              Remove
-            </button>
           </li>
         ))}
         {!items.length && (
-          <li className="py-6 text-center text-muted-foreground">Nothing banned yet.</li>
+          <li className="px-3 py-8 text-center text-sm text-muted-foreground">
+            No filter rules yet.
+          </li>
         )}
       </ul>
     </Card>

@@ -19,6 +19,7 @@ import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { effectivePlan } from "@/lib/premium";
 import { getMyConnectionCounts } from "@/lib/api/social.functions";
 import { profileDisplayTags } from "@/lib/test-user";
+import { displayBio } from "@/lib/profile-display";
 
 export const Route = createFileRoute("/_authenticated/me")({
   head: () => ({
@@ -111,8 +112,8 @@ function MePage() {
                     );
                   })}
                 </div>
-                {profile?.bio && !editing && (
-                  <p className="mt-1 text-xs text-foreground">{profile.bio}</p>
+                {!editing && (
+                  <p className="mt-1 text-xs text-foreground">{displayBio(profile?.bio)}</p>
                 )}
               </div>
               <button
