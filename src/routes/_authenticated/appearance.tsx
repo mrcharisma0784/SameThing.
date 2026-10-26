@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { updateMyProfile } from "@/lib/api/me.functions";
+import { addCustomTag, updateMyProfile } from "@/lib/api/me.functions";
 import { DEFAULT_THEME, THEMES } from "@/lib/themes";
 import { TAGS } from "@/lib/thing-helpers";
 import { effectivePlan } from "@/lib/premium";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/appearance")({
 function AppearancePage() {
   const { profile, refreshProfile } = useAuth();
   const updateFn = useServerFn(updateMyProfile);
+  const addTagFn = useServerFn(addCustomTag);
   const isPremium = effectivePlan(profile) === "premium";
   const theme = profile?.theme ?? DEFAULT_THEME;
   const allTags = useMemo(() => [...TAGS, ...(profile?.custom_tags ?? [])], [profile?.custom_tags]);
@@ -45,16 +46,67 @@ function AppearancePage() {
   const tagEditCost = tagsDirty && !isPremium ? 5 : 0;
 
   const saveTags = async (next: string[]) => {
+    const previousTags = draftTags;
     setDraftTags(next);
     setSavingTags(true);
     try {
       const result = await updateFn({ data: { feed_tags: next } });
       if (result.error) {
+        setDraftTags(previousTags);
         toast.error(result.error);
         return;
       }
       if (result.cost) toast.success(`Feed filter pills updated · −${result.cost} Credits.`);
       await refreshProfile();
+    } catch {
+      setDraftTags(previousTags);
+      toast.error("Couldn't save feed filter pills. Please try again.");
+    } finally {
+      setSavingTags(false);
+    }
+  };
+
+  const addMatchingTag = async () => {
+    if (draftTags.length >= 20) {
+      toast.error("You can add up to 20 feed filter tags.");
+      return;
+    }
+    const typedTag = tagSearch.trim().toLowerCase();
+    if (!typedTag) {
+      const tag = matchingTags[0];
+      if (tag) {
+        setTagSearch("");
+        void saveTags([...draftTags, tag]);
+        return;
+      }
+      toast.error("Type a tag to add it.");
+      return;
+    }
+    if (typedTag.length > 24 || !/^[a-z0-9 _-]+$/.test(typedTag)) {
+      toast.error("Use up to 24 letters, numbers, spaces, dashes, or underscores.");
+      return;
+    }
+    const existingTag = allTags.find((tag) => tag.toLowerCase() === typedTag);
+    if (draftTags.some((tag) => tag.toLowerCase() === typedTag)) {
+      toast.error("That feed filter is already added.");
+      return;
+    }
+    if (existingTag) {
+      setTagSearch("");
+      await saveTags([...draftTags, existingTag]);
+      return;
+    }
+    setSavingTags(true);
+    try {
+      const result = await addTagFn({ data: { tag: typedTag } });
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setTagSearch("");
+      await saveTags([...draftTags, typedTag]);
+    } catch {
+      toast.error("Couldn't add that tag. Please try again.");
     } finally {
       setSavingTags(false);
     }
@@ -200,38 +252,20 @@ function AppearancePage() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
-                  if (draftTags.length >= 20) {
-                    toast.error("You can add up to 20 feed filter tags.");
-                    return;
-                  }
-                  const tag = matchingTags[0];
-                  if (tag) {
-                    void saveTags([...draftTags, tag]);
-                    setTagSearch("");
-                  }
+                  addMatchingTag();
                 }
               }}
               placeholder="Type to add a tag…"
-              disabled={savingTags || inactiveTags.length === 0 || draftTags.length >= 20}
+              disabled={savingTags || draftTags.length >= 20}
               className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
             />
             <button
               type="button"
               aria-label="Add a feed filter tag"
-              aria-disabled={savingTags || inactiveTags.length === 0 || draftTags.length >= 20}
+              aria-disabled={savingTags || draftTags.length >= 20}
               title={draftTags.length >= 20 ? "You can add up to 20 feed filter tags" : "Add a tag"}
-              onClick={() => {
-                if (draftTags.length >= 20) {
-                  toast.error("You can add up to 20 feed filter tags.");
-                  return;
-                }
-                const tag = matchingTags[0];
-                if (tag) {
-                  void saveTags([...draftTags, tag]);
-                  setTagSearch("");
-                }
-              }}
-              disabled={savingTags || inactiveTags.length === 0}
+              onClick={addMatchingTag}
+              disabled={savingTags}
               className={`text-muted-foreground transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 ${draftTags.length >= 20 ? "cursor-not-allowed opacity-40" : ""}`}
             >
               <Plus className="h-4 w-4" />

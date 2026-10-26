@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Ban, Eye, EyeOff, Flag, MoreHorizontal } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -13,6 +13,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { profileDisplayTags } from "@/lib/test-user";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => ({
@@ -51,24 +58,13 @@ function PublicProfilePage() {
   const block = useServerFn(blockUser);
   const unblock = useServerFn(unblockUser);
   const report = useServerFn(reportTarget);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [watchingOverride, setWatchingOverride] = useState<boolean | null>(null);
   const [watchingBusy, setWatchingBusy] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-profile", username],
     queryFn: () => fetchProfile({ data: { username } }),
   });
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const close = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
-    };
-    window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
-  }, [menuOpen]);
 
   const profile = data?.profile as PublicProfile | null | undefined;
   const things = (data?.things ?? []) as unknown as ThingCardData[];
@@ -122,7 +118,6 @@ function PublicProfilePage() {
     const reason = window.prompt("Why are you reporting this profile?")?.trim();
     if (!reason) return;
     const result = await report({ data: { target_type: "user", target_id: profile.id, reason } });
-    setMenuOpen(false);
     if (result.error) toast.error(result.error);
     else toast.success("Profile reported. Thanks for keeping SameThing safe.");
   };
@@ -136,7 +131,6 @@ function PublicProfilePage() {
     const result = profile.blocked
       ? await unblock({ data: { user_id: profile.id } })
       : await block({ data: { user_id: profile.id } });
-    setMenuOpen(false);
     if (result.error) {
       toast.error(result.error);
       return;
@@ -185,45 +179,47 @@ function PublicProfilePage() {
                     );
                   })}
                 </div>
-                {profile.bio && <p className="mt-1 text-sm text-muted-foreground">{profile.bio}</p>}
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {profile.bio?.trim() || "A little mystery leaves room for connection."}
+                </p>
               </div>
               {!isSelf && (
-                <div ref={menuRef} className="relative shrink-0">
-                  <button
-                    type="button"
-                    aria-label="Profile actions"
-                    onClick={() => setMenuOpen((current) => !current)}
-                    className="rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Profile actions"
+                      className="rounded-full p-2 text-muted-foreground transition-[color,background-color,transform] hover:scale-105 hover:bg-secondary hover:text-foreground active:scale-95 motion-reduce:transform-none"
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-52 rounded-2xl border-destructive/50 p-1 shadow-2xl motion-reduce:animate-none motion-reduce:duration-0"
                   >
-                    <MoreHorizontal className="h-5 w-5" />
-                  </button>
-                  {menuOpen && (
-                    <div className="absolute right-0 top-10 z-20 w-52 overflow-hidden rounded-2xl border border-destructive/50 bg-popover p-1 shadow-2xl">
-                      <button
-                        type="button"
-                        onClick={() => void toggleBlock()}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-sm text-destructive hover:bg-destructive/10"
-                      >
-                        <Ban className="h-4 w-4" /> {profile.blocked ? "Unblock" : "Block"}
-                      </button>
-                      {!profile.blocked && (
-                        <>
-                          <div className="my-1 h-px bg-border" />
-                          <button
-                            type="button"
-                            onClick={() => void reportProfile()}
-                            className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-left text-sm text-muted-foreground hover:bg-secondary"
-                          >
-                            <Flag className="h-4 w-4" /> Report profile
-                          </button>
-                        </>
-                      )}
-                      <p className="px-3 pb-2 text-[10px] leading-relaxed text-muted-foreground">
-                        Blocking hides their Things and removes the watch relationship.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                    <DropdownMenuItem
+                      onSelect={() => void toggleBlock()}
+                      className="rounded-xl px-3 py-3 text-destructive transition-transform hover:translate-x-0.5 focus:translate-x-0.5 focus:bg-destructive/10 focus:text-destructive motion-reduce:transform-none"
+                    >
+                      <Ban className="h-4 w-4" /> {profile.blocked ? "Unblock" : "Block"}
+                    </DropdownMenuItem>
+                    {!profile.blocked && (
+                      <>
+                        <DropdownMenuSeparator className="my-1" />
+                        <DropdownMenuItem
+                          onSelect={() => void reportProfile()}
+                          className="rounded-xl px-3 py-3 text-muted-foreground transition-transform hover:translate-x-0.5 focus:translate-x-0.5 motion-reduce:transform-none"
+                        >
+                          <Flag className="h-4 w-4" /> Report profile
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <p className="px-3 pb-2 text-[10px] leading-relaxed text-muted-foreground">
+                      Blocking hides their Things and removes the watch relationship.
+                    </p>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
 
@@ -251,7 +247,7 @@ function PublicProfilePage() {
                   aria-pressed={isWatching}
                   onClick={() => void toggleWatching()}
                   className={cn(
-                    "mt-5 flex w-full items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm transition-colors disabled:cursor-wait disabled:opacity-60",
+                    "mt-5 flex w-full items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm transition-[color,background-color,border-color,transform] hover:scale-[1.01] active:scale-[0.99] motion-reduce:transform-none disabled:cursor-wait disabled:opacity-60",
                     isWatching
                       ? "border-accent/60 bg-accent/10 text-accent"
                       : "border-border bg-background text-foreground hover:border-accent/60",

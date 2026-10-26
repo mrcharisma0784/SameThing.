@@ -17,6 +17,15 @@ import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { Plus, Sparkles } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const EMPTY_TAGS: string[] = [];
 
@@ -49,6 +58,10 @@ function DropPage() {
   const [newTag, setNewTag] = useState("");
   const [addingTag, setAddingTag] = useState(false);
   const [dropComplete, setDropComplete] = useState(false);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+  const [noticeLoadedFor, setNoticeLoadedFor] = useState<string | null>(null);
+  const [placeholder, setPlaceholder] = useState("The exact thought, fear, habit, or moment.");
+  const placeholderTouched = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanRunRef = useRef(0);
 
@@ -60,6 +73,62 @@ function DropPage() {
     (profileData?.profile as { custom_tags?: string[] } | null)?.custom_tags ?? EMPTY_TAGS;
   const isPremium = effectivePlan(profileData?.profile);
   const tagLimit = isPremium ? 15 : 5;
+  const userId = (profileData?.profile as { id?: string } | null)?.id;
+
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      setNoticeDismissed(
+        window.localStorage.getItem(`drop-privacy-notice:${userId}`) === "dismissed",
+      );
+    } catch {
+      setNoticeDismissed(false);
+    } finally {
+      setNoticeLoadedFor(userId);
+    }
+  }, [userId]);
+
+  const dismissPrivacyNotice = () => {
+    if (!userId) return;
+    setNoticeDismissed(true);
+    try {
+      window.localStorage.setItem(`drop-privacy-notice:${userId}`, "dismissed");
+    } catch {
+      // Keep the notice dismissed for this mounted screen if storage is unavailable.
+    }
+  };
+
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const prompts = ["The exact thought, fear, habit, or moment.", "Use @username to tag someone."];
+    let promptIndex = 0;
+    let characterIndex = 0;
+    let deleting = false;
+    let timer: number;
+    const tick = () => {
+      if (placeholderTouched.current) return;
+      const prompt = prompts[promptIndex];
+      characterIndex += deleting ? -1 : 1;
+      setPlaceholder(prompt.slice(0, characterIndex));
+      let delay = deleting ? 28 : 55;
+      if (!deleting && characterIndex === prompt.length) {
+        deleting = true;
+        delay = 1100;
+      } else if (deleting && characterIndex === 0) {
+        deleting = false;
+        promptIndex = (promptIndex + 1) % prompts.length;
+        delay = 300;
+      }
+      timer = window.setTimeout(tick, delay);
+    };
+    timer = window.setTimeout(tick, 55);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const stopPlaceholder = () => {
+    placeholderTouched.current = true;
+    setPlaceholder("The exact thought, fear, habit, or moment.");
+  };
 
   // Debounced AI tag suggestion (premium) + content scan
   useEffect(() => {
@@ -170,13 +239,15 @@ function DropPage() {
             >
               The thing
             </Label>
-            <MentionTextarea
-              value={raw}
-              onChange={setRaw}
-              maxLength={1000}
-              placeholder="The exact thought, fear, habit, or moment... use @username to tag someone"
-              className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
-            />
+            <div onFocus={stopPlaceholder} onTouchStart={stopPlaceholder}>
+              <MentionTextarea
+                value={raw}
+                onChange={setRaw}
+                maxLength={1000}
+                placeholder={placeholder}
+                className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
+              />
+            </div>
             <div className="mt-1 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
               <span>{charCount}/1000</span>
               {thinking && (
@@ -188,16 +259,38 @@ function DropPage() {
                 </span>
               )}
             </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-              Your Thing text is sent to Cloudflare for a safety review after posting. For Premium
-              accounts, text of 8 or more characters is also sent as you type to suggest tags; using
-              a suggestion is optional. Your post may include personal or sensitive details. Read
-              our{" "}
-              <Link to="/privacy" className="underline underline-offset-2">
-                Privacy Policy
-              </Link>
-              .
-            </p>
+            <AlertDialog
+              open={Boolean(userId && noticeLoadedFor === userId && !noticeDismissed)}
+              onOpenChange={(open) => {
+                if (!open) dismissPrivacyNotice();
+              }}
+            >
+              <AlertDialogContent className="max-w-sm rounded-2xl border-border bg-card">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="brand-mark text-2xl font-normal">
+                    Before you share
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-left text-sm leading-relaxed">
+                    Your Thing text is sent to Cloudflare for a safety review after posting. For
+                    Premium accounts, text of 8 or more characters is also sent as you type to
+                    suggest tags; using a suggestion is optional. Your post may include personal or
+                    sensitive details. Read our{" "}
+                    <Link to="/privacy" className="underline underline-offset-2">
+                      Privacy Policy
+                    </Link>
+                    .
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction
+                    onClick={dismissPrivacyNotice}
+                    className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+                  >
+                    Got it
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             {warnings.length > 0 && (
               <div
                 className={cn(

@@ -259,7 +259,6 @@ function SettingsPage() {
                   : "Currently unavailable; Streak data is preserved"
               }
               disabled={true}
-              endAdornment={<span className="text-[10px] text-muted-foreground">Unavailable</span>}
               onClick={() => {}}
             />
             <Row
@@ -379,7 +378,6 @@ function SettingsPage() {
               label="Test Users"
               hint="Currently unavailable; existing records are preserved"
               disabled={true}
-              endAdornment={<span className="text-[10px] text-muted-foreground">Unavailable</span>}
               onClick={() => {}}
             />
           </SettingsGroup>
