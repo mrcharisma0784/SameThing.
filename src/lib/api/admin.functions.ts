@@ -1079,19 +1079,33 @@ const FeedbackPromptInput = z.object({
   body: z.string().trim().min(3).max(1000),
   button_label: z.string().trim().min(2).max(40),
   active: z.boolean(),
-  duration: z.enum(["1h", "7d", "14d", "forever"]),
+  duration: z.enum(["1h", "7d", "14d", "custom", "forever"]),
+  custom_duration_value: z.number().int().min(1).max(525600).optional(),
+  custom_duration_unit: z.enum(["minutes", "hours", "days", "weeks", "months"]).optional(),
 });
 
 export const adminListFeedbackPrompts = createServerFn({ method: "GET" }).handler(async () => {
   await assertAdmin("ads:read");
   await recordAdminAction("adminListFeedbackPrompts", "ads:read");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: prompts, error } = await (supabaseAdmin as any)
+  let { data: prompts, error } = await (supabaseAdmin as any)
     .from("feedback_prompts")
     .select("id, title, body, button_label, active, expires_at, created_at, updated_at")
     .order("updated_at", { ascending: false })
     .limit(50);
-  if (error) return { items: [], error: error.message };
+  if (error) {
+    const legacy = await (supabaseAdmin as any)
+      .from("feedback_prompts")
+      .select("id, title, body, button_label, active, created_at, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(50);
+    if (legacy.error) return { items: [], error: legacy.error.message };
+    prompts = (legacy.data ?? []).map((item: Record<string, unknown>) => ({
+      ...item,
+      expires_at: null,
+    }));
+    error = null;
+  }
 
   const ids = (prompts ?? []).map((prompt: { id: string }) => prompt.id);
   const { data: responses } = ids.length
@@ -1158,15 +1172,30 @@ export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
     await assertAdmin("ads:write");
     await recordAdminAction("adminUpsertFeedbackPrompt", "ads:write");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const unitMs: Record<string, number> = {
+      minutes: 60 * 1000,
+      hours: 60 * 60 * 1000,
+      days: 24 * 60 * 60 * 1000,
+      weeks: 7 * 24 * 60 * 60 * 1000,
+      months: 30 * 24 * 60 * 60 * 1000,
+    };
+    const customDurationMs =
+      data.duration === "custom" && data.custom_duration_value && data.custom_duration_unit
+        ? data.custom_duration_value * unitMs[data.custom_duration_unit]
+        : null;
+    if (data.duration === "custom" && !customDurationMs) {
+      return { ok: false as const, error: "Choose a valid custom duration." };
+    }
     const expiresAt =
       data.active && data.duration !== "forever"
         ? new Date(
             Date.now() +
-              (data.duration === "1h"
-                ? 60 * 60 * 1000
-                : data.duration === "7d"
-                  ? 7 * 24 * 60 * 60 * 1000
-                  : 14 * 24 * 60 * 60 * 1000),
+              (customDurationMs ??
+                (data.duration === "1h"
+                  ? 60 * 60 * 1000
+                  : data.duration === "7d"
+                    ? 7 * 24 * 60 * 60 * 1000
+                    : 14 * 24 * 60 * 60 * 1000)),
           ).toISOString()
         : null;
     if (data.active) {
@@ -1196,8 +1225,34 @@ export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
           .insert(payload)
           .select("id, title, body, button_label, active, expires_at, updated_at")
           .single();
-    if (result.error || !result.data)
-      return { ok: false as const, error: result.error?.message ?? "Prompt not found." };
+    if (result.error || !result.data) {
+      if (result.error?.code !== "42703") {
+        return { ok: false as const, error: result.error?.message ?? "Prompt not found." };
+      }
+      const legacyPayload = {
+        title: data.title,
+        body: data.body,
+        button_label: data.button_label,
+        active: data.active,
+        updated_at: new Date().toISOString(),
+      };
+      const legacyResult = data.id
+        ? await (supabaseAdmin as any)
+            .from("feedback_prompts")
+            .update(legacyPayload)
+            .eq("id", data.id)
+            .select("id, title, body, button_label, active, updated_at")
+            .maybeSingle()
+        : await (supabaseAdmin as any)
+            .from("feedback_prompts")
+            .insert(legacyPayload)
+            .select("id, title, body, button_label, active, updated_at")
+            .single();
+      if (legacyResult.error || !legacyResult.data) {
+        return { ok: false as const, error: legacyResult.error?.message ?? "Prompt not found." };
+      }
+      return { ok: true as const, item: { ...legacyResult.data, expires_at: null } };
+    }
     return { ok: true as const, item: result.data };
   });
 
@@ -1420,7 +1475,10 @@ export const adminSendSystemMessage = createServerFn({ method: "POST" })
     }) =>
       z
         .object({
-          recipient_username: z.string().optional(),
+          recipient_username: z
+            .string()
+            .regex(/^@[a-z0-9_]{2,24}$/i, "Use a username beginning with @.")
+            .optional(),
           broadcast: z.boolean().default(false),
           title: z.string().min(1).max(120),
           body: z.string().min(1).max(2000),
@@ -1441,7 +1499,7 @@ export const adminSendSystemMessage = createServerFn({ method: "POST" })
       const { data: p } = await supabaseAdmin
         .from("profiles")
         .select("id")
-        .eq("username", data.recipient_username.trim().toLowerCase())
+        .eq("username", data.recipient_username.trim().slice(1).toLowerCase())
         .maybeSingle();
       if (!p) return { ok: false, error: "User not found." };
       recipientIds = [p.id];

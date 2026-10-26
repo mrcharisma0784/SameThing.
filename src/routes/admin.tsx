@@ -895,69 +895,52 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
+        <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Profile
           </h3>
-          <ul className="space-y-1 text-sm">
-            <li>
-              <b>Icon:</b>{" "}
+          <div className="grid grid-cols-2 gap-2.5">
+            <DetailField label="Icon">
               <ProfileGlyph
                 value={p?.emoji as string}
                 className="inline-block h-4 w-4 align-[-0.2em]"
               />
-            </li>
-            <li>
-              <b>Bio:</b> {(p?.bio as string) ?? "—"}
-            </li>
-            <li>
-              <b>Gender:</b> {(p?.gender as string) ?? "—"}
-            </li>
-            <li>
-              <b>Age:</b> {(p?.age_range as string) ?? "—"}
-            </li>
-            <li>
-              <b>Plan:</b> {p?.plan as string}
-            </li>
-            <li>
-              <b>Language:</b> {p?.language as string}
-            </li>
-            <li>
-              <b>Warnings:</b> {p?.warnings_count as number}
-            </li>
-            <li>
-              <b>Rare things:</b> {p?.rare_thing_count as number}
-            </li>
+            </DetailField>
+            <DetailField label="Plan">{(p?.plan as string) ?? "—"}</DetailField>
+            <DetailField label="Gender">{(p?.gender as string) ?? "—"}</DetailField>
+            <DetailField label="Age">{(p?.age_range as string) ?? "—"}</DetailField>
+            <DetailField label="Language">{(p?.language as string) ?? "—"}</DetailField>
+            <DetailField label="Warnings">{String(p?.warnings_count ?? 0)}</DetailField>
+            <DetailField label="Rare Things">{String(p?.rare_thing_count ?? 0)}</DetailField>
+            <div className="col-span-2 rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Bio</p>
+              <p className="mt-1 break-words text-sm leading-5 text-foreground">
+                {(p?.bio as string) ?? "—"}
+              </p>
+            </div>
             {isBanned && (
-              <li className="text-destructive">
+              <div className="col-span-2 rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 <b>Banned:</b> {new Date(p!.banned_at as string).toLocaleString()} —{" "}
                 {(p?.ban_reason as string) ?? ""}
-              </li>
+              </div>
             )}
-          </ul>
+          </div>
         </div>
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
+        <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Auth
           </h3>
-          <ul className="space-y-1 text-sm">
-            <li>
-              <b>Email:</b> {d.auth?.email ?? "—"}
-            </li>
-            <li>
-              <b>Phone:</b> {d.auth?.phone ?? "—"}
-            </li>
-            <li>
-              <b>Provider:</b> {d.auth?.provider ?? "—"}
-            </li>
-            <li>
-              <b>Signed up:</b> {d.auth ? new Date(d.auth.created_at).toLocaleString() : "—"}
-            </li>
-            <li>
-              <b>Last sign-in:</b>{" "}
+          <div className="grid gap-2.5">
+            <DetailField label="Email">{d.auth?.email ?? "—"}</DetailField>
+            <DetailField label="Phone">{d.auth?.phone ?? "—"}</DetailField>
+            <DetailField label="Provider">{d.auth?.provider ?? "—"}</DetailField>
+            <DetailField label="Signed up">
+              {d.auth ? new Date(d.auth.created_at).toLocaleString() : "—"}
+            </DetailField>
+            <DetailField label="Last sign-in">
               {d.auth?.last_sign_in_at ? new Date(d.auth.last_sign_in_at).toLocaleString() : "—"}
-            </li>
-          </ul>
+            </DetailField>
+          </div>
         </div>
       </div>
 
@@ -966,10 +949,13 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Top tags used
           </h3>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {d.tags.length ? (
               d.tags.slice(0, 20).map((t) => (
-                <span key={t.tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+                <span
+                  key={t.tag}
+                  className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
+                >
                   {t.tag} · {t.count}
                 </span>
               ))
@@ -987,7 +973,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             onChange={(e) => setWarnNote(e.target.value)}
             rows={2}
             placeholder="Reason / note (goes to their inbox)"
-            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm leading-5"
           />
           <button
             disabled={!warnNote.trim()}
@@ -997,18 +983,18 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
               setWarnNote("");
               load();
             }}
-            className="mt-2 rounded-md bg-amber-500 px-3 py-1.5 text-xs text-accent-foreground disabled:opacity-50"
+            className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
           >
             Send warning
           </button>
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-border bg-background/30 p-4">
+      <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Things ({d.things.length})
         </h3>
-        <ul className="space-y-1 text-sm">
+        <div className="grid gap-2 sm:grid-cols-2">
           {d.things
             .slice(0, 20)
             .map(
@@ -1020,46 +1006,48 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
                 same_count: number;
                 nah_count: number;
               }) => (
-                <li
+                <div
                   key={t.id}
-                  className="flex items-center justify-between border-b border-border py-1"
+                  className={`rounded-xl border border-border/80 bg-background/60 p-3 ${t.hidden ? "opacity-60" : ""}`}
                 >
-                  <span className={t.hidden ? "text-muted-foreground line-through" : ""}>
+                  <p
+                    className={`line-clamp-3 text-sm leading-5 ${t.hidden ? "line-through" : "text-foreground"}`}
+                  >
                     {t.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
                     {t.same_count}✓ / {t.nah_count}✗ · {new Date(t.created_at).toLocaleDateString()}
-                  </span>
-                </li>
+                  </p>
+                </div>
               ),
             )}
-          {!d.things.length && <li className="text-xs text-muted-foreground">None.</li>}
-        </ul>
+          {!d.things.length && <p className="text-sm text-muted-foreground">None.</p>}
+        </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-border bg-background/30 p-4">
+      <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Recent comments ({d.comments.length})
         </h3>
-        <ul className="space-y-1 text-sm">
+        <div className="grid gap-2 sm:grid-cols-2">
           {d.comments
             .slice(0, 20)
             .map((c: { id: string; text: string; created_at: string; hidden: boolean }) => (
-              <li
+              <div
                 key={c.id}
                 className={
-                  "border-b border-border py-1 " +
+                  "rounded-xl border border-border/80 bg-background/60 p-3 " +
                   (c.hidden ? "text-muted-foreground line-through" : "")
                 }
               >
-                {c.text}{" "}
-                <span className="ml-2 text-[10px] text-muted-foreground">
+                <p className="line-clamp-4 text-sm leading-5">{c.text}</p>
+                <span className="mt-2 block text-xs text-muted-foreground">
                   {new Date(c.created_at).toLocaleDateString()}
                 </span>
-              </li>
+              </div>
             ))}
-          {!d.comments.length && <li className="text-xs text-muted-foreground">None.</li>}
-        </ul>
+          {!d.comments.length && <p className="text-sm text-muted-foreground">None.</p>}
+        </div>
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -1067,23 +1055,28 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Vote history ({d.votes.length})
           </h3>
-          <ul className="space-y-1 text-xs text-muted-foreground">
+          <div className="grid gap-2">
             {d.votes
               .slice(0, 20)
               .map((v: { id: string; vote_type: string; thing_id: string; created_at: string }) => (
-                <li key={v.id}>
+                <div
+                  key={v.id}
+                  className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm text-foreground"
+                >
                   {v.vote_type === "same" ? "Same" : "Nah"} on {v.thing_id.slice(0, 8)}… ·{" "}
-                  {new Date(v.created_at).toLocaleDateString()}
-                </li>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(v.created_at).toLocaleDateString()}
+                  </span>
+                </div>
               ))}
-            {!d.votes.length && <li>None.</li>}
-          </ul>
+            {!d.votes.length && <p className="text-sm text-muted-foreground">None.</p>}
+          </div>
         </div>
         <div className="rounded-2xl border border-border bg-background/30 p-4">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Feedback sent ({d.feedback.length})
           </h3>
-          <ul className="space-y-1 text-sm">
+          <div className="grid gap-2">
             {d.feedback
               .slice(0, 10)
               .map(
@@ -1093,20 +1086,32 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
                   created_at: string;
                   replied_at: string | null;
                 }) => (
-                  <li key={f.id} className="border-b border-border py-1">
-                    {f.message}
-                    <span className="ml-2 text-[10px] text-muted-foreground">
+                  <div
+                    key={f.id}
+                    className="rounded-xl border border-border/80 bg-background/60 p-3"
+                  >
+                    <p className="line-clamp-4 text-sm leading-5 text-foreground">{f.message}</p>
+                    <span className="mt-2 block text-xs text-muted-foreground">
                       {new Date(f.created_at).toLocaleDateString()}{" "}
                       {f.replied_at ? "· replied" : ""}
                     </span>
-                  </li>
+                  </div>
                 ),
               )}
-            {!d.feedback.length && <li className="text-xs text-muted-foreground">None.</li>}
-          </ul>
+            {!d.feedback.length && <p className="text-sm text-muted-foreground">None.</p>}
+          </div>
         </div>
       </div>
     </Card>
+  );
+}
+
+function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words text-sm leading-5 text-foreground">{children}</p>
+    </div>
   );
 }
 
@@ -1963,7 +1968,11 @@ function AdsPanel() {
   const [body, setBody] = useState("");
   const [buttonLabel, setButtonLabel] = useState("Send feedback");
   const [active, setActive] = useState(true);
-  const [duration, setDuration] = useState<"1h" | "7d" | "14d" | "forever">("forever");
+  const [duration, setDuration] = useState<"1h" | "7d" | "14d" | "custom" | "forever">("forever");
+  const [customDurationValue, setCustomDurationValue] = useState(1);
+  const [customDurationUnit, setCustomDurationUnit] = useState<
+    "minutes" | "hours" | "days" | "weeks" | "months"
+  >("hours");
   const [busy, setBusy] = useState(false);
   const [responsesFor, setResponsesFor] = useState<string | null>(null);
   const [responses, setResponses] = useState<
@@ -1996,6 +2005,8 @@ function AdsPanel() {
     setButtonLabel("Send feedback");
     setActive(true);
     setDuration("forever");
+    setCustomDurationValue(1);
+    setCustomDurationUnit("hours");
   };
 
   const edit = (item: FeedbackPromptItem) => {
@@ -2014,6 +2025,20 @@ function AdsPanel() {
             ? "7d"
             : "14d",
     );
+    if (item.expires_at && remaining > 8 * 24 * 60 * 60 * 1000) {
+      setDuration("custom");
+      const days = Math.max(1, Math.ceil(remaining / (24 * 60 * 60 * 1000)));
+      if (days % 30 === 0) {
+        setCustomDurationValue(days / 30);
+        setCustomDurationUnit("months");
+      } else if (days % 7 === 0) {
+        setCustomDurationValue(days / 7);
+        setCustomDurationUnit("weeks");
+      } else {
+        setCustomDurationValue(days);
+        setCustomDurationUnit("days");
+      }
+    }
   };
 
   const showResponses = async (item: FeedbackPromptItem) => {
@@ -2039,6 +2064,8 @@ function AdsPanel() {
         button_label: buttonLabel,
         active,
         duration,
+        custom_duration_value: duration === "custom" ? customDurationValue : undefined,
+        custom_duration_unit: duration === "custom" ? customDurationUnit : undefined,
       },
     });
     setBusy(false);
@@ -2094,16 +2121,59 @@ function AdsPanel() {
             <select
               value={duration}
               onChange={(event) =>
-                setDuration(event.target.value as "1h" | "7d" | "14d" | "forever")
+                setDuration(event.target.value as "1h" | "7d" | "14d" | "custom" | "forever")
               }
               className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground"
             >
               <option value="1h">1 hour</option>
               <option value="7d">7 days</option>
               <option value="14d">2 weeks</option>
+              <option value="custom">Custom duration</option>
               <option value="forever">Until stopped</option>
             </select>
           </label>
+          {duration === "custom" && (
+            <div className="rounded-2xl border border-accent/25 bg-accent/5 p-3">
+              <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                Site duration picker
+              </p>
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={525600}
+                  value={customDurationValue}
+                  onChange={(event) =>
+                    setCustomDurationValue(
+                      Math.max(1, Number.parseInt(event.target.value, 10) || 1),
+                    )
+                  }
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+                  aria-label="Custom duration amount"
+                />
+                <select
+                  value={customDurationUnit}
+                  onChange={(event) =>
+                    setCustomDurationUnit(
+                      event.target.value as "minutes" | "hours" | "days" | "weeks" | "months",
+                    )
+                  }
+                  className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+                  aria-label="Custom duration unit"
+                >
+                  <option value="minutes">minutes</option>
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                  <option value="weeks">weeks</option>
+                  <option value="months">months</option>
+                </select>
+              </div>
+              <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+                The prompt stops automatically after this duration. Use Until stopped when there is
+                no expiry.
+              </p>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -2498,7 +2568,7 @@ function MessagesPanel() {
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="@username (without @)"
+          placeholder="@username"
           className="mb-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
       )}
@@ -2522,7 +2592,12 @@ function MessagesPanel() {
         className="mb-3 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
       />
       <button
-        disabled={busy || !title.trim() || !body.trim() || (mode === "user" && !username.trim())}
+        disabled={
+          busy ||
+          !title.trim() ||
+          !body.trim() ||
+          (mode === "user" && !/^@[a-z0-9_]{2,24}$/i.test(username.trim()))
+        }
         onClick={async () => {
           setBusy(true);
           const r = await send({
