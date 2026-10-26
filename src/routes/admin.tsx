@@ -1167,7 +1167,13 @@ function ThingsPanel() {
             if (e.key === "Enter") reload();
           }}
         />
-        <label className="flex items-center gap-1 text-xs">
+        <button
+          onClick={reload}
+          className="rounded-xl bg-accent px-4 py-2 text-sm text-accent-foreground"
+        >
+          Search
+        </button>
+        <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-muted-foreground">
           <input
             type="checkbox"
             checked={hiddenOnly}
@@ -1175,52 +1181,94 @@ function ThingsPanel() {
           />
           Hidden only
         </label>
-        <button
-          onClick={reload}
-          className="rounded-md bg-accent px-3 py-2 text-sm text-accent-foreground"
-        >
-          Search
-        </button>
       </div>
       <ul className="grid gap-3 md:grid-cols-2">
         {rows.map((t) => (
           <li
             key={t.id}
-            className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/40"
+            className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/40 sm:p-5"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
+            <div className="min-w-0">
+              <div className="flex items-start justify-between gap-3">
                 <div
                   className={
-                    "font-serif text-lg " + (t.hidden ? "text-muted-foreground line-through" : "")
+                    "font-serif text-lg leading-6 " +
+                    (t.hidden ? "text-muted-foreground line-through" : "")
                   }
                 >
                   {t.title}
                 </div>
-                <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                  {t.raw_text}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-                  {t.tags?.map((tag) => (
-                    <span key={tag} className="rounded-full bg-secondary px-1.5 py-0.5">
-                      {tag}
-                    </span>
-                  ))}
-                  <span>
-                    · {t.same_count}✓/{t.nah_count}✗
+                {t.hidden && (
+                  <span className="shrink-0 rounded-full border border-destructive/40 px-2 py-1 text-[10px] uppercase tracking-widest text-destructive">
+                    Hidden
                   </span>
-                  <span>· {t.comment_count} comments</span>
-                  <span>· reports: {t.report_count}</span>
-                  <span>· {new Date(t.created_at).toLocaleDateString()}</span>
+                )}
+              </div>
+              <p className="mt-2 line-clamp-3 text-sm leading-5 text-muted-foreground">
+                {t.raw_text}
+              </p>
+              <div className="mt-4">
+                <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Tags
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {t.tags?.length ? (
+                    t.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
+                      >
+                        #{tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No tags</span>
+                  )}
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Votes
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">
+                    <span className="text-emerald-300">{t.same_count} Same</span>
+                    <span className="mx-1 text-muted-foreground">/</span>
+                    <span className="text-rose-300">{t.nah_count} Nah</span>
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Comments
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">{t.comment_count}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Reports
+                  </p>
+                  <p
+                    className={`mt-1 text-sm ${t.report_count ? "text-amber-300" : "text-foreground"}`}
+                  >
+                    {t.report_count}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Dropped
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">
+                    {new Date(t.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2 border-t border-border/70 pt-4">
                 <button
                   onClick={async () => {
                     await hide({ data: { id: t.id, hidden: !t.hidden } });
                     reload();
                   }}
-                  className="rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
+                  className="flex-1 rounded-xl border border-border px-3 py-2.5 text-sm hover:bg-secondary"
                 >
                   {t.hidden ? "Unhide" : "Hide"}
                 </button>
@@ -1232,7 +1280,7 @@ function ThingsPanel() {
                     toast.success("Deleted.");
                     reload();
                   }}
-                  className="rounded-md bg-destructive px-2 py-1 text-xs text-accent-foreground"
+                  className="flex-1 rounded-xl bg-destructive px-3 py-2.5 text-sm text-accent-foreground"
                 >
                   Delete
                 </button>
