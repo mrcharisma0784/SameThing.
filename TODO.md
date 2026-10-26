@@ -54,3 +54,17 @@
 - When the side menu opens, expand “Start here” by default and keep the other groups compact unless opened or matched by a search.
 - On the first Documentation visit, make the open-close sidebar animation slightly longer and softer than the current version.
 - Allow a leftward swipe from within the open sidebar to close it, while preserving the existing rightward swipe to open it.
+
+## Account lifecycle and data requests — Complete in source; lint/build validated
+- Account deletion no longer requires admin approval; a request schedules deletion after 30 days and the account is deleted only when no login occurs during the window.
+- The account screen shows deletion status and remaining days, supports cancellation, and blocks a new deletion request for one month after cancellation.
+- Deletion confirmation asks whether the user also wants a data export.
+- Email data export is limited to once per 30 days and remains pending until email delivery is configured; configured delivery sends a structured export file to the account email.
+
+## Auth, Docs and About refinements — Complete in source; lint/build validated
+- Google and Phone auth buttons use the existing rectangular soft-corner button treatment without logos.
+- Docs has a small installed-app information message and a working menu button without relying on browser edge-swipe behavior.
+- About removes the top Documentation button, uses a left-aligned logo/wordmark with Back, removes the centered hero card and repeated copy, enlarges Product status labels, and removes the footer tagline.
+
+## Annual personal league progression — Complete in source; lint/build validated
+- Leaderboard keeps its existing visual design and adds annual Astra → Cosmo-style personal leagues with activity points, thresholds, current progress and promotion-ready year metadata.

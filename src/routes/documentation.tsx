@@ -12,6 +12,7 @@ import {
   Flame,
   Heart,
   LockKeyhole,
+  Menu,
   Orbit,
   Quote,
   Search,
@@ -534,7 +535,7 @@ const DOC_GROUPS: DocGroup[] = [
           {
             heading: "Requests",
             paragraphs: [
-              "Account and data requests are reviewed manually. You can follow a request's status in Account & privacy. Some records may be retained where required or permitted by applicable law; see the Privacy Policy.",
+              "Data exports can be requested once every 30 days. Account deletion is scheduled for 30 days and completes automatically when there is no new login; you can cancel during that window. Some records may be retained where required or permitted by applicable law; see the Privacy Policy.",
             ],
           },
         ],
@@ -609,7 +610,6 @@ function DocumentationPage() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(DOC_GROUPS.map((group) => [group.id, group.id === "start"])),
   );
-  const touchStartX = useRef<number | null>(null);
   const previewCloseTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -680,25 +680,7 @@ function DocumentationPage() {
   };
 
   return (
-    <div
-      className="min-h-dvh bg-background text-foreground"
-      onTouchStart={(event) => {
-        const start = event.touches[0]?.clientX ?? 999;
-        const edgeSwipe = !sidebarOpen && start <= 28;
-        const sidebarSwipe =
-          sidebarOpen && event.target instanceof Element && Boolean(event.target.closest("aside"));
-        if (edgeSwipe) keepSidebarOpenOnInteraction();
-        if (sidebarSwipe) keepSidebarOpenOnInteraction();
-        touchStartX.current = edgeSwipe || sidebarSwipe ? start : null;
-      }}
-      onTouchEnd={(event) => {
-        if (touchStartX.current === null) return;
-        const end = event.changedTouches[0]?.clientX ?? touchStartX.current;
-        if (!sidebarOpen && end - touchStartX.current > 64) setSidebarOpen(true);
-        if (sidebarOpen && touchStartX.current - end > 64) setSidebarOpen(false);
-        touchStartX.current = null;
-      }}
-    >
+    <div className="min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/88 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/" aria-label="SameThing home" className="inline-flex items-center gap-2.5">
@@ -717,6 +699,14 @@ function DocumentationPage() {
             <span>{ALL_DOC_PAGES.length} pages</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-2.5 text-xs text-foreground transition-colors hover:border-accent/50 hover:text-accent lg:hidden"
+              aria-label="Open documentation menu"
+            >
+              <Menu className="h-3.5 w-3.5" /> Menu
+            </button>
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-2.5 text-xs text-foreground transition-colors hover:border-accent/50 hover:text-accent"
@@ -726,6 +716,10 @@ function DocumentationPage() {
           </div>
         </div>
       </header>
+
+      <p className="mx-auto max-w-[90rem] px-4 pt-3 text-center text-[10px] leading-4 text-muted-foreground sm:px-6 lg:hidden">
+        Browser edge-swipe can act as Back. Install the app for a stable side menu.
+      </p>
 
       {sidebarOpen && (
         <button

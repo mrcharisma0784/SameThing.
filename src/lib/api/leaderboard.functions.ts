@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- annual league counts include tables outside generated types. */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type ThingRow = {
   id: string;
@@ -85,6 +87,18 @@ export type LeaderboardResult = {
   weekEnd: string;
   weekLabel: string;
   leagues: LeaderboardLeague[];
+  season: {
+    label: string;
+    startsAt: string;
+    endsAt: string;
+    current: {
+      id: string;
+      name: string;
+      points: number;
+      nextThreshold: number | null;
+      progress: number;
+    };
+  };
 };
 
 const LeaderboardInput = z.object({});
@@ -98,6 +112,20 @@ function getUtcWeekBounds(now = new Date()) {
   end.setUTCDate(end.getUTCDate() + 7);
   return { start, end };
 }
+
+function getUtcYearBounds(now = new Date()) {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const end = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
+  return { start, end };
+}
+
+const PERSONAL_LEAGUES = [
+  { id: "astra", name: "Astra", threshold: 0 },
+  { id: "cosmo", name: "Cosmo", threshold: 250 },
+  { id: "nova", name: "Nova", threshold: 750 },
+  { id: "solara", name: "Solara", threshold: 1500 },
+  { id: "zenith", name: "Zenith", threshold: 3000 },
+];
 
 function number(value: number | null | undefined) {
   return Number(value ?? 0);
@@ -134,9 +162,11 @@ async function getProfiles(ids: string[]) {
 }
 
 export const getLeaderboard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => LeaderboardInput.parse(input))
-  .handler(async (): Promise<LeaderboardResult> => {
+  .handler(async ({ context }): Promise<LeaderboardResult> => {
     const { start, end } = getUtcWeekBounds();
+    const year = getUtcYearBounds();
     const weekStart = start.toISOString();
     const weekEnd = end.toISOString();
 
@@ -501,6 +531,39 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       },
     ];
 
+    const countFor = async (table: string, column = "user_id") => {
+      const { count, error } = await (supabaseAdmin as any)
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq(column, context.userId)
+        .gte("created_at", year.start.toISOString())
+        .lt("created_at", year.end.toISOString());
+      return error ? 0 : Number(count ?? 0);
+    };
+    const [thingCount, quoteCount, voteCount, commentCount, followerCount] = await Promise.all([
+      countFor("things"),
+      countFor("quotes"),
+      countFor("votes"),
+      countFor("comments"),
+      countFor("follows", "following_id"),
+    ]);
+    const personalPoints =
+      thingCount * 20 + quoteCount * 15 + voteCount * 2 + commentCount * 4 + followerCount * 10;
+    const currentLeague =
+      [...PERSONAL_LEAGUES].reverse().find((league) => personalPoints >= league.threshold) ??
+      PERSONAL_LEAGUES[0];
+    const nextLeague = PERSONAL_LEAGUES.find((league) => league.threshold > personalPoints);
+    const progress = nextLeague
+      ? Math.min(
+          100,
+          Math.round(
+            ((personalPoints - currentLeague.threshold) /
+              (nextLeague.threshold - currentLeague.threshold)) *
+              100,
+          ),
+        )
+      : 100;
+
     const weekFormatter = new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
@@ -512,5 +575,17 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       weekEnd,
       weekLabel: `${weekFormatter.format(start)} – ${weekFormatter.format(new Date(end.getTime() - 1))}`,
       leagues,
+      season: {
+        label: `${year.start.getUTCFullYear()} season`,
+        startsAt: year.start.toISOString(),
+        endsAt: year.end.toISOString(),
+        current: {
+          id: currentLeague.id,
+          name: currentLeague.name,
+          points: personalPoints,
+          nextThreshold: nextLeague?.threshold ?? null,
+          progress,
+        },
+      },
     };
   });

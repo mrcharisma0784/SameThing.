@@ -154,7 +154,7 @@ const FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: "How do I delete my account?",
-    a: "Use Settings → Account & Privacy to submit a deletion request or ask for a copy of your data. Deletion requests are reviewed manually; submitting one does not immediately delete the account. You can follow its status on that page. Some records may be retained where required or permitted by law; see the Privacy Policy.",
+    a: "Use Settings → Account & Privacy to request a deletion or a copy of your data. Deletion is scheduled for 30 days and completes automatically when there is no new login; exports can be requested once every 30 days. Some records may be retained where required or permitted by law; see the Privacy Policy.",
   },
   {
     q: "What happens during maintenance?",

@@ -104,6 +104,38 @@ function LeaderboardPage() {
               {data?.leagues.length ?? 0} leagues
             </span>
           </div>
+          {data?.season ? (
+            <div className="relative mt-5 rounded-2xl border border-accent/20 bg-background/45 p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-accent">
+                    {data.season.label} · your league
+                  </p>
+                  <p className="mt-1 font-serif text-xl italic text-foreground">
+                    {data.season.current.name}
+                  </p>
+                </div>
+                <span className="text-right text-xs text-muted-foreground">
+                  <span className="block text-sm font-medium text-accent">
+                    {data.season.current.points} points
+                  </span>
+                  {data.season.current.nextThreshold
+                    ? `${data.season.current.nextThreshold - data.season.current.points} to next league`
+                    : "Top league reached"}
+                </span>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border">
+                <div
+                  className="h-full rounded-full bg-accent transition-all"
+                  style={{ width: `${data.season.current.progress}%` }}
+                />
+              </div>
+              <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                Things 20 · Quotes 15 · votes 2 · comments 4 · new followers 10. Progress resets at
+                year end.
+              </p>
+            </div>
+          ) : null}
         </header>
 
         <div

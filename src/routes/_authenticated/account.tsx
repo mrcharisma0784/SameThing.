@@ -34,6 +34,7 @@ import {
   getMyDataRequests,
   getMyHiddenContent,
   requestAccountData,
+  cancelAccountDeletion,
   withdrawReport,
 } from "@/lib/api/me.functions";
 import { listMyBlockedUsers, unblockUser } from "@/lib/api/social.functions";
@@ -48,6 +49,7 @@ function AccountPage() {
   const navigate = useNavigate();
   const { user, profile, signOut, refreshProfile } = useAuth();
   const requestDataFn = useServerFn(requestAccountData);
+  const cancelDeletionFn = useServerFn(cancelAccountDeletion);
   const getRequestsFn = useServerFn(getMyDataRequests);
   const listBlockedFn = useServerFn(listMyBlockedUsers);
   const unblockFn = useServerFn(unblockUser);
@@ -62,6 +64,7 @@ function AccountPage() {
   const [busy, setBusy] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [includeExport, setIncludeExport] = useState(false);
   const [allowMentions, setAllowMentions] = useState<boolean>(
     (profile as { allow_mentions?: boolean } | null)?.allow_mentions ?? true,
   );
@@ -171,34 +174,55 @@ function AccountPage() {
   };
 
   const confirmDeletionRequest = async () => {
-    if (!user?.email || !deletePassword) {
+    if (!user?.email || (isEmailAuth && !deletePassword)) {
       toast.error("Enter your account password to continue.");
       return;
     }
     setBusy(true);
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: deletePassword,
-      });
-      if (authError) {
-        toast.error("That password could not be verified. No request was sent.");
-        return;
+      if (isEmailAuth) {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: deletePassword,
+        });
+        if (authError) {
+          toast.error("That password could not be verified. No request was sent.");
+          return;
+        }
       }
       const result = await requestDataFn({ data: { request_type: "deletion" } });
       if (!result.ok) {
         toast.error(result.error);
         return;
       }
-      toast.success("Deletion request received.");
+      if (includeExport) {
+        const exportResult = await requestDataFn({ data: { request_type: "export" } });
+        if (!exportResult.ok) toast.error(exportResult.error);
+      }
+      toast.success("Deletion scheduled for 30 days without a new login.");
       setDeleteDialogOpen(false);
       setDeletePassword("");
+      setIncludeExport(false);
+      await refreshProfile();
       await queryClient.invalidateQueries({ queryKey: ["account-data-requests"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send the deletion request.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const cancelScheduledDeletion = async () => {
+    setBusy(true);
+    const result = await cancelDeletionFn();
+    setBusy(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Deletion cancelled. You can request it again after 30 days.");
+    await refreshProfile();
+    await queryClient.invalidateQueries({ queryKey: ["account-data-requests"] });
   };
 
   return (
@@ -211,6 +235,33 @@ function AccountPage() {
         <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
           signed in via <span className="text-foreground">{provider}</span>
         </p>
+
+        {profile?.deletion_scheduled_for ? (
+          <section className="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-foreground">This account is pending deletion.</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              If you do not sign in again, your account and personal data will be deleted in
+              approximately{" "}
+              {Math.max(
+                0,
+                Math.ceil(
+                  (new Date(profile.deletion_scheduled_for).getTime() - Date.now()) /
+                    (24 * 60 * 60 * 1000),
+                ),
+              )}{" "}
+              days. Cancel now to keep the account; a new deletion request will be unavailable for
+              30 days.
+            </p>
+            <button
+              type="button"
+              onClick={() => void cancelScheduledDeletion()}
+              disabled={busy}
+              className="mt-3 rounded-full border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {busy ? "Cancelling…" : "Cancel deletion"}
+            </button>
+          </section>
+        ) : null}
 
         {/* Mentions toggle */}
         <section className="mt-5 rounded-2xl border border-border bg-card p-4">
@@ -423,9 +474,8 @@ function AccountPage() {
         <section className="mt-6 rounded-2xl border border-border bg-card p-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Your data</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Request a copy of your account data by email, or submit an account deletion request.
-            Requests are reviewed manually; submitting one does not immediately delete your account.
-            You can follow its status below.
+            Request one structured copy of your account data every 30 days. Account deletion is
+            automatic after 30 days without a new login, and no admin approval is required.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <button
@@ -479,8 +529,8 @@ function AccountPage() {
                 Request account deletion?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm leading-relaxed text-muted-foreground">
-                Your account stays active while the request is reviewed. Confirm with your current
-                password to submit this request.
+                Your account stays active for 30 days. If you do not sign in again during that time,
+                your account and personal data will be deleted automatically.
               </AlertDialogDescription>
             </AlertDialogHeader>
             {isEmailAuth ? (
@@ -505,10 +555,19 @@ function AccountPage() {
               </div>
             ) : (
               <p className="rounded-xl border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground">
-                This account uses {provider} sign-in and has no SameThing password to verify here.
-                Add an email/password sign-in method before submitting a deletion request.
+                This account uses {provider} sign-in. Your recent sign-in will be used to confirm
+                this request.
               </p>
             )}
+            <label className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-xs leading-relaxed text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={includeExport}
+                onChange={(event) => setIncludeExport(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-[color:var(--accent)]"
+              />
+              <span>Also prepare my data export and email it to my account address.</span>
+            </label>
             <div className="flex justify-end gap-3 pt-2">
               <AlertDialogCancel
                 disabled={busy}
@@ -520,10 +579,10 @@ function AccountPage() {
               <button
                 type="button"
                 onClick={() => void confirmDeletionRequest()}
-                disabled={busy || !isEmailAuth || !deletePassword}
+                disabled={busy || (isEmailAuth && !deletePassword)}
                 className="rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busy ? "Sending…" : "Request deletion"}
+                {busy ? "Scheduling…" : "Schedule deletion"}
               </button>
             </div>
           </AlertDialogContent>

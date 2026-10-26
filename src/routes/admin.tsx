@@ -1643,38 +1643,9 @@ function ReportsPanel() {
                   {new Date(request.requested_at).toLocaleString()}
                 </p>
               </div>
-              <div className="flex gap-2">
-                {request.status === "pending" && (
-                  <button
-                    type="button"
-                    disabled={busy === request.id}
-                    onClick={() => void updateRequest(request.id, "in_progress")}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs"
-                  >
-                    Start
-                  </button>
-                )}
-                {(request.status === "pending" || request.status === "in_progress") && (
-                  <button
-                    type="button"
-                    disabled={busy === request.id}
-                    onClick={() => void updateRequest(request.id, "completed")}
-                    className="rounded-full bg-accent px-3 py-1.5 text-xs text-accent-foreground"
-                  >
-                    Complete
-                  </button>
-                )}
-                {(request.status === "pending" || request.status === "in_progress") && (
-                  <button
-                    type="button"
-                    disabled={busy === request.id}
-                    onClick={() => void updateRequest(request.id, "rejected")}
-                    className="rounded-full border border-destructive/50 px-3 py-1.5 text-xs text-destructive"
-                  >
-                    Reject
-                  </button>
-                )}
-              </div>
+              <span className="rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+                Automatic lifecycle
+              </span>
             </div>
           ))}
           {!requests.length && (

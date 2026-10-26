@@ -7,7 +7,7 @@ import { effectivePlan } from "@/lib/premium";
 import { getVisibilityContext, isVisibleTarget } from "@/lib/content-visibility.server";
 
 const PROFILE_COLS =
-  "id, username, emoji, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited";
+  "id, username, emoji, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited, deletion_scheduled_for, deletion_cancelled_until";
 
 type HiddenContentItem = {
   report_id: string;
@@ -136,7 +136,9 @@ export const getMyDataRequests = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("account_data_requests")
-      .select("id, request_type, status, requested_at, handled_at, admin_note")
+      .select(
+        "id, request_type, status, requested_at, scheduled_for, handled_at, email_sent_at, admin_note",
+      )
       .eq("user_id", context.userId)
       .order("requested_at", { ascending: false })
       .limit(20);
@@ -148,6 +150,8 @@ export const requestAccountData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => AccountDataRequestInput.parse(input))
   .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
     if (data.request_type === "deletion") {
       const authTime = Number(context.claims.auth_time);
       const authAgeSeconds = Math.floor(Date.now() / 1000) - authTime;
@@ -157,9 +161,22 @@ export const requestAccountData = createServerFn({ method: "POST" })
           error: "Confirm your password again before submitting a deletion request.",
         };
       }
+      const { requestDeletion } = await import("@/lib/account-lifecycle.server");
+      return requestDeletion(context.userId);
     }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const db = supabaseAdmin as any;
+    const monthlyCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentExport, error: recentExportError } = await db
+      .from("account_data_requests")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("request_type", "export")
+      .gte("requested_at", monthlyCutoff)
+      .limit(1)
+      .maybeSingle();
+    if (recentExportError) throw new Error(recentExportError.message);
+    if (recentExport) {
+      return { ok: false as const, error: "You can request one data export every 30 days." };
+    }
     const { data: existing, error: existingError } = await db
       .from("account_data_requests")
       .select("id, status")
@@ -178,6 +195,13 @@ export const requestAccountData = createServerFn({ method: "POST" })
       .single();
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const, request };
+  });
+
+export const cancelAccountDeletion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { cancelDeletion } = await import("@/lib/account-lifecycle.server");
+    return cancelDeletion(context.userId);
   });
 
 export const getMyThings = createServerFn({ method: "GET" })

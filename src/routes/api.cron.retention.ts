@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { purgeExpiredNotifications } from "@/lib/notifications/notification-cleanup.server";
+import { processDueDeletions, processPendingExports } from "@/lib/account-lifecycle.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- production API log table is absent from checked-in generated Supabase types. */
 async function purgeExpiredApiRequestLogs(): Promise<number> {
@@ -32,6 +33,8 @@ export const Route = createFileRoute("/api/cron/retention")({
           const results = await Promise.allSettled([
             purgeExpiredNotifications(),
             purgeExpiredApiRequestLogs(),
+            processPendingExports(),
+            processDueDeletions(),
           ]);
           const failures = results.filter((result) => result.status === "rejected");
           if (failures.length) {
@@ -46,8 +49,16 @@ export const Route = createFileRoute("/api/cron/retention")({
           }
           const notificationsDeleted = results[0].status === "fulfilled" ? results[0].value : 0;
           const apiRequestLogsDeleted = results[1].status === "fulfilled" ? results[1].value : 0;
+          const exportsSent = results[2].status === "fulfilled" ? results[2].value : 0;
+          const accountsDeleted = results[3].status === "fulfilled" ? results[3].value : 0;
           return new Response(
-            JSON.stringify({ ok: true, notificationsDeleted, apiRequestLogsDeleted }),
+            JSON.stringify({
+              ok: true,
+              notificationsDeleted,
+              apiRequestLogsDeleted,
+              exportsSent,
+              accountsDeleted,
+            }),
             {
               status: 200,
               headers: {

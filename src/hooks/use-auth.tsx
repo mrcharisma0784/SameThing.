@@ -35,6 +35,8 @@ type Profile = {
   test_user_until?: string | null;
   test_user_label?: string | null;
   same_credits_unlimited?: boolean;
+  deletion_scheduled_for?: string | null;
+  deletion_cancelled_until?: string | null;
 };
 
 type AuthContextValue = {

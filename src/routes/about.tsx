@@ -1,14 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Compass,
-  Heart,
-  Orbit,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Compass, Heart, Orbit, ShieldCheck, Users } from "lucide-react";
 import { Brand } from "@/components/Brand";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -56,23 +47,14 @@ function AboutSameThingPage() {
 
       <header className="relative z-10 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-accent/50 hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to the room
-          </Link>
           <Link to="/" aria-label="SameThing home" className="shrink-0">
             <Brand size="sm" showMark={false} wordmarkClassName="text-[1.12rem]" />
           </Link>
           <Link
-            to="/documentation"
+            to="/"
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-accent/50 hover:text-foreground"
           >
-            <BookOpen className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Documentation</span>
-            <span className="sm:hidden">Docs</span>
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to the room
           </Link>
         </div>
       </header>
@@ -90,76 +72,6 @@ function AboutSameThingPage() {
               Things and Quotes without an account; sign in when you want to publish, vote or join a
               conversation.
             </p>
-          </div>
-
-          <div className="relative mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto">
-            <div className="relative aspect-[0.92] overflow-hidden rounded-[2rem] border border-accent/25 bg-card/70 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.16)] sm:p-7">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,hsl(var(--accent)/0.08)_45%,transparent_100%)]" />
-              <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/20" />
-              <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-same/25 [transform:translate(-50%,-50%)_rotate(24deg)]" />
-              <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-rare/30 [transform:translate(-50%,-50%)_rotate(-38deg)]" />
-              <div className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[1.2rem] border border-accent/35 bg-background/90 shadow-lg">
-                <Orbit className="h-7 w-7 text-accent" strokeWidth={1.2} />
-              </div>
-              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between sm:bottom-7 sm:left-7 sm:right-7">
-                <div>
-                  <p className="text-[9px] uppercase tracking-[0.22em] text-accent">The premise</p>
-                  <p className="mt-2 max-w-[12rem] font-serif text-xl leading-tight text-foreground">
-                    You are not the only one.
-                  </p>
-                </div>
-                <span className="grid h-9 w-9 place-items-center rounded-full border border-border bg-background/70 text-muted-foreground">
-                  <Heart className="h-4 w-4" strokeWidth={1.5} />
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-16 border-t border-border/70 pt-8 sm:mt-24 sm:pt-10">
-          <div className="max-w-2xl">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-accent">
-              What makes it different
-            </p>
-            <h2 className="mt-2 font-serif text-3xl tracking-[-0.03em] sm:text-4xl">
-              Less performance. More recognition.
-            </h2>
-          </div>
-          <div className="mt-7 grid gap-3 md:grid-cols-3">
-            {[
-              {
-                title: "Browse before joining",
-                text: "Public Things and Quotes can be read without an account. Sign-in is needed to publish or take part.",
-                icon: Compass,
-              },
-              {
-                title: "Resonance, not a verdict",
-                text: "Same and Nah show how a thought lands with people; they are not claims that it is true or universally popular.",
-                icon: Heart,
-              },
-              {
-                title: "Control over comments",
-                text: "Open comments on public Things are visible to guests and signed-in readers. If the owner closes comments, the entire section—including older comments—is hidden from everyone until reopened.",
-                icon: ShieldCheck,
-              },
-            ].map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <article
-                  key={item.title}
-                  className="rounded-[1.35rem] border border-border bg-card/55 p-5 sm:p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                      0{index + 1}
-                    </span>
-                    <Icon className="h-5 w-5 text-accent" strokeWidth={1.5} />
-                  </div>
-                  <h3 className="mt-7 font-serif text-xl tracking-[-0.025em]">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
-                </article>
-              );
-            })}
           </div>
         </section>
 
@@ -221,20 +133,20 @@ function AboutSameThingPage() {
           </h2>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl border border-border bg-card/50 p-4">
-              <h3 className="text-sm font-medium">Core space</h3>
+              <h3 className="text-base font-medium sm:text-lg">Core space</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Public browsing, Things, Same/Nah responses and comments are live.
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-card/50 p-4">
-              <h3 className="text-sm font-medium">Research API</h3>
+              <h3 className="text-base font-medium sm:text-lg">Research API</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Under development. The page, workspace, related information and endpoints are
                 temporarily unavailable.
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-card/50 p-4">
-              <h3 className="text-sm font-medium">Paid plans</h3>
+              <h3 className="text-base font-medium sm:text-lg">Paid plans</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Payment collection and subscription activation are not enabled in this release.
               </p>
@@ -266,7 +178,6 @@ function AboutSameThingPage() {
         </section>
 
         <footer className="flex flex-col gap-4 pt-7 text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>SameThing. · a quieter way to connect</span>
           <div className="flex items-center gap-4">
             <Link to="/terms" search={{ minimal: "true" }} className="hover:text-foreground">
               Terms
