@@ -35,6 +35,7 @@ function AppearancePage() {
   );
   const [draftTags, setDraftTags] = useState<string[]>(savedTags);
   const [savingTags, setSavingTags] = useState(false);
+  const [addTagsOpen, setAddTagsOpen] = useState(false);
   useEffect(() => setDraftTags(savedTags), [savedTags]);
   const inactiveTags = allTags.filter((tag) => !draftTags.includes(tag));
   const tagsDirty = draftTags.join("\u0000") !== savedTags.join("\u0000");
@@ -116,11 +117,7 @@ function AppearancePage() {
                     </span>
                     <span className="block text-xs text-muted-foreground">{item.hint}</span>
                   </span>
-                  {locked ? (
-                    <Lock className="h-3.5 w-3.5 shrink-0 text-[color:var(--rare)]" />
-                  ) : selected ? (
-                    <span className="text-accent">✓</span>
-                  ) : null}
+                  {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-[color:var(--rare)]" />}
                 </button>
               );
             })}
@@ -192,10 +189,21 @@ function AppearancePage() {
               </p>
             )}
           </div>
-          {inactiveTags.length > 0 && (
-            <div className="mt-4">
+          <button
+            type="button"
+            aria-label="Add a feed filter tag"
+            aria-expanded={addTagsOpen}
+            title="Add a tag"
+            onClick={() => setAddTagsOpen((open) => !open)}
+            disabled={savingTags || inactiveTags.length === 0}
+            className="mt-1 flex h-10 w-full items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          {addTagsOpen && inactiveTags.length > 0 && (
+            <div className="mt-3">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Add back
+                Add a tag
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {inactiveTags.map((tag) => (

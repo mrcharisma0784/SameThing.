@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getSiteUrl } from "@/lib/site-url";
 import { LANGUAGES } from "@/lib/languages";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -117,60 +117,58 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               {heading.replace(".", "")}
               <span className="dot">.</span>
             </h1>
-            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+            <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-hidden">
               <span className="inline-flex shrink-0 items-center rounded-full border border-accent bg-accent px-3 py-1.5 text-xs tracking-wide text-accent-foreground">
                 {things.length} {things.length === 1 ? "thing" : "things"}
               </span>
-              <div className="flex min-w-0 items-center gap-1.5">
+              <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setLanguageExpanded((expanded) => !expanded)}
                   aria-expanded={languageExpanded}
                   aria-label={`Feed language: ${languageLabel}. ${languageExpanded ? "Collapse" : "Change language"}`}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent bg-accent px-3 py-1.5 text-xs text-accent-foreground transition-colors"
                 >
                   {languageLabel}
-                  <ChevronDown
-                    className={cn("h-3 w-3 transition-transform", languageExpanded && "rotate-180")}
-                  />
+                  <ChevronRight className="h-3 w-3" />
                 </button>
-                {languageExpanded && (
-                  <div className="no-scrollbar flex max-w-[calc(100vw-10rem)] animate-in slide-in-from-left-1 items-center gap-1.5 overflow-x-auto fade-in duration-200 md:max-w-[34rem]">
+                <div
+                  aria-hidden={!languageExpanded}
+                  className={cn(
+                    "no-scrollbar flex shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden transition-[max-width,opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                    languageExpanded
+                      ? "max-w-[calc(100vw-15rem)] translate-x-0 opacity-100 md:max-w-[34rem]"
+                      : "pointer-events-none max-w-0 -translate-x-3 opacity-0",
+                  )}
+                >
+                  {language !== "all" && (
                     <button
                       type="button"
+                      tabIndex={languageExpanded ? 0 : -1}
                       onClick={() => {
                         setLangScope("all");
                         setLanguageExpanded(false);
                       }}
-                      className={cn(
-                        "shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
-                        language === "all"
-                          ? "border-accent bg-accent/10 text-accent"
-                          : "border-border text-muted-foreground hover:text-foreground",
-                      )}
+                      className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
                       global
                     </button>
-                    {LANGUAGES.map((item) => (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() => {
-                          setLangScope(item.code);
-                          setLanguageExpanded(false);
-                        }}
-                        className={cn(
-                          "shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
-                          language === item.code
-                            ? "border-accent bg-accent/10 text-accent"
-                            : "border-border text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  )}
+                  {LANGUAGES.filter((item) => item.code !== language).map((item) => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      tabIndex={languageExpanded ? 0 : -1}
+                      onClick={() => {
+                        setLangScope(item.code);
+                        setLanguageExpanded(false);
+                      }}
+                      className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
