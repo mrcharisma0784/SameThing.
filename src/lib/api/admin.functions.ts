@@ -490,6 +490,7 @@ const ReportListInput = z.object({
   status: z.enum(["open", "in_review", "resolved", "dismissed", "all"]).default("open"),
   limit: z.number().int().min(1).max(100).default(50),
   offset: z.number().int().min(0).default(0),
+  target_id: z.string().uuid().optional(),
 });
 
 export const adminListReports = createServerFn({ method: "GET" })
@@ -508,6 +509,7 @@ export const adminListReports = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .range(data.offset, data.offset + data.limit - 1);
     if (data.status !== "all") query = query.eq("status", data.status);
+    if (data.target_id) query = query.eq("target_id", data.target_id);
     const { data: reports, count, error } = await query;
     if (error) throw new Error(error.message);
     const rows = (reports ?? []) as Array<Record<string, any>>;

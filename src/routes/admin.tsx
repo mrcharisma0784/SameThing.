@@ -139,6 +139,7 @@ function canAccessAdminTab(state: AdminStatus, tab: Tab) {
 function AdminPage() {
   const [adminState, setAdminState] = useState<AdminStatus | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
   const statusFn = useServerFn(adminStatus);
   const logoutFn = useServerFn(adminLogout);
 
@@ -211,7 +212,10 @@ function AdminPage() {
           {visibleTabs.map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTab(t);
+                if (t !== "reports") setReportTargetId(null);
+              }}
               className={
                 "whitespace-nowrap rounded-full px-3 py-1.5 text-xs uppercase tracking-widest transition-colors " +
                 (activeTab === t
@@ -235,8 +239,15 @@ function AdminPage() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         {activeTab === "overview" && <Overview />}
         {activeTab === "users" && <UsersPanel />}
-        {activeTab === "things" && <ThingsPanel />}
-        {activeTab === "reports" && <ReportsPanel />}
+        {activeTab === "things" && (
+          <ThingsPanel
+            onOpenReports={(thingId) => {
+              setReportTargetId(thingId);
+              setTab("reports");
+            }}
+          />
+        )}
+        {activeTab === "reports" && <ReportsPanel targetId={reportTargetId} />}
         {activeTab === "suspicious" && <SuspiciousPanel />}
         {activeTab === "support" && <SupportPanel />}
         {activeTab === "feedback" && <FeedbackPanel />}
@@ -1121,12 +1132,11 @@ function DetailField({ label, children }: { label: string; children: React.React
 }
 
 // ---------- Things ----------
-function ThingsPanel() {
+function ThingsPanel({ onOpenReports }: { onOpenReports: (thingId: string) => void }) {
   const list = useServerFn(adminListThings);
   const hide = useServerFn(adminHideThing);
   const del = useServerFn(adminDeleteThing);
   const [q, setQ] = useState("");
-  const [hiddenOnly, setHidden] = useState(false);
   const [rows, setRows] = useState<
     Array<{
       id: string;
@@ -1145,14 +1155,16 @@ function ThingsPanel() {
   >([]);
   const [total, setTotal] = useState(0);
   const reload = () => {
-    list({ data: { q: q.trim() || undefined, hiddenOnly, limit: 50, offset: 0 } }).then((r) => {
-      setRows(r.items as never);
-      setTotal(r.total);
-    });
+    list({ data: { q: q.trim() || undefined, hiddenOnly: false, limit: 50, offset: 0 } }).then(
+      (r) => {
+        setRows(r.items as never);
+        setTotal(r.total);
+      },
+    );
   };
   useEffect(() => {
     reload(); /* eslint-disable-next-line */
-  }, [hiddenOnly]);
+  }, []);
   return (
     <Card title={`Things (${total})`}>
       <div className="mb-3 flex flex-wrap gap-2">
@@ -1171,14 +1183,6 @@ function ThingsPanel() {
         >
           Search
         </button>
-        <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={hiddenOnly}
-            onChange={(e) => setHidden(e.target.checked)}
-          />
-          Hidden only
-        </label>
       </div>
       <ul className="grid gap-3 md:grid-cols-2">
         {rows.map((t) => (
@@ -1205,26 +1209,15 @@ function ThingsPanel() {
               <p className="mt-2 line-clamp-3 text-sm leading-5 text-muted-foreground">
                 {t.raw_text}
               </p>
-              <div className="mt-4">
-                <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {t.tags?.length ? (
-                    t.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
-                      >
-                        #{tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-muted-foreground">No tags</span>
-                  )}
-                </div>
-              </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Tags
+                  </p>
+                  <p className="mt-1 truncate text-sm text-foreground">
+                    {t.tags?.length ? t.tags.map((tag) => `#${tag}`).join(" ") : "No tags"}
+                  </p>
+                </div>
                 <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     Votes
@@ -1241,7 +1234,12 @@ function ThingsPanel() {
                   </p>
                   <p className="mt-1 text-sm text-foreground">{t.comment_count}</p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                <button
+                  type="button"
+                  disabled={!t.report_count}
+                  onClick={() => onOpenReports(t.id)}
+                  className={`rounded-xl border border-border/70 bg-background/60 px-3 py-2 text-left ${t.report_count ? "cursor-pointer hover:border-amber-300/70" : "cursor-default"}`}
+                >
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     Reports
                   </p>
@@ -1250,7 +1248,7 @@ function ThingsPanel() {
                   >
                     {t.report_count}
                   </p>
-                </div>
+                </button>
                 <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     Dropped
@@ -1482,7 +1480,7 @@ function SuspiciousPanel() {
   );
 }
 
-function ReportsPanel() {
+function ReportsPanel({ targetId }: { targetId: string | null }) {
   const list = useServerFn(adminListReports);
   const resolve = useServerFn(adminResolveReport);
   const sendReportMessage = useServerFn(adminSendReportMessage);
@@ -1504,7 +1502,7 @@ function ReportsPanel() {
   const [messageBody, setMessageBody] = useState("");
   const reload = async () => {
     const [reportResult, requestResult] = await Promise.all([
-      list({ data: { status: "open", limit: 100, offset: 0 } }),
+      list({ data: { status: "open", limit: 100, offset: 0, target_id: targetId ?? undefined } }),
       requestList(),
     ]);
     setReports(reportResult.items as ReportItem[]);
@@ -1514,7 +1512,7 @@ function ReportsPanel() {
     void reload();
     // reload is a stable local loader for this admin-only panel.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [targetId]);
 
   const resolveOne = async (
     report: ReportItem,
