@@ -1155,12 +1155,10 @@ function ThingsPanel({ onOpenReports }: { onOpenReports: (thingId: string) => vo
   >([]);
   const [total, setTotal] = useState(0);
   const reload = () => {
-    list({ data: { q: q.trim() || undefined, hiddenOnly: false, limit: 50, offset: 0 } }).then(
-      (r) => {
-        setRows(r.items as never);
-        setTotal(r.total);
-      },
-    );
+    list({ data: { q: q.trim() || undefined, limit: 50, offset: 0 } }).then((r) => {
+      setRows(r.items as never);
+      setTotal(r.total);
+    });
   };
   useEffect(() => {
     reload(); /* eslint-disable-next-line */
@@ -1209,15 +1207,28 @@ function ThingsPanel({ onOpenReports }: { onOpenReports: (thingId: string) => vo
               <p className="mt-2 line-clamp-3 text-sm leading-5 text-muted-foreground">
                 {t.raw_text}
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="mt-4 rounded-xl border border-border/70 bg-background/60 px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <p className="shrink-0 text-[10px] uppercase tracking-widest text-muted-foreground">
                     Tags
                   </p>
-                  <p className="mt-1 truncate text-sm text-foreground">
-                    {t.tags?.length ? t.tags.map((tag) => `#${tag}`).join(" ") : "No tags"}
-                  </p>
+                  <div className="flex min-w-0 flex-wrap gap-2">
+                    {t.tags?.length ? (
+                      t.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
+                        >
+                          #{tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No tags</span>
+                    )}
+                  </div>
                 </div>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-2">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     Votes

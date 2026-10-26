@@ -407,13 +407,12 @@ export const adminWarnUser = createServerFn({ method: "POST" })
 
 // ---------- things ----------
 export const adminListThings = createServerFn({ method: "GET" })
-  .inputValidator((i: { q?: string; limit?: number; offset?: number; hiddenOnly?: boolean }) =>
+  .inputValidator((i: { q?: string; limit?: number; offset?: number }) =>
     z
       .object({
         q: z.string().optional(),
         limit: z.number().int().min(1).max(100).default(30),
         offset: z.number().int().min(0).default(0),
-        hiddenOnly: z.boolean().default(false),
       })
       .parse(i),
   )
@@ -430,7 +429,6 @@ export const adminListThings = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .range(data.offset, data.offset + data.limit - 1);
     if (data.q) q = q.ilike("title", `%${data.q}%`);
-    if (data.hiddenOnly) q = q.eq("hidden", true);
     const { data: rows, count } = await q;
     return { items: rows ?? [], total: count ?? 0 };
   });
