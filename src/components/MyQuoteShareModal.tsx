@@ -153,7 +153,10 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
 
     ctx.fillStyle = palette.accent;
     ctx.font = `600 24px ${font.family}`;
-    ctx.fillText(isOwner ? "MYQUOTE." : "FROM A QUOTE", 160, headerY);
+    ctx.fillText(isOwner ? "MYQUOTE." : "A QUOTE, SHARED", 160, headerY);
+    ctx.fillStyle = palette.muted;
+    ctx.font = `20px ${font.family}`;
+    ctx.fillText("One line. A feeling we recognize.", 160, headerY + 42);
 
     const footerLayout = layoutShareCardFooter(
       ctx,
@@ -169,7 +172,7 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
           color: palette.muted,
         },
         {
-          text: "SameThing.  ·  same or nah? tap in.",
+          text: "SameThing.  ·  Feel the same? Join the conversation.",
           font: `22px ${font.family}`,
           color: palette.muted,
         },
@@ -188,10 +191,29 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
       },
     );
     const dividerY = footerLayout.dividerY - 44;
-    const quoteMaxWidth = 760;
-    const textAreaTop = headerY + 120;
-    const textAreaBottom = dividerY - 100;
-    const textAreaHeight = Math.max(180, textAreaBottom - textAreaTop);
+    const cardWidth = 856;
+    const cardHeight = isStory ? 600 : 500;
+    const cardX = (width - cardWidth) / 2;
+    const cardY = isStory ? 660 : 430;
+    roundedRectPath(ctx, cardX, cardY, cardWidth, cardHeight, 30);
+    ctx.save();
+    ctx.globalAlpha = 0.24;
+    ctx.fillStyle = palette.start;
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = palette.line;
+    ctx.lineWidth = 2;
+    roundedRectPath(ctx, cardX, cardY, cardWidth, cardHeight, 30);
+    ctx.stroke();
+    ctx.fillStyle = palette.accent;
+    ctx.beginPath();
+    ctx.arc(width / 2, cardY + 38, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    const quoteMaxWidth = 700;
+    const textAreaTop = cardY + 72;
+    const textAreaBottom = cardY + cardHeight - 56;
+    const textAreaHeight = textAreaBottom - textAreaTop;
     const maxFontSize = isStory ? 62 : 54;
     const minFontSize = isStory ? 34 : 30;
     let quoteFontSize = maxFontSize;
@@ -218,9 +240,11 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
     }
     ctx.fillStyle = palette.ink;
     ctx.font = `italic ${quoteFontSize}px ${font.family}`;
+    ctx.textAlign = "center";
     blockHeight = Math.max(quoteFontSize, (lines.length - 1) * quoteLineGap + quoteFontSize);
     const startY = textAreaTop + (textAreaHeight - blockHeight) / 2 + quoteFontSize * 0.82;
-    lines.forEach((line, index) => ctx.fillText(line, 160, startY + index * quoteLineGap));
+    lines.forEach((line, index) => ctx.fillText(line, width / 2, startY + index * quoteLineGap));
+    ctx.textAlign = "start";
 
     ctx.strokeStyle = palette.line;
     ctx.lineWidth = 2;
@@ -301,11 +325,11 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
       <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-border bg-card p-5 shadow-2xl sm:rounded-3xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-serif text-2xl italic text-foreground">Share this.</h2>
+            <h2 className="font-serif text-2xl italic text-foreground">Share a Quote.</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {isOwner
-                ? "Your Quote becomes a MyQuote. card."
-                : `Attribution stays with ${authorName}.`}
+                ? "Give this feeling a card of its own."
+                : `Shared with attribution to ${authorName}.`}
             </p>
           </div>
           <button
@@ -326,7 +350,7 @@ export function MyQuoteShareModal({ quote, onClose }: { quote: QuoteShare; onClo
               aria-pressed={format === option.key}
               className={`rounded-full border px-3 py-2 text-center text-xs transition-colors ${format === option.key ? "border-accent bg-accent text-accent-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground"}`}
             >
-              {option.label} · {option.width}×{option.height}
+              {option.label} · {option.width} × {option.height}
             </button>
           ))}
         </div>

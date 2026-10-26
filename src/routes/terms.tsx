@@ -63,10 +63,14 @@ function TermsPage() {
         <Section title="2. Acceptance and eligibility">
           <p>
             By creating an account, signing in, or using a public part of the service, you agree to
-            these Terms and the Privacy Policy. You must be at least 13 years old, or the higher
-            minimum age required where you live. In the European Union, the United Kingdom and any
-            jurisdiction with a higher digital-consent age, you must meet the applicable local
-            requirement. SameThing. is not designed for children under 13.
+            these Terms and the Privacy Policy. The general minimum age is 15. A person under 15 may
+            use SameThing. only after verified authorisation from a parent or guardian. That
+            verification flow is not available yet, so people under 15 cannot currently complete
+            registration. Any higher minimum age or additional parental-authorisation requirement
+            under local law also applies. In the EU, GDPR Article 8 concerns consent-based
+            processing when an information-society service is offered directly to a child; the
+            applicable Member State threshold varies from 13 to 16. It is not a general EU “digital
+            age” rule.
           </p>
           <p>
             If you use SameThing. for an organisation, you confirm that you are authorised to accept
@@ -151,11 +155,21 @@ function TermsPage() {
 
         <Section title="7. AI features and content review">
           <p>
-            AI may assist with tag suggestions, safety classification, writing assistance and other
-            clearly identified features. AI output can be wrong and is not professional, legal,
-            medical or crisis advice. You remain responsible for content you publish and for
-            checking any suggested text or tag. A publication cannot bypass the required safety
-            checks merely because a client-side preview completed.
+            SameThing. currently uses Cloudflare Workers AI for two Thing-related tasks. For Premium
+            users, tag suggestions are generated automatically while they type, but applying a
+            suggestion is optional. After a Thing is published, its text is sent for a safety
+            classification. A flagged or inconclusive result may be placed in an authorised Admin
+            review queue. The AI result does not by itself hide or remove a Thing or restrict an
+            account; a human moderator may separately review the content and take action under these
+            Terms. AI can be wrong, and its output is not professional, legal, medical or crisis
+            advice. We do not currently offer an AI writing or rewriting feature through the
+            product.
+          </p>
+          <p>
+            These AI features process the text you enter, which may contain personal or sensitive
+            details. The tag suggestion request also includes the permitted tag choices. We do not
+            intentionally include your account email or user ID in the model prompt. See the Privacy
+            Policy for provider, location and retention details.
           </p>
         </Section>
 

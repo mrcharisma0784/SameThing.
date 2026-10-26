@@ -118,7 +118,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               <span className="dot">.</span>
             </h1>
             <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-hidden">
-              <span className="inline-flex shrink-0 items-center rounded-full border border-accent bg-accent px-3 py-1.5 text-xs tracking-wide text-accent-foreground">
+              <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs tracking-wide text-muted-foreground">
                 {things.length} {things.length === 1 ? "thing" : "things"}
               </span>
               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
@@ -127,7 +127,12 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                   onClick={() => setLanguageExpanded((expanded) => !expanded)}
                   aria-expanded={languageExpanded}
                   aria-label={`Feed language: ${languageLabel}. ${languageExpanded ? "Collapse" : "Change language"}`}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent bg-accent px-3 py-1.5 text-xs text-accent-foreground transition-colors"
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                    languageExpanded
+                      ? "border-accent bg-accent text-accent-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
                 >
                   {languageLabel}
                   <ChevronRight className="h-3 w-3" />

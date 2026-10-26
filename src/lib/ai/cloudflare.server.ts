@@ -24,7 +24,7 @@ type CloudflareChatResponse = {
 };
 
 export function getCloudflareAiModel(): string {
-  return process.env.CLOUDFLARE_AI_MODEL?.trim() || "@cf/zai-org/glm-4.7-flash";
+  return "@cf/zai-org/glm-4.7-flash";
 }
 
 function getCloudflareAiConfig() {
@@ -33,23 +33,19 @@ function getCloudflareAiConfig() {
   if (!accountId || !token) {
     throw new Error("Cloudflare AI is not configured.");
   }
-  const baseUrl =
-    process.env.CLOUDFLARE_AI_BASE_URL?.trim().replace(/\/$/, "") ||
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
-  const gatewayId = process.env.CLOUDFLARE_AI_GATEWAY_ID?.trim() || null;
-  return { baseUrl, gatewayId, token };
+  const baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
+  return { baseUrl, token };
 }
 
 export async function requestCloudflareChatCompletion(
   messages: CloudflareChatMessage[],
   options: CloudflareChatOptions = {},
 ): Promise<CloudflareChatResponse> {
-  const { baseUrl, gatewayId, token } = getCloudflareAiConfig();
+  const { baseUrl, token } = getCloudflareAiConfig();
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      ...(gatewayId ? { "cf-aig-gateway-id": gatewayId } : {}),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -64,10 +60,7 @@ export async function requestCloudflareChatCompletion(
   });
 
   if (!response.ok) {
-    const detail = (await response.text()).slice(0, 240);
-    throw new Error(
-      `Cloudflare AI request failed (${response.status})${detail ? `: ${detail}` : ""}`,
-    );
+    throw new Error(`Cloudflare AI request failed (${response.status}).`);
   }
 
   return (await response.json()) as CloudflareChatResponse;

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AVATARS } from "@/lib/avatars";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
-import { isLabThingActive } from "@/lib/test-user";
 import {
   adminLogin,
   adminStatus,
@@ -46,10 +45,6 @@ import {
   adminDeleteBannedWord,
 } from "@/lib/api/admin.functions";
 import {
-  adminListTestUserApplications,
-  adminReviewTestUserApplication,
-} from "@/lib/api/test-users.functions";
-import {
   adminGetMaintenanceStatus,
   adminSetMaintenanceMode,
   adminSetMaintenanceTargets,
@@ -75,7 +70,6 @@ export const Route = createFileRoute("/admin")({
 type Tab =
   | "overview"
   | "users"
-  | "test-users"
   | "things"
   | "reports"
   | "suspicious"
@@ -121,7 +115,6 @@ const ADMIN_PERMISSION_OPTIONS = [
 const ADMIN_TAB_REQUIREMENTS: Record<Tab, string> = {
   overview: "admin:read",
   users: "users:read",
-  "test-users": "users:read",
   things: "content:read",
   reports: "reports:read",
   suspicious: "reports:read",
@@ -172,7 +165,6 @@ function AdminPage() {
   const allTabs: Tab[] = [
     "overview",
     "users",
-    "test-users",
     "things",
     "reports",
     "suspicious",
@@ -227,23 +219,24 @@ function AdminPage() {
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground")
               }
             >
-              {t === "test-users"
-                ? "Lab"
-                : t === "api"
-                  ? "API Access"
-                  : t === "logs"
-                    ? "Admin Logs"
-                    : t === "access"
-                      ? "Admin Access"
-                      : t}
+              {t === "api"
+                ? "API Access"
+                : t === "logs"
+                  ? "Admin Logs"
+                  : t === "access"
+                    ? "Admin Access"
+                    : t}
             </button>
           ))}
         </nav>
+        <p className="mx-auto max-w-6xl px-4 pb-3 text-xs text-muted-foreground">
+          Test User applications and access management are disabled. Existing application and
+          profile data are preserved.
+        </p>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
         {activeTab === "overview" && <Overview />}
         {activeTab === "users" && <UsersPanel />}
-        {activeTab === "test-users" && <TestUsersAdminPanel />}
         {activeTab === "things" && <ThingsPanel />}
         {activeTab === "reports" && <ReportsPanel />}
         {activeTab === "suspicious" && <SuspiciousPanel />}
@@ -1726,7 +1719,7 @@ function isSupportPremium(profile?: SupportItem["profile"] | null) {
   if (!profile) return false;
   const premiumUntil = profile.premium_until ? new Date(profile.premium_until).getTime() : 0;
   const premiumActive = profile.plan === "premium" && (!premiumUntil || premiumUntil > Date.now());
-  return premiumActive || isLabThingActive(profile);
+  return premiumActive;
 }
 
 function SupportPanel() {
@@ -2908,329 +2901,5 @@ function MaintenancePanel() {
         </div>
       )}
     </section>
-  );
-}
-
-type AdminTestUserApplication = {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  reason: string | null;
-  test_areas: string | null;
-  status: "submitted" | "reviewing" | "approved" | "declined" | "revoked";
-  approved_duration_days: number | null;
-  decision_note: string | null;
-  reviewed_at: string | null;
-  created_at: string;
-  profile: {
-    username: string;
-    emoji: string;
-    gender: string | null;
-    age_range: string | null;
-    plan: string;
-    premium_until: string | null;
-    is_test_user: boolean;
-    test_user_until: string | null;
-    test_user_label: string | null;
-    same_credits: number;
-    same_credits_unlimited: boolean;
-  } | null;
-};
-
-function TestUsersAdminPanel() {
-  const listFn = useServerFn(adminListTestUserApplications);
-  const reviewFn = useServerFn(adminReviewTestUserApplication);
-  const [status, setStatus] = useState<"all" | AdminTestUserApplication["status"]>("submitted");
-  const [items, setItems] = useState<AdminTestUserApplication[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [duration, setDuration] = useState<"7" | "14" | "30" | "custom">("30");
-  const [customDays, setCustomDays] = useState("21");
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const load = async () => {
-    try {
-      const result = await listFn({ data: { status } });
-      setItems(result.items as AdminTestUserApplication[]);
-    } catch {
-      toast.error("Could not load Test User applications.");
-    }
-  };
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
-
-  const durationDays = duration === "custom" ? Number.parseInt(customDays, 10) : Number(duration);
-  const selected = items.find((item) => item.id === selectedId) ?? null;
-
-  const review = async (nextStatus: "reviewing" | "approved" | "declined" | "revoked") => {
-    if (!selected) return;
-    if (
-      nextStatus === "approved" &&
-      (!Number.isInteger(durationDays) || durationDays < 7 || durationDays > 30)
-    ) {
-      toast.error("Choose a duration between 7 and 30 days.");
-      return;
-    }
-    setBusy(true);
-    const result = await reviewFn({
-      data: {
-        application_id: selected.id,
-        status: nextStatus,
-        duration_days: nextStatus === "approved" ? durationDays : null,
-        decision_note: note.trim(),
-      },
-    });
-    setBusy(false);
-    if (!result.ok) {
-      toast.error(result.error);
-      return;
-    }
-    toast.success(
-      nextStatus === "approved"
-        ? "LabThing. access approved."
-        : nextStatus === "declined"
-          ? "Test User application declined."
-          : nextStatus === "revoked"
-            ? "LabThing. access revoked."
-            : "Application marked as reviewing.",
-    );
-    setNote("");
-    await load();
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-        <div>
-          <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-accent">
-            <FlaskConical className="h-4 w-4" /> pilot access
-          </p>
-          <h2 className="mt-1 text-2xl font-medium text-foreground">Lab</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Review Lab applications, select a time window and manage LabThing. access. Approved
-            users receive PremiumThing. and unlimited Same Credits for the selected pilot period.
-          </p>
-        </div>
-        <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value as typeof status)}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-sm text-foreground"
-        >
-          <option value="submitted">Submitted</option>
-          <option value="reviewing">Reviewing</option>
-          <option value="approved">Approved</option>
-          <option value="declined">Declined</option>
-          <option value="revoked">Revoked</option>
-          <option value="all">All applications</option>
-        </select>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <Card title={`Applications · ${items.length}`}>
-          <div className="space-y-2">
-            {items.map((item) => {
-              const active = item.id === selectedId;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
-                  className={`w-full rounded-2xl border p-4 text-left transition-colors ${active ? "border-accent/60 bg-accent/10" : "border-border bg-background/35 hover:border-accent/35"}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-background text-lg">
-                        <ProfileGlyph value={item.profile?.emoji ?? "✦"} className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm text-foreground">
-                          {item.first_name} {item.last_name}
-                        </span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          @{item.profile?.username ?? "account unavailable"}
-                        </span>
-                      </span>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-border px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {item.status}
-                    </span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-                    <span>Age · {item.profile?.age_range || "not provided"}</span>
-                    <span>Gender · {item.profile?.gender || "not provided"}</span>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                    {item.test_areas || item.reason || "No optional details provided."}
-                  </p>
-                </button>
-              );
-            })}
-            {!items.length && (
-              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                No applications in this view.
-              </p>
-            )}
-          </div>
-        </Card>
-
-        <Card
-          title={
-            selected
-              ? `Review · @${selected.profile?.username ?? "unknown"}`
-              : "Select an application"
-          }
-        >
-          {!selected ? (
-            <div className="flex min-h-56 flex-col items-center justify-center text-center text-sm text-muted-foreground">
-              <FlaskConical className="mb-3 h-7 w-7 text-accent/70" />
-              Choose an application to view the full request and manage access.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-border bg-background/45 p-4">
-                <p className="text-sm text-foreground">
-                  {selected.first_name} {selected.last_name}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Applied {new Date(selected.created_at).toLocaleString("en-US")}
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <p className="uppercase tracking-widest text-muted-foreground">Age</p>
-                    <p className="mt-1 text-foreground">
-                      {selected.profile?.age_range || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="uppercase tracking-widest text-muted-foreground">Gender</p>
-                    <p className="mt-1 text-foreground">
-                      {selected.profile?.gender || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="uppercase tracking-widest text-muted-foreground">Plan</p>
-                    <p className="mt-1 text-foreground">{selected.profile?.plan || "Unknown"}</p>
-                  </div>
-                  <div>
-                    <p className="uppercase tracking-widest text-muted-foreground">Credits</p>
-                    <p className="mt-1 text-foreground">
-                      {selected.profile?.same_credits_unlimited
-                        ? "∞ unlimited"
-                        : (selected.profile?.same_credits ?? 0)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Why</p>
-                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground">
-                  {selected.reason || "Not provided."}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Test interests
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground">
-                  {selected.test_areas || "Not provided."}
-                </p>
-              </div>
-              {selected.status === "approved" && (
-                <div className="rounded-2xl border border-accent/30 bg-accent/5 p-3 text-xs leading-5 text-muted-foreground">
-                  <p className="text-foreground">LabThing. access is active.</p>
-                  <p className="mt-1">
-                    {selected.approved_duration_days
-                      ? `${selected.approved_duration_days} days from approval.`
-                      : "No end date; revoke manually when the pilot ends."}
-                  </p>
-                </div>
-              )}
-              <label className="block text-[10px] uppercase tracking-widest text-muted-foreground">
-                Decision note
-                <textarea
-                  value={note}
-                  onChange={(event) => setNote(event.target.value.slice(0, 1200))}
-                  placeholder="Optional note sent to the applicant"
-                  className="mt-1.5 min-h-20 w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm normal-case tracking-normal text-foreground outline-none focus:border-accent/60"
-                />
-              </label>
-              {(selected.status === "submitted" || selected.status === "reviewing") && (
-                <>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      Approved access window
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(["7", "14", "30", "custom"] as const).map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setDuration(option)}
-                          className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${duration === option ? "border-accent bg-accent/15 text-accent" : "border-border text-muted-foreground hover:border-accent/40"}`}
-                        >
-                          {option === "custom" ? "Custom (7–30)" : `${option} days`}
-                          {option === "30" ? " · Max" : ""}
-                        </button>
-                      ))}
-                    </div>
-                    {duration === "custom" && (
-                      <input
-                        type="number"
-                        min={7}
-                        max={30}
-                        value={customDays}
-                        onChange={(event) => setCustomDays(event.target.value)}
-                        className="mt-2 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-accent/60"
-                        placeholder="7–30 days"
-                      />
-                    )}
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void review("reviewing")}
-                      className="rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground hover:border-accent/40 hover:text-foreground disabled:opacity-50"
-                    >
-                      Mark reviewing
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void review("declined")}
-                      className="rounded-xl border border-destructive/35 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                    >
-                      Decline
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void review("approved")}
-                      className="rounded-xl bg-accent px-3 py-2 text-xs text-accent-foreground hover:bg-accent/90 disabled:opacity-50"
-                    >
-                      Approve LabThing.
-                    </button>
-                  </div>
-                </>
-              )}
-              {selected.status === "approved" && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void review("revoked")}
-                  className="w-full rounded-xl border border-destructive/35 px-3 py-2 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                >
-                  Revoke LabThing. access
-                </button>
-              )}
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
   );
 }

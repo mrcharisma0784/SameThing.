@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Admin reads newly migrated service-only tables before generated types refresh. */
 // require the admin session cookie unlocked via the shared password.
 import { createServerFn } from "@tanstack/react-start";
-import { isLabThingActive } from "@/lib/test-user";
+import { effectivePlan } from "@/lib/premium";
 import { z } from "zod";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import {
@@ -893,10 +893,7 @@ export const adminListSupportRequests = createServerFn({ method: "GET" })
     });
     items.sort((left: any, right: any) => {
       const premiumRank = (profile: any) => {
-        const premiumUntil = profile?.premium_until ? new Date(profile.premium_until).getTime() : 0;
-        const premiumActive =
-          profile?.plan === "premium" && (!premiumUntil || premiumUntil > Date.now());
-        return premiumActive || isLabThingActive(profile) ? 1 : 0;
+        return effectivePlan(profile) === "premium" ? 1 : 0;
       };
       return (
         premiumRank(right.profile) - premiumRank(left.profile) ||

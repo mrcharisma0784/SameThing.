@@ -256,11 +256,11 @@ function SettingsPage() {
               hint={
                 isMaintenancePaused("/streak")
                   ? "Temporarily unavailable"
-                  : "Start when you are ready, then return daily"
+                  : "Currently unavailable; Streak data is preserved"
               }
-              disabled={isMaintenancePaused("/streak")}
-              endAdornment={maintenanceAdornment("/streak")}
-              onClick={() => navigate({ to: "/streak" })}
+              disabled={true}
+              endAdornment={<span className="text-[10px] text-muted-foreground">Unavailable</span>}
+              onClick={() => {}}
             />
             <Row
               icon={<Trophy className="h-4 w-4" />}
@@ -377,8 +377,10 @@ function SettingsPage() {
             <Row
               icon={<FlaskConical className="h-4 w-4" />}
               label="Test Users"
-              hint="Early access trials and feedback"
-              onClick={() => navigate({ to: "/test-users" })}
+              hint="Currently unavailable; existing records are preserved"
+              disabled={true}
+              endAdornment={<span className="text-[10px] text-muted-foreground">Unavailable</span>}
+              onClick={() => {}}
             />
           </SettingsGroup>
 

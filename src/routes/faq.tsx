@@ -34,7 +34,7 @@ const FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: "How does Streak work?",
-    a: "Streak is optional and starts at 0. Choose Start my Streak whenever you are ready; after that, open the Streak page once each UTC day to continue the flame. Missing a day resets the current run, while your best run and milestone rewards remain recorded.",
+    a: "Streak is currently unavailable. Existing Streak records and milestone history are preserved, but check-ins and Streak Freeze purchases are disabled.",
   },
   {
     q: "Can I comment on a quote?",
@@ -138,7 +138,7 @@ const FAQS: Array<{ q: string; a: string }> = [
   },
   {
     q: "How does AI help?",
-    a: "Server-side AI may suggest tags or help review safety signals. A Thing is not published until required safety checks finish; if a check cannot be completed, publication is held. AI can be wrong, suggestions are optional, and you remain responsible for what you publish.",
+    a: "Cloudflare Workers AI generates optional tag suggestions for Premium users as they type and runs a safety review after a Thing is posted. A flagged or unclear result may go to an authorised human moderator; the AI result alone does not hide a post or restrict an account. AI can be wrong, and using a suggested tag is your choice. See the Privacy Policy for what text is processed and how it is handled.",
   },
   {
     q: "What triggers a warning or suspension?",

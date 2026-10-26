@@ -185,34 +185,68 @@ function PrivacyPage() {
 
         <Section title="8. AI processing">
           <p className="text-muted-foreground">
-            Certain server-side features may send limited text to a configured AI or
-            safety-processing provider for tag suggestions and safety classification. The service
-            does not expose provider credentials to browsers. We do not authorise providers to train
-            a general model on your content under the current configuration, but providers may
-            retain technical logs under their own terms. We do not use AI to make solely automated
-            decisions with legal or similarly significant effects without appropriate review and
-            notice.
+            SameThing. uses Cloudflare Workers AI with the Cloudflare-hosted
+            <code>@cf/zai-org/glm-4.7-flash</code> model from Zhipu AI. Cloudflare runs the model on
+            its global network. The app does not select a processing country or promise that
+            inference stays within your country or the EEA.
+          </p>
+          <p className="text-muted-foreground">
+            We use this service for Premium tag suggestions and for safety classification of Thing
+            text after it is posted. For Premium members, a draft with at least eight characters is
+            sent automatically for tag suggestions along with the available tag choices; applying a
+            suggestion is optional. The post-publication safety review also sends the Thing text. We
+            do not intentionally include your account email or user ID in the model prompt.
+            Free-form Things can contain personal or sensitive details, so please consider that
+            before typing or posting them.
+          </p>
+          <p className="text-muted-foreground">
+            A flagged or inconclusive safety result may be placed in an authorised Admin review
+            queue. The AI result alone does not hide or remove content or restrict an account. A
+            human moderator may review it and take a separate action under the moderation rules. AI
+            results can be wrong. We do not use this classification alone to make a legal or
+            similarly significant decision about you.
+          </p>
+          <p className="text-muted-foreground">
+            Cloudflare says it processes standard Workers AI prompts and outputs only as long as
+            needed to return the response, does not retain them afterward, and does not use them to
+            train its models. Cloudflare may keep non-content operational metadata needed to run,
+            secure, support or bill for the service; its published notice gives no fixed retention
+            period for that metadata. The app calls Workers AI directly rather than routing prompts
+            through AI Gateway logging. Our application error logs do not include the Thing text or
+            model output. On the current Vercel Hobby plan, runtime logs are retained for one hour.
+            See{" "}
+            <a
+              href="https://developers.cloudflare.com/workers-ai/platform/data-usage/"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Cloudflare's Workers AI data-usage notice
+            </a>
+            .
           </p>
         </Section>
 
         <Section title="9. Who may receive data?">
           <p className="text-muted-foreground">
-            Data may be processed by service providers that host or secure the product, including
-            managed database/authentication, application hosting, security, AI and—when
-            activated—payment providers. Providers receive only what is needed for their function
-            and are expected to process data under contractual or other applicable safeguards. We
-            may disclose information to authorities, advisers or other parties where necessary to
-            comply with law, protect people, investigate abuse, enforce Terms or establish legal
-            claims.
+            Cloudflare processes the text described above to provide Workers AI. The model is
+            Cloudflare-hosted; the app does not send these requests directly to Zhipu AI. Supabase
+            provides the app database and authentication, and Vercel hosts the web app. These
+            providers may process service and security information needed to provide their
+            respective services. We may disclose information to authorities, advisers or other
+            parties where necessary to comply with law, protect people, investigate abuse, enforce
+            Terms or establish legal claims.
           </p>
         </Section>
 
         <Section title="10. International transfers">
           <p className="text-muted-foreground">
-            Our providers may process data in countries outside your country of residence. Where
-            required, we use an applicable adequacy decision, standard contractual clauses,
-            equivalent safeguards or another lawful transfer mechanism. Contact us if you need
-            information about the current provider list and applicable safeguards.
+            Cloudflare, Inc. is based in the United States, and Workers AI runs across Cloudflare's
+            global network. The app does not pin AI inference to a single country or the EEA, so the
+            precise processing location can vary. Other providers may also process data outside your
+            country. Where applicable, transfers rely on the provider's relevant adequacy decision,
+            standard contractual clauses or another lawful safeguard. Contact us for current
+            provider and transfer information.
           </p>
         </Section>
 
@@ -230,6 +264,19 @@ function PrivacyPage() {
             <li>
               Inbox notifications: deleted during the daily cleanup after your selected 24-hour,
               7-day, 15-day or 30-day window. They may remain stored for up to about one extra day.
+            </li>
+            <li>
+              AI prompts and responses: not stored by SameThing. as AI transcripts or content logs.
+              Cloudflare says standard inference content is not retained after processing.
+              Cloudflare operational metadata has no fixed retention period stated in its public
+              Workers AI notice. Safety-review status and related moderation records are retained
+              indefinitely as moderation records.
+            </li>
+            <li>
+              Application runtime logs: the current Vercel Hobby plan retains them for one hour.
+              SameThing. error messages for AI calls do not contain the submitted text or model
+              output. Cloudflare may retain non-content operational metadata under its own service
+              policies, without a fixed period stated in its Workers AI notice.
             </li>
             <li>
               Previously created Research API request logs: kept for 7 days, then removed in the
@@ -271,10 +318,41 @@ function PrivacyPage() {
 
         <Section title="14. Children">
           <p className="text-muted-foreground">
-            SameThing. is not directed to children under 13. Where local law sets a higher age or
-            parental-consent requirement, that requirement applies. If we learn that we collected
-            data from a child contrary to applicable law, we will take appropriate steps to delete
-            it or obtain the required authorisation.
+            The general minimum age is 15. A person under 15 may use SameThing. only after verified
+            authorisation from a parent or guardian. That verification flow is not available yet, so
+            under-15 registration is currently paused; we do not currently collect a parent's email
+            address or phone number for this purpose. Any higher local minimum age or parental
+            authorisation rule also applies.
+          </p>
+          <p className="text-muted-foreground">
+            In the EU, GDPR Article 8 applies specifically when personal-data processing is based on
+            consent and an information-society service is offered directly to a child. The age below
+            which parent or guardian authorisation is needed varies by Member State from 13 to 16;
+            it is not a general digital-age rule. See the
+            <a
+              href="https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/legal-grounds-processing-data/are-there-any-specific-safeguards-data-about-children_en"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              {" "}
+              European Commission guidance
+            </a>{" "}
+            and
+            <a
+              href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32016R0679&from=EN"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              {" "}
+              GDPR Article 8
+            </a>
+            .
+          </p>
+          <p className="text-muted-foreground">
+            If we learn that we collected data from a child contrary to applicable law, we will take
+            appropriate steps to delete it or obtain the required authorisation.
           </p>
         </Section>
 

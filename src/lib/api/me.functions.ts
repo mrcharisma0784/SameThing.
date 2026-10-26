@@ -366,18 +366,18 @@ export const addCustomTag = createServerFn({ method: "POST" })
     const tag = data.tag.trim().toLowerCase();
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("custom_tags, plan")
+      .select("custom_tags, plan, premium_until, is_test_user")
       .eq("id", context.userId)
       .maybeSingle();
     const current: string[] = (prof?.custom_tags as string[] | null) ?? [];
-    const limit = prof?.plan === "premium" ? 15 : 5;
+    const premium = effectivePlan(prof) === "premium";
+    const limit = premium ? 15 : 5;
     if (current.includes(tag)) return { error: null, tags: current };
     if (current.length >= limit)
       return {
-        error:
-          prof?.plan === "premium"
-            ? "Tag limit reached (15)."
-            : "Free limit reached (5). ✦ PremiumThing. gives you 15.",
+        error: premium
+          ? "Tag limit reached (15)."
+          : "Free limit reached (5). ✦ PremiumThing. gives you 15.",
         tags: current,
       };
 
@@ -660,12 +660,18 @@ export const getPublicProfile = createServerFn({ method: "GET" })
 // ---- Update demographics (one-time) ------------------------------
 const DemoInput = z.object({
   gender: z.string().min(1).max(24),
-  age_range: z.string().min(1).max(24),
+  age_range: z.string().regex(/^(?:[1-9]|[1-9][0-9]|1[01][0-9]|120)$/),
 });
 export const saveDemographics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => DemoInput.parse(i))
   .handler(async ({ data, context }) => {
+    if (Number(data.age_range) < 15) {
+      return {
+        error:
+          "Under-15 registration is paused until verified parent or guardian approval is available.",
+      };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("profiles")

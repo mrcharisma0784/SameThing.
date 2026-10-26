@@ -42,10 +42,30 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     if (error || !data?.claims) throw new Error("Unauthorized: Invalid token");
     if (!data.claims.sub) throw new Error("Unauthorized: No user ID found in token");
 
+    const userId = data.claims.sub;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("is_test_user, plan, same_credits_unlimited")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profileError) throw new Error("Could not verify account access.");
+    if (
+      profile?.is_test_user &&
+      (profile.plan === "premium" || profile.same_credits_unlimited === true)
+    ) {
+      const { error: revokeError } = await supabaseAdmin
+        .from("profiles")
+        .update({ plan: "free", premium_until: null, same_credits_unlimited: false })
+        .eq("id", userId)
+        .eq("is_test_user", true);
+      if (revokeError) throw new Error("Could not retire legacy Test User access.");
+    }
+
     return next({
       context: {
         supabase,
-        userId: data.claims.sub,
+        userId,
         claims: data.claims,
       },
     });

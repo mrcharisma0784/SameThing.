@@ -147,7 +147,10 @@ export function MyThingShareModal({
 
     ctx.fillStyle = palette.accent;
     ctx.font = `600 24px ${font.family}`;
-    ctx.fillText(isOwnThing ? "MYTHING." : "FROM A THING", 160, headerY);
+    ctx.fillText(isOwnThing ? "MYTHING." : "A THING, SHARED", 160, headerY);
+    ctx.fillStyle = palette.muted;
+    ctx.font = `20px ${font.family}`;
+    ctx.fillText("A thought, made easier to pass along.", 160, headerY + 42);
 
     const footerLayout = layoutShareCardFooter(
       ctx,
@@ -163,7 +166,7 @@ export function MyThingShareModal({
           color: palette.muted,
         },
         {
-          text: "SameThing.  ·  same or nah? tap in.",
+          text: "SameThing.  ·  Feel the same? Join the conversation.",
           font: `22px ${font.family}`,
           color: palette.muted,
         },
@@ -312,11 +315,11 @@ export function MyThingShareModal({
       <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-border bg-card p-5 shadow-2xl sm:rounded-3xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-serif text-2xl italic text-foreground">Share this.</h2>
+            <h2 className="font-serif text-2xl italic text-foreground">Share a Thing.</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {isOwnThing
-                ? "Your Thing becomes a MyThing. card."
-                : `Attribution stays with ${authorName}.`}
+                ? "Turn this thought into a card worth passing on."
+                : `Shared with attribution to ${authorName}.`}
             </p>
           </div>
           <button
@@ -343,7 +346,7 @@ export function MyThingShareModal({
                     : "border-border bg-background text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {option.label} · {option.width}×{option.height}
+                {option.label} · {option.width} × {option.height}
               </button>
             );
           })}

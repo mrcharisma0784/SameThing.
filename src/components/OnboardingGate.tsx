@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
 import { completeOnboarding } from "@/lib/api/things.functions";
-import { saveDemographics, deleteMyAccount } from "@/lib/api/me.functions";
+import { saveDemographics } from "@/lib/api/me.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DEFAULT_AVATAR, SELECTABLE_AVATARS } from "@/lib/avatars";
@@ -21,7 +21,6 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   const { user, profile, refreshProfile } = useAuth();
   const onboard = useServerFn(completeOnboarding);
   const saveDemo = useServerFn(saveDemographics);
-  const del = useServerFn(deleteMyAccount);
   const [step, setStep] = useState(0);
   const [username, setUsername] = useState("");
   const [emoji, setEmoji] = useState(DEFAULT_AVATAR);
@@ -33,10 +32,20 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   const needsOnboarding = !!user && !!profile && !profile.onboarded_at;
   const needsDemographics =
     !!user && !!profile && !!profile.onboarded_at && !profile.demographics_completed_at;
-  const open = needsOnboarding || needsDemographics;
+  const savedAge = Number(profile?.age_range);
+  const needsUnder15 =
+    !!user &&
+    !!profile &&
+    !!profile.demographics_completed_at &&
+    Number.isFinite(savedAge) &&
+    savedAge >= 1 &&
+    savedAge < 15;
+  const open = needsOnboarding || needsDemographics || needsUnder15;
 
   useEffect(() => {
-    if (profile && !profile.onboarded_at) {
+    if (needsUnder15) {
+      setStep(4);
+    } else if (profile && !profile.onboarded_at) {
       setUsername(profile.username || "");
       setEmoji(profile.emoji || DEFAULT_AVATAR);
       setLanguage((profile.language as "en" | "tr") || "en");
@@ -44,7 +53,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     } else if (profile && !profile.demographics_completed_at) {
       setStep(3);
     }
-  }, [profile]);
+  }, [profile, needsUnder15]);
 
   const submitOnboarding = async () => {
     setSaving(true);
@@ -68,17 +77,13 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
       toast.error("Please enter a valid age.");
       return;
     }
-    if (n < 13) {
+    if (n < 15) {
+      toast.error(
+        "Under-15 registration is paused until verified parent or guardian approval is available.",
+      );
       setSaving(true);
-      // Under 13: block access and delete account
-      try {
-        await del();
-      } catch (e) {
-        console.error(e);
-      }
       await supabase.auth.signOut();
       setSaving(false);
-      toast.error("You must be 13 or older to use SameThing.");
       return;
     }
     setSaving(true);
@@ -101,6 +106,26 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
           onPointerDownOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
+          {step === 4 && needsUnder15 && (
+            <div className="space-y-4 text-center">
+              <p className="font-serif text-2xl italic text-foreground">Parent approval needed.</p>
+              <p className="text-sm text-muted-foreground">
+                Under-15 access is paused until verified parent or guardian approval is available.
+                Your account and saved data have not been deleted.
+              </p>
+              <Button
+                onClick={async () => {
+                  setSaving(true);
+                  await supabase.auth.signOut();
+                  setSaving(false);
+                }}
+                disabled={saving}
+                className="w-full rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {saving ? "Signing out…" : "Sign out"}
+              </Button>
+            </div>
+          )}
           {step === 0 && needsOnboarding && (
             <div className="space-y-4 text-center">
               <Brand size="lg" />
@@ -254,7 +279,9 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
                   className="mt-1 bg-background"
                 />
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  You must be 13 or older to use SameThing.
+                  The general minimum age is 15. Under-15 registration requires verified parent or
+                  guardian approval, but that verification is not available yet. Higher local age
+                  requirements still apply.
                 </p>
               </div>
               <Button

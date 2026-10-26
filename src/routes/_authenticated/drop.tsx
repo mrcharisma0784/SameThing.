@@ -188,6 +188,16 @@ function DropPage() {
                 </span>
               )}
             </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+              Your Thing text is sent to Cloudflare for a safety review after posting. For Premium
+              accounts, text of 8 or more characters is also sent as you type to suggest tags; using
+              a suggestion is optional. Your post may include personal or sensitive details. Read
+              our{" "}
+              <Link to="/privacy" className="underline underline-offset-2">
+                Privacy Policy
+              </Link>
+              .
+            </p>
             {warnings.length > 0 && (
               <div
                 className={cn(

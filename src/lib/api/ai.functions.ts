@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai/cloudflare.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { TAGS } from "@/lib/thing-helpers";
+import { effectivePlan } from "@/lib/premium";
 
 const Input = z.object({
   text: z.string().min(4).max(1000),
@@ -21,10 +22,10 @@ export const suggestTags = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("plan")
+      .select("plan, premium_until, is_test_user")
       .eq("id", context.userId)
       .maybeSingle();
-    if (prof?.plan !== "premium") {
+    if (effectivePlan(prof) !== "premium") {
       return { tags: [] as string[], error: "premium" as string | null };
     }
 
@@ -59,7 +60,7 @@ export const suggestTags = createServerFn({ method: "POST" })
         .slice(0, 3);
       return { tags, error: null as string | null };
     } catch (e) {
-      console.error("suggestTags", e);
+      console.error("suggestTags request failed");
       const message = e instanceof Error ? e.message : "";
       return {
         tags: [],

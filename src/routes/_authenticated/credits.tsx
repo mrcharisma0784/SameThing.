@@ -93,7 +93,7 @@ function CreditsPage() {
     staleTime: 30_000,
   });
   const entries = useMemo(() => (data?.entries ?? []) as LedgerEntry[], [data?.entries]);
-  const unlimitedCredits = Boolean(isLabThingActive(profile) || profile?.same_credits_unlimited);
+  const unlimitedCredits = Boolean(isLabThingActive(profile));
   const requestPurchase = async (packKey: "small" | "medium" | "large") => {
     setPurchaseBusy(packKey);
     const result = await createPurchase({ data: { pack_key: packKey } });
@@ -267,13 +267,9 @@ function CreditsPage() {
               detail="Move one of your Things directly below the newest posts in New for 6, 24 or 72 hours."
               action="Open MyThing."
             />
-            <SpendCard
-              href="/streak"
-              icon={<ShieldCheck className="h-4 w-4" />}
-              title="Streak Freeze"
-              detail="Protect one missed UTC day. Premium includes three; other accounts can add up to three for 30 Credits each."
-              action="Open Streak"
-            />
+            <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+              Streak and Streak Freeze are currently unavailable. Existing Streak data is preserved.
+            </div>
           </div>
         </section>
 

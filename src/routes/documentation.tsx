@@ -165,7 +165,7 @@ const DOC_GROUPS: DocGroup[] = [
           {
             heading: "Writing a Thing",
             paragraphs: [
-              "The Drop a Thing flow gives you a text area, tags and controls for anonymity and comments. A short display label is derived from the submitted text; there is no separate Title field. The safety review runs before publication. If the check cannot complete, the Thing is not silently published without review.",
+              "The Drop a Thing flow gives you a text area, tags and controls for anonymity and comments. A short display label is derived from the submitted text; there is no separate Title field. Deterministic platform checks run before publication. After a Thing is posted, Cloudflare AI may classify it for safety; a flagged or unclear result can go to an authorised human moderator. The AI result alone does not hide the post or restrict an account.",
               "You remain the owner of your Thing. Your owner menu can include edit, share, report and delete actions according to ownership and the state of the content.",
             ],
           },
@@ -290,21 +290,15 @@ const DOC_GROUPS: DocGroup[] = [
         eyebrow: "Your account / 02",
         icon: Flame,
         intro:
-          "Streak is an optional daily return ritual. It begins at zero and only starts when you choose to begin it.",
+          "Streak is currently unavailable. Existing Streak records and milestone history are preserved; check-ins and Streak Freeze purchases are disabled.",
         sections: [
           {
             heading: "Start when you are ready",
-            paragraphs: [
-              "Opening the Streak page does not start or increase anything by itself. Choose Start my Streak when you want your first check-in to count as day one.",
-            ],
+            paragraphs: ["The Streak page is unavailable while this feature is disabled."],
           },
           {
             heading: "Keep the flame",
-            bullets: [
-              "After starting, open the Streak page once during each UTC day to continue the current run.",
-              "Missing a UTC day resets the current run, but your best run and milestone history remain recorded.",
-              "Streak milestone rewards appear in Achievements and can be claimed once when unlocked.",
-            ],
+            bullets: ["Your existing Streak records and milestone history are preserved."],
           },
         ],
       },

@@ -35,9 +35,12 @@ function AppearancePage() {
   );
   const [draftTags, setDraftTags] = useState<string[]>(savedTags);
   const [savingTags, setSavingTags] = useState(false);
-  const [addTagsOpen, setAddTagsOpen] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
   useEffect(() => setDraftTags(savedTags), [savedTags]);
   const inactiveTags = allTags.filter((tag) => !draftTags.includes(tag));
+  const matchingTags = inactiveTags.filter((tag) =>
+    tag.toLowerCase().includes(tagSearch.trim().toLowerCase()),
+  );
   const tagsDirty = draftTags.join("\u0000") !== savedTags.join("\u0000");
   const tagEditCost = tagsDirty && !isPremium ? 5 : 0;
 
@@ -189,34 +192,66 @@ function AppearancePage() {
               </p>
             )}
           </div>
-          <button
-            type="button"
-            aria-label="Add a feed filter tag"
-            aria-expanded={addTagsOpen}
-            title="Add a tag"
-            onClick={() => setAddTagsOpen((open) => !open)}
-            disabled={savingTags || inactiveTags.length === 0}
-            className="mt-1 flex h-10 w-full items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:border-accent/50 hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-          {addTagsOpen && inactiveTags.length > 0 && (
-            <div className="mt-3">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Add a tag
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {inactiveTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => void saveTags([...draftTags, tag])}
-                    disabled={savingTags}
-                    className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  >
-                    <Plus className="h-3 w-3" /> {tag}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-1 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+            <input
+              aria-label="Search available feed filter tags"
+              value={tagSearch}
+              onChange={(event) => setTagSearch(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  if (draftTags.length >= 20) {
+                    toast.error("You can add up to 20 feed filter tags.");
+                    return;
+                  }
+                  const tag = matchingTags[0];
+                  if (tag) {
+                    void saveTags([...draftTags, tag]);
+                    setTagSearch("");
+                  }
+                }
+              }}
+              placeholder="Type to add a tag…"
+              disabled={savingTags || inactiveTags.length === 0 || draftTags.length >= 20}
+              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+            />
+            <button
+              type="button"
+              aria-label="Add a feed filter tag"
+              aria-disabled={savingTags || inactiveTags.length === 0 || draftTags.length >= 20}
+              title={draftTags.length >= 20 ? "You can add up to 20 feed filter tags" : "Add a tag"}
+              onClick={() => {
+                if (draftTags.length >= 20) {
+                  toast.error("You can add up to 20 feed filter tags.");
+                  return;
+                }
+                const tag = matchingTags[0];
+                if (tag) {
+                  void saveTags([...draftTags, tag]);
+                  setTagSearch("");
+                }
+              }}
+              disabled={savingTags || inactiveTags.length === 0}
+              className={`text-muted-foreground transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-40 ${draftTags.length >= 20 ? "cursor-not-allowed opacity-40" : ""}`}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+          {tagSearch.trim() && matchingTags.length > 0 && draftTags.length < 20 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {matchingTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => {
+                    void saveTags([...draftTags, tag]);
+                    setTagSearch("");
+                  }}
+                  disabled={savingTags}
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                >
+                  <Plus className="h-3 w-3" /> {tag}
+                </button>
+              ))}
             </div>
           )}
         </section>
