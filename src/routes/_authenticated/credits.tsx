@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -118,12 +119,7 @@ function CreditsPage() {
   return (
     <OnboardingGate>
       <AppShell>
-        <Link
-          to="/settings"
-          className="mb-3 inline-flex items-center gap-1 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> settings
-        </Link>
+        <SettingsBackLink />
 
         <div className="flex items-start justify-between gap-4">
           <div>

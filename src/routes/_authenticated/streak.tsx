@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -91,12 +92,7 @@ function StreakPage() {
   return (
     <OnboardingGate>
       <AppShell>
-        <Link
-          to="/settings"
-          className="mb-4 inline-flex items-center gap-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> settings
-        </Link>
+        <SettingsBackLink />
 
         <header className="relative overflow-hidden rounded-[2rem] border border-accent/30 bg-card px-5 py-6 sm:px-7 sm:py-8">
           <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border border-accent/15" />

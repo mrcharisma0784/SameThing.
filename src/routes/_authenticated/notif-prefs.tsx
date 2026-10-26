@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { useEffect, useState } from "react";
 import { BellOff, ChevronLeft } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -172,12 +173,7 @@ function NotifPrefsPage() {
   return (
     <OnboardingGate>
       <AppShell>
-        <Link
-          to="/settings"
-          className="mb-4 inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" /> back to settings
-        </Link>
+        <SettingsBackLink />
         <h1 className="brand-mark text-3xl text-foreground">
           Notifications<span className="dot">.</span>
         </h1>

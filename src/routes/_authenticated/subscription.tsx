@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,12 +78,7 @@ function SubscriptionPage() {
   return (
     <OnboardingGate>
       <AppShell>
-        <Link
-          to="/settings"
-          className="mb-3 inline-flex items-center gap-1 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> settings
-        </Link>
+        <SettingsBackLink />
         <h1 className="brand-mark text-3xl text-foreground">
           Subscription<span className="dot">.</span>
         </h1>

@@ -14,6 +14,8 @@ import { PublicLanding } from "@/components/PublicLanding";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { getSiteUrl } from "@/lib/site-url";
+import { LANGUAGES } from "@/lib/languages";
+import { ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -54,16 +56,25 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
   const feed = useServerFn(getFeed);
   const [filter, setFilter] = useState<FilterKey>("new");
   const [tag, setTag] = useState<string | null>(null);
-  const [langScope, setLangScope] = useState<"mine" | "all">(() => {
+  const [langScope, setLangScope] = useState<string>(() => {
     if (typeof window === "undefined") return "mine";
-    return (localStorage.getItem("feed:langScope") as "mine" | "all") || "mine";
+    const stored = localStorage.getItem("feed:langScope");
+    return stored === "all" || stored === "mine" || LANGUAGES.some((item) => item.code === stored)
+      ? stored
+      : "mine";
   });
+  const [languageExpanded, setLanguageExpanded] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("feed:langScope", langScope);
   }, [langScope]);
 
-  const language = langScope === "all" ? "all" : profile?.language || "all";
+  const language =
+    langScope === "all" ? "all" : langScope === "mine" ? profile?.language || "all" : langScope;
+  const languageLabel =
+    language === "all"
+      ? "global"
+      : LANGUAGES.find((item) => item.code === language)?.label || language;
   const feedTags = (profile?.feed_tags?.length ? profile.feed_tags : [...TAGS]) as string[];
 
   const { data, isLoading, isError } = useQuery({
@@ -106,17 +117,62 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               {heading.replace(".", "")}
               <span className="dot">.</span>
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {things.length} {things.length === 1 ? "thing" : "things"} ·{" "}
-              <button
-                onClick={() => setLangScope((s) => (s === "mine" ? "all" : "mine"))}
-                className="underline-offset-2 hover:text-foreground hover:underline"
-              >
-                {langScope === "all"
-                  ? "global"
-                  : `local (${(profile?.language || "en").toLowerCase()})`}
-              </button>
-            </p>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex shrink-0 items-center rounded-full border border-accent bg-accent px-3 py-1.5 text-xs tracking-wide text-accent-foreground">
+                {things.length} {things.length === 1 ? "thing" : "things"}
+              </span>
+              <div className="flex min-w-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setLanguageExpanded((expanded) => !expanded)}
+                  aria-expanded={languageExpanded}
+                  aria-label={`Feed language: ${languageLabel}. ${languageExpanded ? "Collapse" : "Change language"}`}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground"
+                >
+                  {languageLabel}
+                  <ChevronDown
+                    className={cn("h-3 w-3 transition-transform", languageExpanded && "rotate-180")}
+                  />
+                </button>
+                {languageExpanded && (
+                  <div className="no-scrollbar flex max-w-[calc(100vw-10rem)] animate-in slide-in-from-left-1 items-center gap-1.5 overflow-x-auto fade-in duration-200 md:max-w-[34rem]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLangScope("all");
+                        setLanguageExpanded(false);
+                      }}
+                      className={cn(
+                        "shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                        language === "all"
+                          ? "border-accent bg-accent/10 text-accent"
+                          : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      global
+                    </button>
+                    {LANGUAGES.map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => {
+                          setLangScope(item.code);
+                          setLanguageExpanded(false);
+                        }}
+                        className={cn(
+                          "shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                          language === item.code
+                            ? "border-accent bg-accent/10 text-accent"
+                            : "border-border text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </section>
 
           {/* Filter pills */}

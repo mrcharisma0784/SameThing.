@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -129,12 +130,7 @@ function CapsulesPage() {
   return (
     <OnboardingGate>
       <AppShell>
-        <Link
-          to="/settings"
-          className="mb-3 inline-flex items-center gap-1 text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> settings
-        </Link>
+        <SettingsBackLink />
         <div className="flex items-end justify-between gap-3">
           <div>
             <h1 className="brand-mark text-3xl text-foreground">
