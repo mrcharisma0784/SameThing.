@@ -130,11 +130,27 @@ export const adminOverview = createServerFn({ method: "GET" }).handler(async () 
   await assertAdmin("admin:read");
   await recordAdminAction("adminOverview", "admin:read");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const [users, things, comments, votes, feedback, premium, banned] = await Promise.all([
+  const [
+    users,
+    things,
+    quotes,
+    comments,
+    votes,
+    follows,
+    reports,
+    feedback,
+    premium,
+    banned,
+    prompts,
+    apiKeys,
+  ] = await Promise.all([
     supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("things").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("quotes").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("comments").select("id", { count: "exact", head: true }),
     supabaseAdmin.from("votes").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("follows").select("id", { count: "exact", head: true }),
+    supabaseAdmin.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
     supabaseAdmin.from("feedback").select("id", { count: "exact", head: true }),
     supabaseAdmin
       .from("profiles")
@@ -144,15 +160,25 @@ export const adminOverview = createServerFn({ method: "GET" }).handler(async () 
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .not("banned_at", "is", null),
+    (supabaseAdmin as any).from("feedback_prompts").select("id", { count: "exact", head: true }),
+    (supabaseAdmin as any)
+      .from("api_keys")
+      .select("id", { count: "exact", head: true })
+      .is("revoked_at", null),
   ]);
   return {
     users: users.count ?? 0,
     things: things.count ?? 0,
+    quotes: quotes.count ?? 0,
     comments: comments.count ?? 0,
     votes: votes.count ?? 0,
+    follows: follows.count ?? 0,
+    openReports: reports.count ?? 0,
     feedback: feedback.count ?? 0,
     premium: premium.count ?? 0,
     banned: banned.count ?? 0,
+    prompts: prompts.count ?? 0,
+    activeApiKeys: apiKeys.count ?? 0,
   };
 });
 
@@ -1053,6 +1079,7 @@ const FeedbackPromptInput = z.object({
   body: z.string().trim().min(3).max(1000),
   button_label: z.string().trim().min(2).max(40),
   active: z.boolean(),
+  duration: z.enum(["1h", "7d", "14d", "forever"]),
 });
 
 export const adminListFeedbackPrompts = createServerFn({ method: "GET" }).handler(async () => {
@@ -1061,7 +1088,7 @@ export const adminListFeedbackPrompts = createServerFn({ method: "GET" }).handle
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: prompts, error } = await (supabaseAdmin as any)
     .from("feedback_prompts")
-    .select("id, title, body, button_label, active, created_at, updated_at")
+    .select("id, title, body, button_label, active, expires_at, created_at, updated_at")
     .order("updated_at", { ascending: false })
     .limit(50);
   if (error) return { items: [], error: error.message };
@@ -1131,6 +1158,17 @@ export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
     await assertAdmin("ads:write");
     await recordAdminAction("adminUpsertFeedbackPrompt", "ads:write");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const expiresAt =
+      data.active && data.duration !== "forever"
+        ? new Date(
+            Date.now() +
+              (data.duration === "1h"
+                ? 60 * 60 * 1000
+                : data.duration === "7d"
+                  ? 7 * 24 * 60 * 60 * 1000
+                  : 14 * 24 * 60 * 60 * 1000),
+          ).toISOString()
+        : null;
     if (data.active) {
       const { error: deactivateError } = await (supabaseAdmin as any)
         .from("feedback_prompts")
@@ -1143,6 +1181,7 @@ export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
       body: data.body,
       button_label: data.button_label,
       active: data.active,
+      expires_at: expiresAt,
       updated_at: new Date().toISOString(),
     };
     const result = data.id
@@ -1150,12 +1189,12 @@ export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
           .from("feedback_prompts")
           .update(payload)
           .eq("id", data.id)
-          .select("id, title, body, button_label, active, updated_at")
+          .select("id, title, body, button_label, active, expires_at, updated_at")
           .maybeSingle()
       : await (supabaseAdmin as any)
           .from("feedback_prompts")
           .insert(payload)
-          .select("id, title, body, button_label, active, updated_at")
+          .select("id, title, body, button_label, active, expires_at, updated_at")
           .single();
     if (result.error || !result.data)
       return { ok: false as const, error: result.error?.message ?? "Prompt not found." };

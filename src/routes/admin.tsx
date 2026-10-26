@@ -219,13 +219,15 @@ function AdminPage() {
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground")
               }
             >
-              {t === "api"
-                ? "API Access"
-                : t === "logs"
-                  ? "Admin Logs"
-                  : t === "access"
-                    ? "Admin Access"
-                    : t}
+              {t === "messages"
+                ? "Broadcasting"
+                : t === "api"
+                  ? "API Access"
+                  : t === "logs"
+                    ? "Admin Logs"
+                    : t === "access"
+                      ? "Admin Access"
+                      : t}
             </button>
           ))}
         </nav>
@@ -595,12 +597,17 @@ function Overview() {
     ["Premium", d.premium],
     ["Banned", d.banned],
     ["Things", d.things],
+    ["Quotes", d.quotes],
     ["Comments", d.comments],
     ["Votes", d.votes],
+    ["Follows", d.follows],
+    ["Open reports", d.openReports],
     ["Feedback", d.feedback],
+    ["Prompts", d.prompts],
+    ["Active API keys", d.activeApiKeys],
   ];
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
       {items.map(([label, val]) => (
         <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -1163,14 +1170,17 @@ function ThingsPanel() {
           Search
         </button>
       </div>
-      <ul className="divide-y">
+      <ul className="grid gap-3 md:grid-cols-2">
         {rows.map((t) => (
-          <li key={t.id} className="py-3">
+          <li
+            key={t.id}
+            className="rounded-2xl border border-border bg-background/40 p-4 transition-colors hover:border-accent/40"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div
                   className={
-                    "font-medium " + (t.hidden ? "text-muted-foreground line-through" : "")
+                    "font-serif text-lg " + (t.hidden ? "text-muted-foreground line-through" : "")
                   }
                 >
                   {t.title}
@@ -1936,6 +1946,7 @@ type FeedbackPromptItem = {
   body: string;
   button_label: string;
   active: boolean;
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
   response_count: number;
@@ -1952,6 +1963,7 @@ function AdsPanel() {
   const [body, setBody] = useState("");
   const [buttonLabel, setButtonLabel] = useState("Send feedback");
   const [active, setActive] = useState(true);
+  const [duration, setDuration] = useState<"1h" | "7d" | "14d" | "forever">("forever");
   const [busy, setBusy] = useState(false);
   const [responsesFor, setResponsesFor] = useState<string | null>(null);
   const [responses, setResponses] = useState<
@@ -1983,6 +1995,7 @@ function AdsPanel() {
     setBody("");
     setButtonLabel("Send feedback");
     setActive(true);
+    setDuration("forever");
   };
 
   const edit = (item: FeedbackPromptItem) => {
@@ -1991,6 +2004,16 @@ function AdsPanel() {
     setBody(item.body);
     setButtonLabel(item.button_label);
     setActive(item.active);
+    const remaining = item.expires_at ? new Date(item.expires_at).getTime() - Date.now() : 0;
+    setDuration(
+      !item.expires_at
+        ? "forever"
+        : remaining <= 2 * 60 * 60 * 1000
+          ? "1h"
+          : remaining <= 8 * 24 * 60 * 60 * 1000
+            ? "7d"
+            : "14d",
+    );
   };
 
   const showResponses = async (item: FeedbackPromptItem) => {
@@ -2015,6 +2038,7 @@ function AdsPanel() {
         body,
         button_label: buttonLabel,
         active,
+        duration,
       },
     });
     setBusy(false);
@@ -2032,7 +2056,8 @@ function AdsPanel() {
       <Card title="In-app feedback prompts">
         <p className="mb-4 max-w-2xl text-sm leading-6 text-muted-foreground">
           Manage the small feedback form shown at the bottom of the app. Users can choose one to
-          five stars and leave an optional comment. Only one prompt can be live at a time.
+          five stars and leave an optional comment. Only one prompt can be live at a time, and you
+          can choose when it stops appearing.
         </p>
         <div className="grid gap-3">
           <input
@@ -2064,6 +2089,21 @@ function AdsPanel() {
               Publish now
             </label>
           </div>
+          <label className="grid gap-1 text-xs uppercase tracking-widest text-muted-foreground">
+            Show for
+            <select
+              value={duration}
+              onChange={(event) =>
+                setDuration(event.target.value as "1h" | "7d" | "14d" | "forever")
+              }
+              className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground"
+            >
+              <option value="1h">1 hour</option>
+              <option value="7d">7 days</option>
+              <option value="14d">2 weeks</option>
+              <option value="forever">Until stopped</option>
+            </select>
+          </label>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -2114,6 +2154,13 @@ function AdsPanel() {
                   <span className="mt-1 block truncate text-xs text-muted-foreground">
                     {item.body}
                   </span>
+                  <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                    {item.active
+                      ? item.expires_at
+                        ? `Live until ${new Date(item.expires_at).toLocaleString()}`
+                        : "Live until stopped"
+                      : "Stopped"}
+                  </p>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2">
@@ -2433,7 +2480,7 @@ function MessagesPanel() {
   const [link, setLink] = useState("");
   const [busy, setBusy] = useState(false);
   return (
-    <Card title="Send system message">
+    <Card title="Broadcasting">
       <div className="mb-3 flex gap-2 text-sm">
         <label className="flex items-center gap-1">
           <input type="radio" checked={mode === "user"} onChange={() => setMode("user")} /> To user
@@ -2444,7 +2491,7 @@ function MessagesPanel() {
             checked={mode === "broadcast"}
             onChange={() => setMode("broadcast")}
           />{" "}
-          Broadcast to all
+          Broadcast to everyone
         </label>
       </div>
       {mode === "user" && (
@@ -2497,7 +2544,7 @@ function MessagesPanel() {
         }}
         className="rounded-md bg-accent px-4 py-2 text-sm text-accent-foreground disabled:opacity-50"
       >
-        {busy ? "Sending…" : "Send [System] message"}
+        {busy ? "Sending…" : "Send broadcast"}
       </button>
     </Card>
   );
@@ -2550,12 +2597,15 @@ function BannedPanel() {
           Add
         </button>
       </div>
-      <ul className="divide-y">
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((b) => (
-          <li key={b.id} className="flex items-center justify-between py-2 text-sm">
-            <span>
-              {b.word}{" "}
-              <span className="ml-2 rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase">
+          <li
+            key={b.id}
+            className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background/40 p-3.5 text-sm"
+          >
+            <span className="min-w-0">
+              <span className="block truncate font-medium text-foreground">{b.word}</span>
+              <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-widest">
                 {b.severity}
               </span>
             </span>

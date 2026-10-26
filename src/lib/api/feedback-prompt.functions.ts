@@ -9,16 +9,19 @@ export const getActiveFeedbackPrompt = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("feedback_prompts")
-      .select("id, title, body, button_label")
+      .select("id, title, body, button_label, expires_at")
       .eq("active", true)
       .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(10);
     if (error) {
       console.error("active feedback prompt read failed", error);
       return { prompt: null };
     }
-    return { prompt: data ?? null };
+    const prompt = (data ?? []).find(
+      (item: { expires_at?: string | null }) =>
+        !item.expires_at || new Date(item.expires_at).getTime() > Date.now(),
+    );
+    return { prompt: prompt ?? null };
   });
 
 const FeedbackResponseInput = z.object({
@@ -34,11 +37,12 @@ export const submitFeedbackPromptResponse = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prompt } = await (supabaseAdmin as any)
       .from("feedback_prompts")
-      .select("id")
+      .select("id, expires_at")
       .eq("id", data.prompt_id)
       .eq("active", true)
       .maybeSingle();
-    if (!prompt) return { ok: false as const, error: "This feedback form is no longer active." };
+    if (!prompt || (prompt.expires_at && new Date(prompt.expires_at).getTime() <= Date.now()))
+      return { ok: false as const, error: "This feedback form is no longer active." };
 
     const { error } = await (supabaseAdmin as any).from("feedback_prompt_responses").upsert(
       {
