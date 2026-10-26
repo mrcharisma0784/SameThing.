@@ -850,6 +850,20 @@ export const adminListAccountDataRequests = createServerFn({ method: "GET" }).ha
   };
 });
 
+export const adminClearAccountDataRequests = createServerFn({ method: "POST" }).handler(
+  async () => {
+    await assertAdmin("support:write");
+    await recordAdminAction("adminClearAccountDataRequests", "support:write");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("account_data_requests")
+      .delete()
+      .not("id", "is", null);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  },
+);
+
 const AccountRequestActionInput = z.object({
   request_id: z.string().uuid(),
   status: z.enum(["in_progress", "completed", "rejected", "cancelled"]),

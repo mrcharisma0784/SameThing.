@@ -24,10 +24,9 @@ import {
   adminListSuspicious,
   adminResolveSuspicious,
   adminRetrySuspicious,
-  adminListAccountDataRequests,
+  adminClearAccountDataRequests,
   adminListSupportRequests,
   adminUpdateSupportRequest,
-  adminUpdateAccountDataRequest,
   adminListFeedback,
   adminReplyFeedback,
   adminListFeedbackPrompts,
@@ -1584,32 +1583,21 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
   const list = useServerFn(adminListReports);
   const resolve = useServerFn(adminResolveReport);
   const sendReportMessage = useServerFn(adminSendReportMessage);
-  const requestList = useServerFn(adminListAccountDataRequests);
-  const requestUpdate = useServerFn(adminUpdateAccountDataRequest);
+  const clearAccountDataRequests = useServerFn(adminClearAccountDataRequests);
   const [reports, setReports] = useState<ReportItem[]>([]);
-  const [requests, setRequests] = useState<
-    Array<{
-      id: string;
-      request_type: string;
-      status: string;
-      requested_at: string;
-      profile?: { username?: string } | null;
-    }>
-  >([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [messageReportId, setMessageReportId] = useState<string | null>(null);
   const [messageTitle, setMessageTitle] = useState("Message from SameThing moderators");
   const [messageBody, setMessageBody] = useState("");
   const reload = async () => {
-    const [reportResult, requestResult] = await Promise.all([
-      list({ data: { status: "open", limit: 100, offset: 0, target_id: targetId ?? undefined } }),
-      requestList(),
-    ]);
+    const reportResult = await list({
+      data: { status: "open", limit: 100, offset: 0, target_id: targetId ?? undefined },
+    });
     setReports(reportResult.items as ReportItem[]);
-    setRequests(requestResult.items as typeof requests);
   };
   useEffect(() => {
     void reload();
+    void clearAccountDataRequests();
     // reload is a stable local loader for this admin-only panel.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetId]);
@@ -1641,15 +1629,6 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
       setMessageReportId(null);
     }
   };
-  const updateRequest = async (id: string, status: "in_progress" | "completed" | "rejected") => {
-    setBusy(id);
-    const result = await requestUpdate({ data: { request_id: id, status, admin_note: "" } });
-    setBusy(null);
-    if (!result.ok) toast.error(result.error);
-    else toast.success("Request updated.");
-    await reload();
-  };
-
   return (
     <div className="space-y-6">
       <Card title={`Reports · ${reports.length} open`}>
@@ -1788,34 +1767,6 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
           })}
           {!reports.length && (
             <p className="py-6 text-center text-sm text-muted-foreground">No open reports.</p>
-          )}
-        </div>
-      </Card>
-
-      <Card title="Account & privacy requests">
-        <div className="space-y-2">
-          {requests.map((request) => (
-            <div
-              key={request.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/40 p-3"
-            >
-              <div>
-                <p className="text-sm text-foreground">
-                  {request.request_type === "export" ? "Email data export" : "Account deletion"} · @
-                  {request.profile?.username ?? "unknown"}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {request.status.replace("_", " ")} ·{" "}
-                  {new Date(request.requested_at).toLocaleString()}
-                </p>
-              </div>
-              <span className="rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground">
-                Automatic lifecycle
-              </span>
-            </div>
-          ))}
-          {!requests.length && (
-            <p className="py-4 text-sm text-muted-foreground">No pending privacy requests.</p>
           )}
         </div>
       </Card>
@@ -3014,7 +2965,42 @@ function MaintenancePanel() {
     }
   };
 
+  const saveTargetState = async (
+    target: MaintenanceTargetView,
+    nextEnabled: boolean,
+    nextNote: string | null,
+  ) => {
+    const status = await setTargets({
+      data: {
+        targets: targets.map((item) => ({
+          key: item.key,
+          target_type: item.target_type,
+          path: item.path,
+          label: item.label,
+          description: item.description,
+          enabled: item.key === target.key ? nextEnabled : item.enabled,
+          note: item.key === target.key ? nextNote : item.note,
+        })),
+      },
+    });
+    applyStatus(status);
+    toast.success(`${target.label} ${nextEnabled ? "is under maintenance." : "is live again."}`);
+  };
+
   const askTargetChange = (target: MaintenanceTargetView) => {
+    if (target.enabled) {
+      setBusy(true);
+      void saveTargetState(target, false, null)
+        .catch((error) =>
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Page maintenance status could not be updated.",
+          ),
+        )
+        .finally(() => setBusy(false));
+      return;
+    }
     setPendingTarget(target);
     setTargetNote(target.note ?? "");
   };
@@ -3024,24 +3010,8 @@ function MaintenancePanel() {
     const nextEnabled = !pendingTarget.enabled;
     setBusy(true);
     try {
-      const status = await setTargets({
-        data: {
-          targets: targets.map((target) => ({
-            key: target.key,
-            target_type: target.target_type,
-            path: target.path,
-            label: target.label,
-            description: target.description,
-            enabled: target.key === pendingTarget.key ? nextEnabled : target.enabled,
-            note: target.key === pendingTarget.key ? targetNote.trim() || null : target.note,
-          })),
-        },
-      });
-      applyStatus(status);
+      await saveTargetState(pendingTarget, nextEnabled, targetNote.trim() || null);
       setPendingTarget(null);
-      toast.success(
-        `${pendingTarget.label} ${nextEnabled ? "is under maintenance." : "is live again."}`,
-      );
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Page maintenance status could not be updated.",
@@ -3109,9 +3079,6 @@ function MaintenancePanel() {
           </p>
           <p className="mt-1 text-sm text-foreground">Settings areas you can pause one by one</p>
         </div>
-        <span className="rounded-full border border-border px-2.5 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          {targets.filter((target) => target.enabled).length} active
-        </span>
       </div>
 
       <div className="mt-3 divide-y divide-border overflow-hidden rounded-xl border border-border">
@@ -3121,17 +3088,15 @@ function MaintenancePanel() {
             type="button"
             onClick={() => askTargetChange(target)}
             disabled={loading || busy}
-            aria-pressed={target.enabled}
-            className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-secondary/70 disabled:cursor-not-allowed ${target.enabled ? "opacity-50" : ""}`}
+            aria-pressed={!target.enabled}
+            className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-secondary/70 disabled:cursor-not-allowed"
           >
             <span
-              className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${target.enabled ? "border-accent/30 bg-accent/10 text-accent" : "border-border bg-background text-muted-foreground"}`}
+              className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full border p-1 transition-colors ${!target.enabled ? "border-accent bg-accent" : "border-border bg-secondary"}`}
             >
-              {target.enabled ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              <span
+                className={`h-4 w-4 rounded-full bg-foreground transition-transform ${!target.enabled ? "translate-x-4" : "translate-x-0"}`}
+              />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium text-foreground">{target.label}</span>
@@ -3155,11 +3120,6 @@ function MaintenancePanel() {
           this first page-by-page release.
         </p>
       </div>
-
-      <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
-        Admin remains exempt. You can pause multiple selected pages at once; a paused page shows a
-        maintenance notice while the rest of the site stays live.
-      </p>
 
       {(pendingTarget || pendingGlobal) && (
         <div className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-background/85 p-4 backdrop-blur-sm">
