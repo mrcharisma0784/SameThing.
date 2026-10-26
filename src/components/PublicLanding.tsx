@@ -357,9 +357,7 @@ export function PublicLanding() {
         <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
           <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] text-accent">
-                Example thoughts
-              </p>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-accent">Thoughts</p>
               <h2 className="mt-3 font-serif text-3xl leading-tight text-foreground sm:text-4xl">
                 Some thoughts arrive quietly.
               </h2>
@@ -369,15 +367,12 @@ export function PublicLanding() {
                 "I am learning that rest can be a plan.",
                 "Some rooms feel loud even when nobody speaks.",
                 "I miss versions of people that never existed.",
-              ].map((quote, index) => (
+              ].map((quote) => (
                 <div
                   key={quote}
                   className="landing-scroll-reveal rounded-xl border border-border bg-card/50 p-3.5 sm:p-4"
                 >
                   <p className="font-serif text-lg leading-tight text-foreground">“{quote}”</p>
-                  <p className="mt-4 text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
-                    example / 0{index + 1}
-                  </p>
                 </div>
               ))}
             </div>
