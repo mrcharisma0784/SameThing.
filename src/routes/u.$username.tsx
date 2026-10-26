@@ -60,6 +60,9 @@ function PublicProfilePage() {
   const report = useServerFn(reportTarget);
   const [watchingOverride, setWatchingOverride] = useState<boolean | null>(null);
   const [watchingBusy, setWatchingBusy] = useState(false);
+  const [reportProfileOpen, setReportProfileOpen] = useState(false);
+  const [profileReportReason, setProfileReportReason] = useState("");
+  const [profileReportBusy, setProfileReportBusy] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["public-profile", username],
@@ -109,17 +112,28 @@ function PublicProfilePage() {
     });
   };
 
-  const reportProfile = async () => {
+  const reportProfile = () => {
     if (!profile) return;
     if (!user) {
       void navigate({ to: "/auth" });
       return;
     }
-    const reason = window.prompt("Why are you reporting this profile?")?.trim();
-    if (!reason) return;
-    const result = await report({ data: { target_type: "user", target_id: profile.id, reason } });
+    setProfileReportReason("");
+    setReportProfileOpen(true);
+  };
+
+  const submitProfileReport = async () => {
+    if (!profile || !profileReportReason.trim()) return;
+    setProfileReportBusy(true);
+    const result = await report({
+      data: { target_type: "user", target_id: profile.id, reason: profileReportReason.trim() },
+    });
+    setProfileReportBusy(false);
     if (result.error) toast.error(result.error);
-    else toast.success("Profile reported. Thanks for keeping SameThing safe.");
+    else {
+      setReportProfileOpen(false);
+      toast.success("Profile reported. Thanks for keeping SameThing safe.");
+    }
   };
 
   const toggleBlock = async () => {
@@ -281,6 +295,46 @@ function PublicProfilePage() {
               </p>
             )}
           </section>
+
+          {reportProfileOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-foreground shadow-2xl">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Safety
+                </p>
+                <h2 className="mt-1 font-serif text-2xl font-normal">Report this profile</h2>
+                <p className="mt-3 text-sm leading-5 text-muted-foreground">
+                  Tell us what feels wrong. Your report will be reviewed by the SameThing team.
+                </p>
+                <textarea
+                  autoFocus
+                  value={profileReportReason}
+                  onChange={(event) => setProfileReportReason(event.target.value)}
+                  rows={4}
+                  placeholder="Reason for reporting…"
+                  className="mt-4 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-5 outline-none focus:border-accent"
+                />
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={profileReportBusy}
+                    onClick={() => setReportProfileOpen(false)}
+                    className="rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={profileReportBusy || !profileReportReason.trim()}
+                    onClick={() => void submitProfileReport()}
+                    className="rounded-full bg-accent px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+                  >
+                    {profileReportBusy ? "Reporting…" : "Submit report"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <h2 className="brand-mark text-3xl text-foreground">
             Public Things<span className="dot">.</span>

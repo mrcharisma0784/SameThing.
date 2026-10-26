@@ -700,11 +700,6 @@ function UsersPanel() {
                   >
                     <ProfileGlyph value={u.emoji} className="h-4 w-4 shrink-0" />
                     <span className="truncate">@{u.username}</span>
-                    {u.banned_at && (
-                      <span className="shrink-0 rounded bg-destructive px-1.5 py-0.5 text-[10px] text-accent-foreground">
-                        BANNED
-                      </span>
-                    )}
                   </button>
                   <span className="truncate text-muted-foreground">{u.plan}</span>
                   <span className="text-right tabular-nums">{u.warnings_count}</span>
@@ -1306,11 +1301,8 @@ function ThingsPanel({ onOpenReports }: { onOpenReports: (thingId: string) => vo
                   <div className="flex min-w-0 flex-wrap gap-2">
                     {t.tags?.length ? (
                       t.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
-                        >
-                          #{tag}
+                        <span key={tag} className="text-sm text-foreground">
+                          #{tag}{" "}
                         </span>
                       ))
                     ) : (
