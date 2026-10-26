@@ -63,6 +63,7 @@ function PublicProfilePage() {
   const [watchingBusy, setWatchingBusy] = useState(false);
   const [reportProfileOpen, setReportProfileOpen] = useState(false);
   const [profileReportReason, setProfileReportReason] = useState("");
+  const [profileReportOther, setProfileReportOther] = useState(false);
   const [profileReportBusy, setProfileReportBusy] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -120,14 +121,15 @@ function PublicProfilePage() {
       return;
     }
     setProfileReportReason("");
+    setProfileReportOther(false);
     setReportProfileOpen(true);
   };
 
-  const submitProfileReport = async () => {
-    if (!profile || !profileReportReason.trim()) return;
+  const submitProfileReport = async (reason = profileReportReason.trim()) => {
+    if (!profile || !reason) return;
     setProfileReportBusy(true);
     const result = await report({
-      data: { target_type: "user", target_id: profile.id, reason: profileReportReason.trim() },
+      data: { target_type: "user", target_id: profile.id, reason },
     });
     setProfileReportBusy(false);
     if (result.error) toast.error(result.error);
@@ -298,39 +300,68 @@ function PublicProfilePage() {
           {reportProfileOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
               <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-foreground shadow-2xl">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Safety
-                </p>
-                <h2 className="mt-1 font-serif text-2xl font-normal">Report this profile</h2>
+                <h2 className="font-serif text-2xl font-normal">Report this profile</h2>
                 <p className="mt-3 text-sm leading-5 text-muted-foreground">
-                  Tell us what feels wrong. Your report will be reviewed by the SameThing team.
+                  Choose the reason that best describes the problem.
                 </p>
-                <textarea
-                  autoFocus
-                  value={profileReportReason}
-                  onChange={(event) => setProfileReportReason(event.target.value)}
-                  rows={4}
-                  placeholder="Reason for reporting…"
-                  className="mt-4 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-5 outline-none focus:border-accent"
-                />
-                <div className="mt-4 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    disabled={profileReportBusy}
-                    onClick={() => setReportProfileOpen(false)}
-                    className="rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={profileReportBusy || !profileReportReason.trim()}
-                    onClick={() => void submitProfileReport()}
-                    className="rounded-full bg-accent px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
-                  >
-                    {profileReportBusy ? "Reporting…" : "Submit report"}
-                  </button>
-                </div>
+                {!profileReportOther ? (
+                  <div className="mt-4 space-y-1">
+                    {[
+                      { key: "harmful", label: "Harmful / violence" },
+                      { key: "spam", label: "Spam" },
+                      { key: "hate", label: "Hate speech" },
+                      { key: "sexual", label: "Sexual content" },
+                      { key: "self-harm risk", label: "Self-harm risk" },
+                      { key: "other", label: "Other" },
+                    ].map((reason) => (
+                      <button
+                        key={reason.key}
+                        type="button"
+                        disabled={profileReportBusy}
+                        onClick={() => {
+                          if (reason.key === "other") {
+                            setProfileReportOther(true);
+                            setProfileReportReason("");
+                          } else {
+                            void submitProfileReport(reason.key);
+                          }
+                        }}
+                        className="block w-full rounded-xl px-3 py-2.5 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                      >
+                        {reason.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      autoFocus
+                      value={profileReportReason}
+                      onChange={(event) => setProfileReportReason(event.target.value)}
+                      rows={4}
+                      placeholder="Reason for reporting…"
+                      className="mt-4 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-5 outline-none focus:border-accent"
+                    />
+                    <div className="mt-4 flex justify-start gap-2">
+                      <button
+                        type="button"
+                        disabled={profileReportBusy || !profileReportReason.trim()}
+                        onClick={() => void submitProfileReport()}
+                        className="rounded-full bg-accent px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+                      >
+                        {profileReportBusy ? "Reporting…" : "Submit report"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={profileReportBusy}
+                        onClick={() => setReportProfileOpen(false)}
+                        className="rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
