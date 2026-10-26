@@ -44,6 +44,7 @@ import { Route as AuthenticatedTwinRouteImport } from './routes/_authenticated/t
 import { Route as ConnectionsUsernameRouteImport } from './routes/connections.$username'
 import { Route as QuoteIdRouteImport } from './routes/quote.$id'
 import { Route as ThingIdRouteImport } from './routes/thing.$id'
+import { Route as ThingsIdRouteImport } from './routes/things.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as ApiCronRetentionRouteImport } from './routes/api.cron.retention'
 import { Route as ApiV1HealthRouteImport } from './routes/api.v1.health'
@@ -234,6 +235,11 @@ const ThingIdRoute = ThingIdRouteImport.update({
   path: '/thing/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ThingsIdRoute = ThingsIdRouteImport.update({
+  id: '/things/$id',
+  path: '/things/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/connections/$username': typeof ConnectionsUsernameRoute
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
+  '/things/$id': typeof ThingsIdRoute
   '/u/$username': typeof UUsernameRoute
   '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByTo {
   '/connections/$username': typeof ConnectionsUsernameRoute
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
+  '/things/$id': typeof ThingsIdRoute
   '/u/$username': typeof UUsernameRoute
   '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/connections/$username': typeof ConnectionsUsernameRoute
   '/quote/$id': typeof QuoteIdRoute
   '/thing/$id': typeof ThingIdRoute
+  '/things/$id': typeof ThingsIdRoute
   '/u/$username': typeof UUsernameRoute
   '/api/cron/retention': typeof ApiCronRetentionRoute
   '/api/v1/health': typeof ApiV1HealthRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/connections/$username'
     | '/quote/$id'
     | '/thing/$id'
+    | '/things/$id'
     | '/u/$username'
     | '/api/cron/retention'
     | '/api/v1/health'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
     | '/connections/$username'
     | '/quote/$id'
     | '/thing/$id'
+    | '/things/$id'
     | '/u/$username'
     | '/api/cron/retention'
     | '/api/v1/health'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/connections/$username'
     | '/quote/$id'
     | '/thing/$id'
+    | '/things/$id'
     | '/u/$username'
     | '/api/cron/retention'
     | '/api/v1/health'
@@ -583,6 +595,7 @@ export interface RootRouteChildren {
   ConnectionsUsernameRoute: typeof ConnectionsUsernameRoute
   QuoteIdRoute: typeof QuoteIdRoute
   ThingIdRoute: typeof ThingIdRoute
+  ThingsIdRoute: typeof ThingsIdRoute
   UUsernameRoute: typeof UUsernameRoute
   ApiCronRetentionRoute: typeof ApiCronRetentionRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
@@ -840,6 +853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/things/$id': {
+      id: '/things/$id'
+      path: '/things/$id'
+      fullPath: '/things/$id'
+      preLoaderRoute: typeof ThingsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -1002,6 +1022,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnectionsUsernameRoute: ConnectionsUsernameRoute,
   QuoteIdRoute: QuoteIdRoute,
   ThingIdRoute: ThingIdRoute,
+  ThingsIdRoute: ThingsIdRoute,
   UUsernameRoute: UUsernameRoute,
   ApiCronRetentionRoute: ApiCronRetentionRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
