@@ -784,116 +784,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
     load();
   };
   return (
-    <Card title={`User · @${(p?.username as string) ?? "?"}`}>
-      <div className="mb-3 flex justify-end">
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            onClick={() => setPremiumPanelOpen((value) => !value)}
-            className="rounded-md border border-[color:var(--rare)]/50 px-2.5 py-1 text-xs text-[color:var(--rare)]"
-          >
-            {isPremium ? "Manage Premium" : "Grant Premium"}
-          </button>
-          <button
-            onClick={async () => {
-              const reason = isBanned ? "" : (prompt("Ban reason?") ?? "");
-              await banFn({ data: { id, reason, ban: !isBanned } });
-              toast.success(isBanned ? "Unbanned." : "Banned.");
-              load();
-            }}
-            className={
-              "rounded-md px-2.5 py-1 text-xs " +
-              (isBanned ? "border" : "bg-destructive text-accent-foreground")
-            }
-          >
-            {isBanned ? "Unban" : "Ban"}
-          </button>
-        </div>
-      </div>
-
-      {premiumPanelOpen && (
-        <section className="mb-4 rounded-2xl border border-[color:var(--rare)]/60 bg-background/30 p-4 shadow-[0_0_20px_color-mix(in_srgb,var(--rare)_10%,transparent)]">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-serif text-lg text-foreground">PREMIUMTHING. ACCESS</h3>
-            <span className="text-right text-xs text-muted-foreground">
-              {isPremium
-                ? premiumUntil
-                  ? `Active · ends ${new Date(premiumUntil).toLocaleDateString()}`
-                  : "Active · no end date"
-                : "Inactive"}
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {([7, 14, 30, 90] as const).map((days) => (
-              <button
-                key={days}
-                type="button"
-                onClick={() => {
-                  setPremiumSelection(days);
-                  setCustomPremiumDays("");
-                }}
-                className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === days ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
-              >
-                {days} days
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                setPremiumSelection("forever");
-                setCustomPremiumDays("");
-              }}
-              className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === "forever" ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
-            >
-              Forever
-            </button>
-          </div>
-          <label className="mt-4 block text-xs uppercase tracking-widest text-muted-foreground">
-            Custom length (1–90 days)
-            <input
-              type="number"
-              min={1}
-              max={90}
-              value={customPremiumDays}
-              onChange={(event) => setCustomPremiumDays(event.target.value.slice(0, 2))}
-              placeholder="e.g. 45"
-              className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground outline-none focus:border-[color:var(--rare)]"
-            />
-          </label>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Granting:{" "}
-            <strong className="text-foreground">
-              {selectedPremiumDays === "forever"
-                ? "Forever"
-                : `${selectedPremiumDays || "—"} day(s)`}
-            </strong>
-          </p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              disabled={premiumBusy}
-              onClick={() => void updatePremium(true)}
-              className="rounded-xl bg-[color:var(--rare)] px-3 py-2.5 text-sm text-background disabled:opacity-50"
-            >
-              Update gift
-            </button>
-            {isPremium && (
-              <button
-                type="button"
-                disabled={premiumBusy}
-                onClick={() => void updatePremium(false)}
-                className="rounded-xl border border-border px-3 py-2.5 text-sm text-foreground disabled:opacity-50"
-              >
-                Remove premium
-              </button>
-            )}
-          </div>
-          <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-            Gifts are timed by default (max 90 days); Forever keeps PremiumThing. active until
-            manually removed.
-          </p>
-        </section>
-      )}
-
+    <Card title="User detail">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -928,11 +819,19 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
         <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Username
+          </h3>
+          <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-3">
+            <p className="text-lg text-foreground">@{(p?.username as string) ?? "—"}</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Auth
           </h3>
           <div className="grid gap-2.5">
             <DetailField label="Email">{d.auth?.email ?? "—"}</DetailField>
-            <DetailField label="Phone">{d.auth?.phone ?? "—"}</DetailField>
+            {d.auth?.phone && <DetailField label="Phone">{d.auth.phone}</DetailField>}
             <DetailField label="Provider">{d.auth?.provider ?? "—"}</DetailField>
             <DetailField label="Signed up">
               {d.auth ? new Date(d.auth.created_at).toLocaleString() : "—"}
@@ -964,31 +863,139 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             )}
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Send warning
-          </h3>
-          <textarea
-            value={warnNote}
-            onChange={(e) => setWarnNote(e.target.value)}
-            rows={2}
-            placeholder="Reason / note (goes to their inbox)"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm leading-5"
-          />
+      </div>
+
+      <section className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Send warning
+        </h3>
+        <textarea
+          value={warnNote}
+          onChange={(e) => setWarnNote(e.target.value)}
+          rows={2}
+          placeholder="Reason / note (goes to their inbox)"
+          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm leading-5"
+        />
+        <button
+          disabled={!warnNote.trim()}
+          onClick={async () => {
+            await warnFn({ data: { id, note: warnNote.trim() } });
+            toast.success("Warning sent.");
+            setWarnNote("");
+            load();
+          }}
+          className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+        >
+          Send warning
+        </button>
+        <div className="mt-5 flex flex-wrap gap-2 border-t border-border/70 pt-4">
           <button
-            disabled={!warnNote.trim()}
+            type="button"
+            onClick={() => setPremiumPanelOpen((value) => !value)}
+            className="rounded-xl border border-[color:var(--rare)]/50 px-4 py-2.5 text-sm text-[color:var(--rare)]"
+          >
+            {isPremium ? "Manage Premium" : "Grant Premium"}
+          </button>
+          <button
+            type="button"
             onClick={async () => {
-              await warnFn({ data: { id, note: warnNote.trim() } });
-              toast.success("Warning sent.");
-              setWarnNote("");
+              const reason = isBanned ? "" : (prompt("Ban reason?") ?? "");
+              await banFn({ data: { id, reason, ban: !isBanned } });
+              toast.success(isBanned ? "Unbanned." : "Banned.");
               load();
             }}
-            className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+            className={
+              "rounded-xl px-4 py-2.5 text-sm " +
+              (isBanned ? "border border-border" : "bg-destructive text-accent-foreground")
+            }
           >
-            Send warning
+            {isBanned ? "Unban" : "Ban"}
           </button>
         </div>
-      </div>
+        {premiumPanelOpen && (
+          <section className="mt-4 rounded-2xl border border-[color:var(--rare)]/60 bg-background/30 p-4 shadow-[0_0_20px_color-mix(in_srgb,var(--rare)_10%,transparent)]">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-serif text-lg text-foreground">PREMIUMTHING. ACCESS</h3>
+              <span className="text-right text-xs text-muted-foreground">
+                {isPremium
+                  ? premiumUntil
+                    ? `Active · ends ${new Date(premiumUntil).toLocaleDateString()}`
+                    : "Active · no end date"
+                  : "Inactive"}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {([7, 14, 30, 90] as const).map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => {
+                    setPremiumSelection(days);
+                    setCustomPremiumDays("");
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === days ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
+                >
+                  {days} days
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setPremiumSelection("forever");
+                  setCustomPremiumDays("");
+                }}
+                className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === "forever" ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
+              >
+                Forever
+              </button>
+            </div>
+            <label className="mt-4 block text-xs uppercase tracking-widest text-muted-foreground">
+              Custom length (1–90 days)
+              <input
+                type="number"
+                min={1}
+                max={90}
+                value={customPremiumDays}
+                onChange={(event) => setCustomPremiumDays(event.target.value.slice(0, 2))}
+                placeholder="e.g. 45"
+                className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground outline-none focus:border-[color:var(--rare)]"
+              />
+            </label>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Granting:{" "}
+              <strong className="text-foreground">
+                {selectedPremiumDays === "forever"
+                  ? "Forever"
+                  : `${selectedPremiumDays || "—"} day(s)`}
+              </strong>
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                disabled={premiumBusy}
+                onClick={() => void updatePremium(true)}
+                className="rounded-xl bg-[color:var(--rare)] px-3 py-2.5 text-sm text-background disabled:opacity-50"
+              >
+                Update gift
+              </button>
+              {isPremium && (
+                <button
+                  type="button"
+                  disabled={premiumBusy}
+                  onClick={() => void updatePremium(false)}
+                  className="rounded-xl border border-border px-3 py-2.5 text-sm text-foreground disabled:opacity-50"
+                >
+                  Remove premium
+                </button>
+              )}
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              Gifts are timed by default (max 90 days); Forever keeps PremiumThing. active until
+              manually removed.
+            </p>
+          </section>
+        )}
+      </section>
 
       <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
