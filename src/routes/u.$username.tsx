@@ -305,33 +305,45 @@ function PublicProfilePage() {
                   Choose the reason that best describes the problem.
                 </p>
                 {!profileReportOther ? (
-                  <div className="mt-4 space-y-1">
-                    {[
-                      { key: "harmful", label: "Harmful / violence" },
-                      { key: "spam", label: "Spam" },
-                      { key: "hate", label: "Hate speech" },
-                      { key: "sexual", label: "Sexual content" },
-                      { key: "self-harm risk", label: "Self-harm risk" },
-                      { key: "other", label: "Other" },
-                    ].map((reason) => (
+                  <>
+                    <div className="mt-4 space-y-1">
+                      {[
+                        { key: "harmful", label: "Harmful / violence" },
+                        { key: "spam", label: "Spam" },
+                        { key: "hate", label: "Hate speech" },
+                        { key: "sexual", label: "Sexual content" },
+                        { key: "self-harm risk", label: "Self-harm risk" },
+                        { key: "other", label: "Other" },
+                      ].map((reason) => (
+                        <button
+                          key={reason.key}
+                          type="button"
+                          disabled={profileReportBusy}
+                          onClick={() => {
+                            if (reason.key === "other") {
+                              setProfileReportOther(true);
+                              setProfileReportReason("");
+                            } else {
+                              void submitProfileReport(reason.key);
+                            }
+                          }}
+                          className="block w-full rounded-xl px-3 py-2.5 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                        >
+                          {reason.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex justify-end">
                       <button
-                        key={reason.key}
                         type="button"
                         disabled={profileReportBusy}
-                        onClick={() => {
-                          if (reason.key === "other") {
-                            setProfileReportOther(true);
-                            setProfileReportReason("");
-                          } else {
-                            void submitProfileReport(reason.key);
-                          }
-                        }}
-                        className="block w-full rounded-xl px-3 py-2.5 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                        onClick={() => setReportProfileOpen(false)}
+                        className="rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-50"
                       >
-                        {reason.label}
+                        Cancel
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <textarea
