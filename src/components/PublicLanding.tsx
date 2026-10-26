@@ -311,6 +311,40 @@ export function PublicLanding() {
           </div>
         </section>
 
+        {[
+          {
+            label: "Credit",
+            title: "A little balance for the things worth keeping.",
+            description:
+              "Same Credits reward selected ways of taking part and open a few quieter paths inside the room.",
+          },
+          {
+            label: "Test User",
+            title: "Help shape what comes next.",
+            description:
+              "Test User access is currently being prepared for small, thoughtful product trials and feedback.",
+          },
+        ].map((item) => (
+          <section key={item.label} className="border-y border-border/60 bg-card/20">
+            <div className="mx-auto grid max-w-6xl gap-7 px-4 py-12 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-8 lg:py-16">
+              <div>
+                <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-accent">
+                  <FileCode2 className="h-3.5 w-3.5" /> {item.label}
+                </p>
+                <h2 className="mt-3 max-w-md font-serif text-3xl leading-tight text-foreground sm:text-4xl">
+                  {item.title}
+                </h2>
+              </div>
+              <div className="max-w-xl">
+                <p className="text-[13px] leading-6 text-muted-foreground">{item.description}</p>
+                <span className="mt-5 inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-accent/35 px-4 py-2.5 text-xs text-muted-foreground opacity-60">
+                  Under development <ArrowRight className="h-3.5 w-3.5 text-accent" />
+                </span>
+              </div>
+            </div>
+          </section>
+        ))}
+
         <section id="how-it-works" className="border-y border-border/60 bg-card/20">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8 lg:py-20">
             <div>
@@ -339,7 +373,7 @@ export function PublicLanding() {
                 >
                   <span className="font-serif text-xl italic text-accent/75">{number}</span>
                   <div className="min-w-0">
-                    <h3 className="text-sm text-foreground">{title}</h3>
+                    <h3 className="text-base text-foreground sm:text-[17px]">{title}</h3>
                     <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
                       {description}
                     </p>

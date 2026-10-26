@@ -1,5 +1,12 @@
 # SameThing implementation TODO
 
+## Landing, auth and Credit UI refinements — Complete in source; lint/build validated
+- Slightly enlarge the landing-page “See what resonates”, “Drop a Thing” and “Notice something” labels.
+- Add stacked Credit and Test User information areas matching the landing-page “API & research” area.
+- Remove the product-name prefix from the Privacy and Terms last-updated lines.
+- Replace the full-width Google sign-in button with round Google and phone icon buttons; phone sign-in remains unavailable without appearing disabled.
+- Remove “USD”, “live paths”, “Open MyThing.” and “Open Time Capsule” from Credit while keeping the cards navigable, and center “Show more” / “Show less” inside rounded horizontal buttons.
+
 ## Under-15 guardian approval — Blocked pending production setup
 - During onboarding, users under 15 must be able to enter a parent or guardian phone number or email, complete a genuine verification/consent step, and continue only after approval is verified.
 - Choose a proportionate option for EU users and do not present self-entered contact information as verified consent.

@@ -37,7 +37,7 @@ function PrivacyPage() {
         Privacy<span className="dot">.</span>
       </h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-        Privacy Policy · Last updated: October 2026
+        Last updated: October 2026
       </p>
 
       <article className="mt-6 space-y-6 text-sm leading-relaxed text-foreground">

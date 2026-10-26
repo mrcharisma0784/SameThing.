@@ -41,7 +41,7 @@ function TermsPage() {
         Terms<span className="dot">.</span>
       </h1>
       <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-        Terms of Service · Last updated: October 2026
+        Last updated: October 2026
       </p>
 
       <article className="prose prose-invert mt-6 max-w-none text-sm leading-relaxed text-foreground">

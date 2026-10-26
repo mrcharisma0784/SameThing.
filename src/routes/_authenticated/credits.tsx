@@ -181,9 +181,6 @@ function CreditsPage() {
                   connected; no card is charged and no balance is added in this release.
                 </p>
               </div>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                USD
-              </span>
             </div>
           )}
           {!unlimitedCredits && (
@@ -214,9 +211,6 @@ function CreditsPage() {
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               <Zap className="h-3.5 w-3.5 text-accent" /> spend your Credits
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              live paths
-            </span>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <SpendCard
@@ -224,14 +218,12 @@ function CreditsPage() {
               icon={<Clock3 className="h-4 w-4" />}
               title="Time Capsule"
               detail="Seal a thought for a future date. Free once, then 10–60 credits by duration."
-              action="Open Time Capsule"
             />
             <SpendCard
               href="/me"
               icon={<Sparkles className="h-4 w-4" />}
               title="Boost MyThing."
               detail="Move one of your Things directly below the newest posts in New for 6, 24 or 72 hours."
-              action="Open MyThing."
             />
             <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
               Streak and Streak Freeze are currently unavailable. Existing Streak data is preserved.
@@ -298,7 +290,7 @@ function CreditsPage() {
             <button
               type="button"
               onClick={() => setShowAllEntries((showing) => !showing)}
-              className="mt-3 text-[10px] uppercase tracking-widest text-accent hover:text-foreground"
+              className="mx-auto mt-4 flex min-w-32 items-center justify-center rounded-full border border-border px-4 py-2 text-[10px] uppercase tracking-widest text-accent transition-colors hover:border-accent/50 hover:text-foreground"
             >
               {showAllEntries ? "Show less" : "Show more"}
             </button>
@@ -337,13 +329,11 @@ function SpendCard({
   icon,
   title,
   detail,
-  action,
 }: {
   href: "/capsules" | "/me" | "/streak";
   icon: React.ReactNode;
   title: string;
   detail: string;
-  action: string;
 }) {
   return (
     <Link
@@ -355,9 +345,6 @@ function SpendCard({
         <span className="text-xs uppercase tracking-widest">{title}</span>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{detail}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-foreground transition-colors group-hover:text-accent">
-        {action} <ArrowUpRight className="h-3 w-3" />
-      </span>
     </Link>
   );
 }

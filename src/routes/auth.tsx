@@ -8,6 +8,30 @@ import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/Brand";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { Smartphone } from "lucide-react";
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+      <path
+        fill="#4285F4"
+        d="M21.35 12.27c0-.68-.06-1.34-.18-1.97H12v3.73h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.15Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 21.8c2.63 0 4.84-.87 6.45-2.38l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.55 0-4.71-1.72-5.49-4.03H3.27v2.53A9.74 9.74 0 0 0 12 21.8Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M6.51 13.86A5.86 5.86 0 0 1 6.2 12c0-.64.11-1.27.31-1.86V7.61H3.27A9.8 9.8 0 0 0 2.2 12c0 1.58.38 3.08 1.07 4.39l3.24-2.53Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 6.11c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.19 14.63 2.2 12 2.2a9.74 9.74 0 0 0-8.73 5.41l3.24 2.53C7.29 7.83 9.45 6.11 12 6.11Z"
+      />
+    </svg>
+  );
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
@@ -215,14 +239,27 @@ function AuthPage() {
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 md:mt-0">
             {!showForgotPassword && !resetPasswordMode && (
               <>
-                <button
-                  type="button"
-                  onClick={google}
-                  disabled={loading || (mode === "signup" && !acceptedTerms)}
-                  className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
-                >
-                  Continue with Google
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={google}
+                    disabled={loading || (mode === "signup" && !acceptedTerms)}
+                    aria-label="Continue with Google"
+                    title="Continue with Google"
+                    className="grid h-12 w-12 place-items-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+                  >
+                    <GoogleMark />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toast.info("Phone sign-in is coming soon.")}
+                    aria-label="Continue with phone"
+                    title="Phone sign-in coming soon"
+                    className="grid h-12 w-12 place-items-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <Smartphone className="h-5 w-5" />
+                  </button>
+                </div>
 
                 <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
                   <span className="h-px flex-1 bg-border" /> or email{" "}
