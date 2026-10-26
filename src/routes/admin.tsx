@@ -229,10 +229,6 @@ function AdminPage() {
             </button>
           ))}
         </nav>
-        <p className="mx-auto max-w-6xl px-4 pb-3 text-xs text-muted-foreground">
-          Test User applications and access management are disabled. Existing application and
-          profile data are preserved.
-        </p>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
         {activeTab === "overview" && <Overview />}
@@ -300,9 +296,6 @@ function LoginScreen({ onOk }: { onOk: () => void }) {
           </p>
         </div>
         <div className="border-t border-border pt-4">
-          <p className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-            Founder credentials
-          </p>
           <label
             htmlFor="admin-username"
             className="text-[10px] uppercase tracking-widest text-muted-foreground"
@@ -346,9 +339,6 @@ function LoginScreen({ onOk }: { onOk: () => void }) {
         >
           {busy ? "Verifying…" : "Sign in as founder"}
         </button>
-        <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground/70">
-          No public route · no indexing
-        </p>
       </form>
     </div>
   );
@@ -679,11 +669,11 @@ function UsersPanel() {
               <span className="text-right">Warn</span>
               <span className="text-right">Rare</span>
             </div>
-            <div className="divide-y divide-border">
+            <div className="space-y-2">
               {rows.map((u) => (
                 <div
                   key={u.id}
-                  className={`grid grid-cols-[minmax(0,1fr)_110px_76px_76px] items-center gap-4 px-3 py-3 ${u.banned_at ? "bg-destructive/10" : ""}`}
+                  className={`grid grid-cols-[minmax(0,1fr)_110px_76px_76px] items-center gap-4 rounded-xl border border-border bg-card px-3 py-3 shadow-sm transition-colors hover:border-accent/40 ${u.banned_at ? "border-destructive/35 bg-destructive/10" : ""}`}
                 >
                   <button
                     type="button"

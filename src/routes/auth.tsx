@@ -239,25 +239,25 @@ function AuthPage() {
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 md:mt-0">
             {!showForgotPassword && !resetPasswordMode && (
               <>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
                     onClick={google}
                     disabled={loading || (mode === "signup" && !acceptedTerms)}
                     aria-label="Continue with Google"
-                    title="Continue with Google"
-                    className="grid h-12 w-12 place-items-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
                   >
                     <GoogleMark />
+                    <span>Google</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => toast.info("Phone sign-in is coming soon.")}
                     aria-label="Continue with phone"
-                    title="Phone sign-in coming soon"
-                    className="grid h-12 w-12 place-items-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-secondary"
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                   >
                     <Smartphone className="h-5 w-5" />
+                    <span>Phone</span>
                   </button>
                 </div>
 
