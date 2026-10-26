@@ -26,3 +26,12 @@
 ## Empty bio and profile-menu motion — Complete in source; build validated
 - Display a suitable English default sentence when a profile bio is empty without writing that sentence into the user's saved bio.
 - Add restrained, reduced-motion-aware opening and closing animation to the profile-view menu, with subtle motion on its related buttons.
+
+## Landing-page card arrows, spacing and footer — Complete in source; build validated
+- Remove the arrow icons from the cards in “The quiet loop.” Place a restrained arrow at the right-center of each “Thoughts” card; keep those cards non-clickable for now because they may later link to real Things.
+- Remove “Leave it unfinished. Let the room meet you there.” and reduce the surrounding gap so the next divider does not leave an oversized blank area.
+- Put quotation marks around the footer sentence “A quieter social space for the things that make us feel less alone.” Keep “© 2026 SameThing.” and “for the in-between” side by side.
+
+## Documentation navigation and first-entry motion — Complete in source; build validated
+- Remove the top-right menu button while preserving the existing right-swipe gesture that opens the side menu. Place the “Back to the room” button at the far right.
+- On a visitor’s first Documentation visit, animate the side menu open and then closed, like the Inbox tutorial. Keep navigation groups collapsed by default so the sidebar starts in compact mode.

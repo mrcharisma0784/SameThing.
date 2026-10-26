@@ -256,7 +256,7 @@ export function PublicLanding() {
       </div>
 
       <main className="relative z-10">
-        <section className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-16 lg:pt-16">
+        <section className="mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-12 lg:px-8 lg:pb-12 lg:pt-16">
           <div className="max-w-4xl">
             <h1 className="landing-reveal landing-reveal-delay-1 mt-5 max-w-3xl font-serif text-[clamp(3rem,8vw,6.6rem)] leading-[0.86] tracking-[-0.045em] text-foreground">
               You&apos;re not the
@@ -280,9 +280,6 @@ export function PublicLanding() {
                 See how it works <ArrowDownRight className="h-4 w-4 text-accent" />
               </a>
             </div>
-            <p className="mt-4 text-[9px] uppercase tracking-[0.16em] text-muted-foreground/75">
-              Leave it unfinished. Let the room meet you there.
-            </p>
           </div>
         </section>
 
@@ -347,7 +344,6 @@ export function PublicLanding() {
                       {description}
                     </p>
                   </div>
-                  <ChevronRight className="ml-auto mt-1 h-4 w-4 shrink-0 text-muted-foreground/45 transition-transform group-hover:translate-x-1" />
                 </div>
               ))}
             </div>
@@ -370,9 +366,15 @@ export function PublicLanding() {
               ].map((quote) => (
                 <div
                   key={quote}
-                  className="landing-scroll-reveal rounded-xl border border-border bg-card/50 p-3.5 sm:p-4"
+                  className="landing-scroll-reveal flex items-center gap-3 rounded-xl border border-border bg-card/50 p-3.5 sm:p-4"
                 >
-                  <p className="font-serif text-lg leading-tight text-foreground">“{quote}”</p>
+                  <p className="min-w-0 flex-1 font-serif text-lg leading-tight text-foreground">
+                    “{quote}”
+                  </p>
+                  <ChevronRight
+                    className="h-4 w-4 shrink-0 text-muted-foreground/45"
+                    aria-hidden="true"
+                  />
                 </div>
               ))}
             </div>
@@ -415,7 +417,7 @@ export function PublicLanding() {
               <LandingBrand size="md" />
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-5 text-muted-foreground">
-              A quieter social space for the things that make us feel less alone.
+              “A quieter social space for the things that make us feel less alone.”
             </p>
           </div>
           <div>
@@ -461,9 +463,9 @@ export function PublicLanding() {
             </div>
           </div>
         </div>
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-border/60 px-4 py-4 text-[9px] uppercase tracking-[0.15em] text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <span>© {new Date().getFullYear()} SameThing.</span>
-          <span>for the in-between</span>
+        <div className="mx-auto flex max-w-6xl flex-row items-center justify-between gap-2 border-t border-border/60 px-4 py-4 text-[9px] uppercase tracking-[0.15em] text-muted-foreground sm:px-6 lg:px-8">
+          <span className="whitespace-nowrap">© {new Date().getFullYear()} SameThing.</span>
+          <span className="whitespace-nowrap">for the in-between</span>
         </div>
       </footer>
     </div>

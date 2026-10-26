@@ -12,7 +12,6 @@ import {
   Flame,
   Heart,
   LockKeyhole,
-  Menu,
   Orbit,
   Quote,
   Search,
@@ -20,7 +19,6 @@ import {
   Sparkles,
   Target,
   Users,
-  X,
 } from "lucide-react";
 import { Brand } from "@/components/Brand";
 import { cn } from "@/lib/utils";
@@ -609,9 +607,10 @@ function DocumentationPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(DOC_GROUPS.map((group) => [group.id, true])),
+    Object.fromEntries(DOC_GROUPS.map((group) => [group.id, false])),
   );
   const touchStartX = useRef<number | null>(null);
+  const previewCloseTimer = useRef<number | null>(null);
 
   useEffect(() => {
     setQuery(initialQuery ?? "");
@@ -619,6 +618,7 @@ function DocumentationPage() {
 
   useEffect(() => {
     if (!sidebarOpen) return;
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
     const previousOverflow = document.body.style.overflow;
     const previousOverscroll = document.body.style.overscrollBehavior;
     document.body.style.overflow = "hidden";
@@ -628,6 +628,35 @@ function DocumentationPage() {
       document.body.style.overscrollBehavior = previousOverscroll;
     };
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 1023px)");
+    const seenKey = "samething:documentation-sidebar-preview";
+    if (!mobile.matches) return;
+    try {
+      if (window.localStorage.getItem(seenKey)) return;
+      window.localStorage.setItem(seenKey, "done");
+    } catch {
+      return;
+    }
+    const openTimer = window.setTimeout(() => setSidebarOpen(true), 550);
+    previewCloseTimer.current = window.setTimeout(() => setSidebarOpen(false), 1550);
+    return () => {
+      window.clearTimeout(openTimer);
+      if (previewCloseTimer.current !== null) {
+        window.clearTimeout(previewCloseTimer.current);
+        previewCloseTimer.current = null;
+      }
+    };
+  }, []);
+
+  const keepSidebarOpenOnInteraction = () => {
+    if (previewCloseTimer.current !== null) {
+      window.clearTimeout(previewCloseTimer.current);
+      previewCloseTimer.current = null;
+    }
+  };
+
   const activePage = useMemo(
     () => ALL_DOC_PAGES.find((page) => page.id === activeId) ?? ALL_DOC_PAGES[0],
     [activeId],
@@ -655,7 +684,9 @@ function DocumentationPage() {
       className="min-h-dvh bg-background text-foreground"
       onTouchStart={(event) => {
         const start = event.touches[0]?.clientX ?? 999;
-        touchStartX.current = !sidebarOpen && start <= 28 ? start : null;
+        const edgeSwipe = !sidebarOpen && start <= 28;
+        if (edgeSwipe) keepSidebarOpenOnInteraction();
+        touchStartX.current = edgeSwipe ? start : null;
       }}
       onTouchEnd={(event) => {
         if (touchStartX.current === null) return;
@@ -681,22 +712,13 @@ function DocumentationPage() {
             <span className="text-accent">/</span>
             <span>{ALL_DOC_PAGES.length} pages</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-2.5 text-xs text-foreground transition-colors hover:border-accent/50 hover:text-accent"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to the room
             </Link>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen((open) => !open)}
-              className="pressable grid h-9 w-9 place-items-center rounded-xl border border-border bg-card text-foreground lg:hidden"
-              aria-label={sidebarOpen ? "Close documentation menu" : "Open documentation menu"}
-              aria-expanded={sidebarOpen}
-            >
-              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
           </div>
         </div>
       </header>
@@ -711,6 +733,8 @@ function DocumentationPage() {
       )}
       <div className="mx-auto grid max-w-[90rem] lg:grid-cols-[18rem_minmax(0,1fr)]">
         <aside
+          onPointerDown={keepSidebarOpenOnInteraction}
+          onKeyDown={keepSidebarOpenOnInteraction}
           className={cn(
             "fixed inset-y-0 left-0 z-50 w-[min(18rem,88vw)] overflow-y-auto border-r border-border/70 bg-card/95 pt-[4.1rem] shadow-2xl transition-transform duration-200 lg:sticky lg:top-[4.1rem] lg:block lg:h-[calc(100dvh-4.1rem)] lg:w-auto lg:translate-x-0 lg:overflow-y-auto lg:bg-card/20 lg:pt-0 lg:shadow-none",
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
@@ -728,7 +752,7 @@ function DocumentationPage() {
             </label>
             <nav className="mt-5 space-y-4" aria-label="Documentation sections">
               {filteredGroups.map((group) => {
-                const expanded = expandedGroups[group.id] ?? true;
+                const expanded = query.trim().length > 0 || expandedGroups[group.id] === true;
                 return (
                   <div key={group.id}>
                     <button
