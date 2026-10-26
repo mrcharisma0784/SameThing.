@@ -833,9 +833,14 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
               </p>
             </div>
             {isBanned && (
-              <div className="col-span-2 rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                <b>Banned:</b> {new Date(p!.banned_at as string).toLocaleString()} —{" "}
-                {(p?.ban_reason as string) ?? ""}
+              <div className="col-span-2 rounded-xl border border-border/70 bg-background/60 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Banned
+                </p>
+                <p className="mt-1 break-words text-sm leading-5 text-foreground">
+                  {new Date(p!.banned_at as string).toLocaleString()} —{" "}
+                  {(p?.ban_reason as string) ?? ""}
+                </p>
               </div>
             )}
           </div>
@@ -2854,14 +2859,24 @@ function BannedPanel() {
             placeholder="Add a word or phrase"
             className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-accent/60"
           />
-          <select
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value as "warn" | "block")}
-            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-accent/60"
-          >
-            <option value="warn">Warn</option>
-            <option value="block">Block</option>
-          </select>
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ["warn", "Warn"],
+                ["block", "Ban"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={severity === value}
+                onClick={() => setSeverity(value)}
+                className={`rounded-xl border px-3 py-2.5 text-sm transition-colors ${severity === value ? "border-accent bg-accent/10 text-accent" : "border-border bg-background text-muted-foreground hover:border-accent/50 hover:text-foreground"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             disabled={!word.trim()}
             onClick={async () => {
