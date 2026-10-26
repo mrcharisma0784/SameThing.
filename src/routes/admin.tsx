@@ -32,6 +32,7 @@ import {
   adminReplyFeedback,
   adminListFeedbackPrompts,
   adminListFeedbackPromptResponses,
+  adminDeleteFeedbackPrompt,
   adminUpsertFeedbackPrompt,
   adminListApiAccessRequests,
   adminUpdateApiAccessRequest,
@@ -2106,6 +2107,7 @@ type FeedbackPromptItem = {
 function AdsPanel() {
   const list = useServerFn(adminListFeedbackPrompts);
   const listResponses = useServerFn(adminListFeedbackPromptResponses);
+  const remove = useServerFn(adminDeleteFeedbackPrompt);
   const save = useServerFn(adminUpsertFeedbackPrompt);
   const [items, setItems] = useState<FeedbackPromptItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -2128,14 +2130,23 @@ function AdsPanel() {
     }>
   >([]);
   const [responsesBusy, setResponsesBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const load = () =>
-    list()
-      .then((result) => {
-        if (result.error) toast.error(result.error);
-        setItems(result.items as FeedbackPromptItem[]);
-      })
-      .catch(() => toast.error("Ads could not be loaded."));
+  const load = async () => {
+    try {
+      const result = await list();
+      if (result.error) toast.error(result.error);
+      let next = result.items as FeedbackPromptItem[];
+      const legacyPrompt = next.find((item) => item.title === "Siteyi nasıl buldunuz??");
+      if (legacyPrompt) {
+        await remove({ data: { id: legacyPrompt.id } });
+        next = next.filter((item) => item.id !== legacyPrompt.id);
+      }
+      setItems(next);
+    } catch {
+      toast.error("Ads could not be loaded.");
+    }
+  };
 
   useEffect(() => {
     load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -2182,6 +2193,24 @@ function AdsPanel() {
       return;
     }
     setResponses(result.items as typeof responses);
+  };
+
+  const deletePrompt = async (item: FeedbackPromptItem) => {
+    if (!window.confirm(`Delete “${item.title}” and its responses?`)) return;
+    setDeletingId(item.id);
+    const result = await remove({ data: { id: item.id } });
+    setDeletingId(null);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    if (editingId === item.id) clearForm();
+    if (responsesFor === item.id) {
+      setResponsesFor(null);
+      setResponses([]);
+    }
+    toast.success("Feedback prompt deleted.");
+    load();
   };
 
   const submit = async (nextActive: boolean) => {
@@ -2370,6 +2399,14 @@ function AdsPanel() {
                   className="rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground hover:border-accent/50 hover:text-foreground"
                 >
                   View responses
+                </button>
+                <button
+                  type="button"
+                  disabled={deletingId === item.id}
+                  onClick={() => void deletePrompt(item)}
+                  className="rounded-full border border-destructive/40 px-3 py-1.5 text-[11px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                >
+                  {deletingId === item.id ? "Deleting…" : "Delete"}
                 </button>
                 <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/70">
                   Updated {new Date(item.updated_at).toLocaleDateString("en-US")}

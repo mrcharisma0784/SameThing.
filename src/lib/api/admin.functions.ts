@@ -1166,6 +1166,26 @@ export const adminListFeedbackPromptResponses = createServerFn({ method: "GET" }
     };
   });
 
+const FeedbackPromptDeleteInput = z.object({ id: z.string().uuid() });
+
+export const adminDeleteFeedbackPrompt = createServerFn({ method: "POST" })
+  .inputValidator((input) => FeedbackPromptDeleteInput.parse(input))
+  .handler(async ({ data }) => {
+    await assertAdmin("ads:write");
+    await recordAdminAction("adminDeleteFeedbackPrompt", "ads:write");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (supabaseAdmin as any)
+      .from("feedback_prompt_responses")
+      .delete()
+      .eq("prompt_id", data.id);
+    const { error } = await (supabaseAdmin as any)
+      .from("feedback_prompts")
+      .delete()
+      .eq("id", data.id);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
 export const adminUpsertFeedbackPrompt = createServerFn({ method: "POST" })
   .inputValidator((input) => FeedbackPromptInput.parse(input))
   .handler(async ({ data }) => {
