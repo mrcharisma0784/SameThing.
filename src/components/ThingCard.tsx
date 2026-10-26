@@ -27,7 +27,6 @@ import {
   updateThing,
   voteOnThing,
 } from "@/lib/api/things.functions";
-import { withdrawReport } from "@/lib/api/me.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { effectivePlan } from "@/lib/premium";
 import { isLabThingActive } from "@/lib/test-user";
@@ -88,7 +87,6 @@ export function ThingCard({
   const qc = useQueryClient();
   const vote = useServerFn(voteOnThing);
   const report = useServerFn(reportTarget);
-  const withdraw = useServerFn(withdrawReport);
   const like = useServerFn(likeThing);
   const unlike = useServerFn(unlikeThing);
   const update = useServerFn(updateThing);
@@ -96,7 +94,9 @@ export function ThingCard({
   const restore = useServerFn(restoreThing);
   const boost = useServerFn(boostThing);
   const [local, setLocal] = useState(thing);
-  const [reported, setReported] = useState(false);
+  const [reportOtherOpen, setReportOtherOpen] = useState(false);
+  const [reportOtherReason, setReportOtherReason] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
   const [userVote, setUserVote] = useState<"same" | "nah" | null>(null);
   const [likeBusy, setLikeBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,7 +185,7 @@ export function ThingCard({
     m.mutate(t);
   };
 
-  const handleReport = async (reason: string) => {
+  const submitReport = async (reason: string) => {
     if (!user) {
       navigate({ to: "/auth" });
       return;
@@ -196,28 +196,26 @@ export function ThingCard({
       toast.error(res.error);
       return;
     }
-    setReported(true);
-    const undoReport = async () => {
-      const undone = await withdraw({ data: { target_type: "thing", target_id: local.id } });
-      if (!undone.ok) {
-        toast.error(undone.error);
-        return;
-      }
-      setReported(false);
-      toast.success("Report withdrawn. This Thing is visible again.");
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["feed"] }),
-        qc.invalidateQueries({ queryKey: ["search"] }),
-      ]);
-    };
-    toast.success("Thing hidden from your view.", {
-      duration: 9000,
-      action: { label: "Undo", onClick: () => void undoReport() },
-    });
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["feed"] }),
-      qc.invalidateQueries({ queryKey: ["search"] }),
-    ]);
+    toast.success("Report sent to the admin team.");
+  };
+
+  const handleReport = async (reason: string) => {
+    if (reason === "other") {
+      setMenuOpen(false);
+      setReportOtherReason("");
+      setReportOtherOpen(true);
+      return;
+    }
+    await submitReport(reason);
+  };
+
+  const submitOtherReport = async () => {
+    if (!reportOtherReason.trim()) return;
+    setReportBusy(true);
+    await submitReport(reportOtherReason.trim());
+    setReportBusy(false);
+    setReportOtherOpen(false);
+    setReportOtherReason("");
   };
 
   const openShare = () => {
@@ -345,7 +343,7 @@ export function ThingCard({
   const isBoostActive = Boolean(
     local.boosted_until && new Date(local.boosted_until).getTime() > Date.now(),
   );
-  if (reported || local.deleted_at) return null;
+  if (local.deleted_at) return null;
 
   return (
     <article
@@ -637,6 +635,43 @@ export function ThingCard({
         </div>
       )}
       {shareOpen && <MyThingShareModal thing={local} onClose={() => setShareOpen(false)} />}
+      {reportOtherOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 text-foreground shadow-2xl">
+            <h2 className="font-serif text-2xl font-normal">Report this Thing</h2>
+            <p className="mt-3 text-sm leading-5 text-muted-foreground">
+              Tell us what feels wrong. Your report will be reviewed by the SameThing team.
+            </p>
+            <textarea
+              autoFocus
+              value={reportOtherReason}
+              onChange={(event) => setReportOtherReason(event.target.value)}
+              rows={4}
+              maxLength={60}
+              placeholder="Reason for reporting…"
+              className="mt-4 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-5 outline-none focus:border-accent"
+            />
+            <div className="mt-4 flex justify-start gap-2">
+              <button
+                type="button"
+                disabled={reportBusy || !reportOtherReason.trim()}
+                onClick={() => void submitOtherReport()}
+                className="rounded-full bg-accent px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+              >
+                {reportBusy ? "Reporting…" : "Submit report"}
+              </button>
+              <button
+                type="button"
+                disabled={reportBusy}
+                onClick={() => setReportOtherOpen(false)}
+                className="rounded-full border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

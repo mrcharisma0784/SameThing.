@@ -33,7 +33,6 @@ import {
   restoreQuote,
 } from "@/lib/api/quotes.functions";
 import { reportTarget } from "@/lib/api/things.functions";
-import { withdrawReport } from "@/lib/api/me.functions";
 
 export type QuoteCommentItem = {
   id: string;
@@ -82,7 +81,6 @@ export function QuoteOfTheDay() {
   const likeFn = useServerFn(likeQuote);
   const unlikeFn = useServerFn(unlikeQuote);
   const reportFn = useServerFn(reportTarget);
-  const withdrawFn = useServerFn(withdrawReport);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [author, setAuthor] = useState("");
@@ -92,7 +90,6 @@ export function QuoteOfTheDay() {
   const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set());
   const [localCounts, setLocalCounts] = useState<Record<string, number>>({});
   const [shareQuote, setShareQuote] = useState<QuoteItem | null>(null);
-  const [reportedIds, setReportedIds] = useState<Set<string>>(() => new Set());
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<{
     id: string;
@@ -131,10 +128,7 @@ export function QuoteOfTheDay() {
     staleTime: 30_000,
   });
 
-  const quotes = useMemo(
-    () => (data?.quotes ?? []).filter((item) => !reportedIds.has(item.id)) as QuoteItem[],
-    [data, reportedIds],
-  );
+  const quotes = useMemo(() => (data?.quotes ?? []) as QuoteItem[], [data]);
   const mine = (mineData?.quote ?? null) as QuoteItem | null;
   const displayQuotes = useMemo(() => {
     const rest = mine ? quotes.filter((item) => item.id !== mine.id) : quotes;
@@ -297,32 +291,7 @@ export function QuoteOfTheDay() {
       toast.error(result.error);
       return;
     }
-    setReportedIds((current) => new Set(current).add(item.id));
-    const undoReport = async () => {
-      const undone = await withdrawFn({ data: { target_type: "quote", target_id: item.id } });
-      if (!undone.ok) {
-        toast.error(undone.error);
-        return;
-      }
-      setReportedIds((current) => {
-        const next = new Set(current);
-        next.delete(item.id);
-        return next;
-      });
-      toast.success("Report withdrawn. This Quote is visible again.");
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["quotes", "today"] }),
-        qc.invalidateQueries({ queryKey: ["quotes", "mine"] }),
-      ]);
-    };
-    toast.success("Quote hidden from your view.", {
-      duration: 9000,
-      action: { label: "Undo", onClick: () => void undoReport() },
-    });
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: ["quotes", "today"] }),
-      qc.invalidateQueries({ queryKey: ["quotes", "mine"] }),
-    ]);
+    toast.success("Report sent to the admin team.");
   };
 
   const toggleLike = async (item: QuoteItem) => {
