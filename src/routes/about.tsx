@@ -154,7 +154,7 @@ function AboutSameThingPage() {
           </div>
         </section>
 
-        <section className="mt-16 border-y border-border/70 py-12 text-center sm:mt-24 sm:py-16">
+        <section className="mt-16 border-b border-border/70 py-12 text-center sm:mt-24 sm:py-16">
           <p className="text-[10px] uppercase tracking-[0.3em] text-accent">A room to return to</p>
           <h2 className="mx-auto mt-3 max-w-2xl font-serif text-4xl leading-[0.95] tracking-[-0.045em] sm:text-5xl">
             Leave something honest. See what comes back.

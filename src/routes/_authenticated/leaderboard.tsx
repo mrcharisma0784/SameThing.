@@ -34,7 +34,10 @@ export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
     meta: [
       { title: "Leaderboard · SameThing." },
-      { name: "description", content: "Weekly leagues for Things, Quotes and people." },
+      {
+        name: "description",
+        content: "Astra, Cosmos and Quelo leagues for Things, Quotes and people.",
+      },
     ],
     links: [{ rel: "canonical", href: getSiteUrl("/leaderboard") }],
   }),
@@ -82,7 +85,7 @@ function LeaderboardPage() {
           <div className="relative flex items-start justify-between gap-4">
             <div className="max-w-xl">
               <p className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-accent">
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.7} /> weekly leagues
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.7} /> three leagues
               </p>
               <h1 className="brand-mark text-4xl text-foreground sm:text-5xl">
                 Leaderboard<span className="dot">.</span>
@@ -131,8 +134,7 @@ function LeaderboardPage() {
                 />
               </div>
               <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-                Things 20 · Quotes 15 · votes 2 · comments 4 · new followers 10. Progress resets at
-                year end.
+                Annual progress. The next season begins at year end.
               </p>
             </div>
           ) : null}

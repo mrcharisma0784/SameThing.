@@ -121,10 +121,8 @@ function getUtcYearBounds(now = new Date()) {
 
 const PERSONAL_LEAGUES = [
   { id: "astra", name: "Astra", threshold: 0 },
-  { id: "cosmo", name: "Cosmo", threshold: 250 },
-  { id: "nova", name: "Nova", threshold: 750 },
-  { id: "solara", name: "Solara", threshold: 1500 },
-  { id: "zenith", name: "Zenith", threshold: 3000 },
+  { id: "cosmos", name: "Cosmos", threshold: 250 },
+  { id: "quelo", name: "Quelo", threshold: 750 },
 ];
 
 function number(value: number | null | undefined) {
@@ -277,11 +275,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     if (quoteLikesResult.error)
       console.error("leaderboard quote-like activity error", quoteLikesResult.error);
 
-    const shareCounts = new Map<string, number>();
-    for (const row of (sharesResult.data ?? []) as unknown as Array<{ thing_id: string }>) {
-      shareCounts.set(row.thing_id, (shareCounts.get(row.thing_id) ?? 0) + 1);
-    }
-
     const thingActivity = new Map<
       string,
       { likes: number; same: number; nah: number; votes: number; comments: number; shares: number }
@@ -375,26 +368,6 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
-    const thingsBySame = [...things].sort((a, b) => {
-      const scoreDelta =
-        (thingActivity.get(b.id)?.same ?? 0) - (thingActivity.get(a.id)?.same ?? 0);
-      if (scoreDelta !== 0) return scoreDelta;
-      return thingEngagement(b) - thingEngagement(a);
-    });
-
-    const thingsByDiscussion = [...things].sort((a, b) => {
-      const scoreDelta =
-        (thingActivity.get(b.id)?.comments ?? 0) - (thingActivity.get(a.id)?.comments ?? 0);
-      if (scoreDelta !== 0) return scoreDelta;
-      return thingEngagement(b) - thingEngagement(a);
-    });
-
-    const thingsByShared = [...things].sort((a, b) => {
-      const scoreDelta = (shareCounts.get(b.id) ?? 0) - (shareCounts.get(a.id) ?? 0);
-      if (scoreDelta !== 0) return scoreDelta;
-      return thingEngagement(b) - thingEngagement(a);
-    });
-
     const quotesByLove = [...quotes].sort((a, b) => {
       const scoreDelta = quoteEngagement(b) - quoteEngagement(a);
       if (scoreDelta !== 0) return scoreDelta;
@@ -482,52 +455,28 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
     const leagues: LeaderboardLeague[] = [
       {
-        id: "rafael-orbit",
-        name: "Rafael’s Orbit",
+        id: "astra",
+        name: "Astra",
         category: "thing",
-        description: "The Things carrying the strongest signal this week.",
+        description: "The strongest signals in the room this week.",
         metric: "signal strength",
         entries: rankEntries(thingsByFame.map((thing) => thingEntry(thing, "fame"))),
       },
       {
-        id: "astra-vale",
-        name: "Astra Vale",
+        id: "cosmos",
+        name: "Cosmos",
         category: "user",
         description: "The people whose presence travels furthest through the feed.",
         metric: "presence",
         entries: rankEntries(userEntries),
       },
       {
-        id: "solenne-samefire",
-        name: "Solenne Samefire",
-        category: "thing",
-        description: "The Things most often met with a quiet, unmistakable Same.",
-        metric: "Same votes",
-        entries: rankEntries(thingsBySame.map((thing) => thingEntry(thing, "same"))),
-      },
-      {
-        id: "vespera-thread",
-        name: "Vespera Thread",
-        category: "thing",
-        description: "The conversations with the most thoughtful replies.",
-        metric: "conversation",
-        entries: rankEntries(thingsByDiscussion.map((thing) => thingEntry(thing, "discussion"))),
-      },
-      {
-        id: "elaris-echo",
-        name: "Elaris Echo",
+        id: "quelo",
+        name: "Quelo",
         category: "quote",
         description: "Quotes that stayed with people after they passed through.",
         metric: "echoes",
         entries: rankEntries(quoteEntries),
-      },
-      {
-        id: "lumen-relay",
-        name: "Lumen Relay",
-        category: "thing",
-        description: "The Things moving from one person to another beyond the first glance.",
-        metric: "shared signal",
-        entries: rankEntries(thingsByShared.map((thing) => thingEntry(thing, "shared"))),
       },
     ];
 

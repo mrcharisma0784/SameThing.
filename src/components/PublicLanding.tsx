@@ -207,7 +207,7 @@ export function PublicLanding() {
 
   const openQuickSearch = () => {
     const query = quickSearch.trim();
-    navigate({ to: "/documentation", search: query ? { q: query } : {} });
+    navigate({ to: "/documentation", search: query ? { q: query, menu: "1" } : { menu: "1" } });
   };
 
   return (

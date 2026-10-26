@@ -1,6 +1,7 @@
 
-## Admin feedback prompts, broadcasting and data cards — Complete in source; lint/build validated
-- Feedback prompts remain visible to eligible users while active, can be assigned a duration of 1 hour, 7 days, 2 weeks or indefinitely, expire automatically, and can be stopped so they are no longer shown.
-- Rename the Admin Messages area to Broadcasting and update its panel copy accordingly.
-- Render Forbidden words and Things as appropriately sized cards instead of plain text rows.
-- Add more useful counts to Admin Overview.
+## Docs, auth, About and league corrections — Complete in source; lint/build validated
+- Remove the Docs menu button, restore edge-swipe sidebar behavior, and keep only the mobile install-the-app message.
+- When the landing search opens Documentation, open the sidebar automatically and preserve/improve the search query behavior.
+- Style Google and Phone auth buttons like the email input, with a slightly darker fill.
+- Remove one redundant About separator above “A room to return to” and rebalance the spacing.
+- Keep exactly three concise leagues: Astra, Cosmos and Quelo; remove the example point-weight explanation and older league names.
