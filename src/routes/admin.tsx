@@ -2267,40 +2267,34 @@ function AdsPanel() {
               className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
             />
           </div>
-          <div className="rounded-2xl border border-accent/25 bg-accent/5 p-3">
-            <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-accent">Show for</p>
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2">
-              <input
-                type="number"
-                min={1}
-                max={525600}
-                value={customDurationValue}
-                onChange={(event) =>
-                  setCustomDurationValue(Math.max(1, Number.parseInt(event.target.value, 10) || 1))
-                }
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
-                aria-label="Custom duration amount"
-              />
-              <select
-                value={customDurationUnit}
-                onChange={(event) =>
-                  setCustomDurationUnit(
-                    event.target.value as "minutes" | "hours" | "days" | "weeks" | "months",
-                  )
-                }
-                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
-                aria-label="Custom duration unit"
-              >
-                <option value="minutes">minutes</option>
-                <option value="hours">hours</option>
-                <option value="days">days</option>
-                <option value="weeks">weeks</option>
-                <option value="months">months</option>
-              </select>
-            </div>
-            <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-              The prompt stops automatically after this custom duration.
-            </p>
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2">
+            <input
+              type="number"
+              min={1}
+              max={525600}
+              value={customDurationValue}
+              onChange={(event) =>
+                setCustomDurationValue(Math.max(1, Number.parseInt(event.target.value, 10) || 1))
+              }
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+              aria-label="Custom duration amount"
+            />
+            <select
+              value={customDurationUnit}
+              onChange={(event) =>
+                setCustomDurationUnit(
+                  event.target.value as "minutes" | "hours" | "days" | "weeks" | "months",
+                )
+              }
+              className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+              aria-label="Custom duration unit"
+            >
+              <option value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+              <option value="weeks">weeks</option>
+              <option value="months">months</option>
+            </select>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -2833,6 +2827,10 @@ function BannedPanel() {
   const [items, setItems] = useState<Array<{ id: string; word: string; severity: string }>>([]);
   const [word, setWord] = useState("");
   const [severity, setSeverity] = useState<"warn" | "block">("warn");
+  const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
+  const [swipeId, setSwipeId] = useState<string | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const reload = () => list().then((r) => setItems(r.items));
   useEffect(() => {
     reload(); /* eslint-disable-next-line */
@@ -2847,9 +2845,6 @@ function BannedPanel() {
             from being saved.
           </p>
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          {items.length} rules
-        </span>
       </div>
       <div className="mt-4 rounded-2xl border border-border/70 bg-background/40 p-3">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_130px_auto]">
@@ -2884,7 +2879,35 @@ function BannedPanel() {
       </div>
       <ul className="mt-4 divide-y divide-border/70 rounded-2xl border border-border/70 bg-background/30">
         {items.map((b) => (
-          <li key={b.id} className="flex items-center justify-between gap-4 px-3 py-3 text-sm">
+          <li
+            key={b.id}
+            onTouchStart={(event) => {
+              setSwipeStartX(event.touches[0]?.clientX ?? null);
+              setSwipeId(b.id);
+              setSwipeOffset(0);
+            }}
+            onTouchMove={(event) => {
+              if (swipeStartX === null || swipeId !== b.id) return;
+              setSwipeOffset(Math.max(0, Math.min(140, event.touches[0].clientX - swipeStartX)));
+            }}
+            onTouchEnd={async () => {
+              if (swipeId !== b.id) return;
+              const shouldDelete = swipeOffset >= 90;
+              setSwipeStartX(null);
+              setSwipeId(null);
+              setSwipeOffset(0);
+              if (!shouldDelete) return;
+              setDeletingId(b.id);
+              await del({ data: { id: b.id } });
+              setDeletingId(null);
+              reload();
+            }}
+            className="flex touch-pan-y items-center justify-between gap-4 overflow-hidden px-3 py-3 text-sm transition-transform duration-150"
+            style={{
+              transform: swipeId === b.id ? `translateX(${swipeOffset}px)` : undefined,
+              opacity: deletingId === b.id ? 0.45 : 1,
+            }}
+          >
             <span className="min-w-0 truncate font-medium text-foreground">{b.word}</span>
             <span className="flex shrink-0 items-center gap-3">
               <span
@@ -2892,15 +2915,6 @@ function BannedPanel() {
               >
                 {b.severity}
               </span>
-              <button
-                onClick={async () => {
-                  await del({ data: { id: b.id } });
-                  reload();
-                }}
-                className="text-xs text-muted-foreground hover:text-destructive"
-              >
-                Remove
-              </button>
             </span>
           </li>
         ))}
