@@ -743,6 +743,9 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const [premiumSelection, setPremiumSelection] = useState<7 | 14 | 30 | 90 | "forever">(30);
   const [customPremiumDays, setCustomPremiumDays] = useState("");
   const [premiumBusy, setPremiumBusy] = useState(false);
+  const [banPanelOpen, setBanPanelOpen] = useState(false);
+  const [banReason, setBanReason] = useState("");
+  const [banBusy, setBanBusy] = useState(false);
   const load = () => fn({ data: { id } }).then(setD);
   useEffect(() => {
     load(); /* eslint-disable-next-line */
@@ -792,6 +795,15 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
     }
     toast.success("PremiumThing. removed.");
     setPremiumPanelOpen(false);
+    load();
+  };
+  const submitBan = async () => {
+    setBanBusy(true);
+    await banFn({ data: { id, reason: banReason.trim(), ban: true } });
+    setBanBusy(false);
+    setBanPanelOpen(false);
+    setBanReason("");
+    toast.success("Banned.");
     load();
   };
   return (
@@ -904,9 +916,12 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <button
               type="button"
               onClick={async () => {
-                const reason = isBanned ? "" : (prompt("Ban reason?") ?? "");
-                await banFn({ data: { id, reason, ban: !isBanned } });
-                toast.success(isBanned ? "Unbanned." : "Banned.");
+                if (!isBanned) {
+                  setBanPanelOpen(true);
+                  return;
+                }
+                await banFn({ data: { id, reason: "", ban: false } });
+                toast.success("Unbanned.");
                 load();
               }}
               className={
@@ -1020,17 +1035,44 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
                 }) => (
                   <div
                     key={t.id}
-                    className={`rounded-xl border border-border/80 bg-background/60 p-3 ${t.hidden ? "opacity-60" : ""}`}
+                    className={`rounded-xl border border-border/80 bg-background/60 p-3 transition-colors hover:border-accent/40 ${t.hidden ? "opacity-60" : ""}`}
                   >
-                    <p
-                      className={`line-clamp-3 text-sm leading-5 ${t.hidden ? "line-through" : "text-foreground"}`}
-                    >
-                      {t.title}
-                    </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {t.same_count}✓ / {t.nah_count}✗ ·{" "}
-                      {new Date(t.created_at).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p
+                        className={`line-clamp-2 min-w-0 text-sm leading-5 ${t.hidden ? "text-muted-foreground line-through" : "text-foreground"}`}
+                      >
+                        {t.title}
+                      </p>
+                      {t.hidden && (
+                        <span className="shrink-0 rounded-full border border-destructive/40 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-destructive">
+                          Hidden
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-1.5 text-[10px]">
+                      <div className="rounded-lg border border-border/70 px-2 py-1.5">
+                        <span className="block uppercase tracking-widest text-muted-foreground">
+                          Same
+                        </span>
+                        <span className="mt-0.5 block text-xs text-emerald-300">
+                          {t.same_count}
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-border/70 px-2 py-1.5">
+                        <span className="block uppercase tracking-widest text-muted-foreground">
+                          Nah
+                        </span>
+                        <span className="mt-0.5 block text-xs text-rose-300">{t.nah_count}</span>
+                      </div>
+                      <div className="rounded-lg border border-border/70 px-2 py-1.5">
+                        <span className="block uppercase tracking-widest text-muted-foreground">
+                          Dropped
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-foreground">
+                          {new Date(t.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 ),
               )}
@@ -1118,6 +1160,55 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
           </div>
         </div>
       </div>
+      {banPanelOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Moderation
+                </p>
+                <h2 className="mt-1 font-serif text-2xl text-foreground">Ban this user?</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBanPanelOpen(false)}
+                className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-secondary"
+              >
+                Close
+              </button>
+            </div>
+            <p className="mt-3 text-sm leading-5 text-muted-foreground">
+              Add an optional reason. It will be stored with the moderation action.
+            </p>
+            <textarea
+              autoFocus
+              value={banReason}
+              onChange={(event) => setBanReason(event.target.value)}
+              rows={4}
+              placeholder="Reason for the ban…"
+              className="mt-4 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm leading-5 text-foreground outline-none focus:border-destructive"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setBanPanelOpen(false)}
+                className="rounded-xl border border-border px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={banBusy}
+                onClick={() => void submitBan()}
+                className="rounded-xl bg-destructive px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
+              >
+                {banBusy ? "Banning…" : "Confirm ban"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
