@@ -797,6 +797,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
                 className="inline-block h-4 w-4 align-[-0.2em]"
               />
             </DetailField>
+            <DetailField label="Username">@{(p?.username as string) ?? "—"}</DetailField>
             <DetailField label="Plan">{(p?.plan as string) ?? "—"}</DetailField>
             <DetailField label="Gender">{(p?.gender as string) ?? "—"}</DetailField>
             <DetailField label="Age">{(p?.age_range as string) ?? "—"}</DetailField>
@@ -819,14 +820,6 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
         <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Username
-          </h3>
-          <div className="rounded-xl border border-border/70 bg-background/60 px-3 py-3">
-            <p className="text-lg text-foreground">@{(p?.username as string) ?? "—"}</p>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Auth
           </h3>
           <div className="grid gap-2.5">
@@ -843,269 +836,274 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Top tags used
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {d.tags.length ? (
-              d.tags.slice(0, 20).map((t) => (
-                <span
-                  key={t.tag}
-                  className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
-                >
-                  {t.tag} · {t.count}
-                </span>
-              ))
-            ) : (
-              <span className="text-xs text-muted-foreground">None.</span>
-            )}
+      <div className="flex flex-col">
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-background/30 p-4">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Top tags used
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {d.tags.length ? (
+                d.tags.slice(0, 20).map((t) => (
+                  <span
+                    key={t.tag}
+                    className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-foreground"
+                  >
+                    {t.tag} · {t.count}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">None.</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <section className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Send warning
-        </h3>
-        <textarea
-          value={warnNote}
-          onChange={(e) => setWarnNote(e.target.value)}
-          rows={2}
-          placeholder="Reason / note (goes to their inbox)"
-          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm leading-5"
-        />
-        <button
-          disabled={!warnNote.trim()}
-          onClick={async () => {
-            await warnFn({ data: { id, note: warnNote.trim() } });
-            toast.success("Warning sent.");
-            setWarnNote("");
-            load();
-          }}
-          className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
-        >
-          Send warning
-        </button>
-        <div className="mt-5 flex flex-wrap gap-2 border-t border-border/70 pt-4">
+        <section className="order-last mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Send warning
+          </h3>
+          <textarea
+            value={warnNote}
+            onChange={(e) => setWarnNote(e.target.value)}
+            rows={2}
+            placeholder="Reason / note (goes to their inbox)"
+            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm leading-5"
+          />
           <button
-            type="button"
-            onClick={() => setPremiumPanelOpen((value) => !value)}
-            className="rounded-xl border border-[color:var(--rare)]/50 px-4 py-2.5 text-sm text-[color:var(--rare)]"
-          >
-            {isPremium ? "Manage Premium" : "Grant Premium"}
-          </button>
-          <button
-            type="button"
+            disabled={!warnNote.trim()}
             onClick={async () => {
-              const reason = isBanned ? "" : (prompt("Ban reason?") ?? "");
-              await banFn({ data: { id, reason, ban: !isBanned } });
-              toast.success(isBanned ? "Unbanned." : "Banned.");
+              await warnFn({ data: { id, note: warnNote.trim() } });
+              toast.success("Warning sent.");
+              setWarnNote("");
               load();
             }}
-            className={
-              "rounded-xl px-4 py-2.5 text-sm " +
-              (isBanned ? "border border-border" : "bg-destructive text-accent-foreground")
-            }
+            className="mt-3 rounded-xl bg-amber-500 px-4 py-2.5 text-sm text-accent-foreground disabled:opacity-50"
           >
-            {isBanned ? "Unban" : "Ban"}
+            Send warning
           </button>
-        </div>
-        {premiumPanelOpen && (
-          <section className="mt-4 rounded-2xl border border-[color:var(--rare)]/60 bg-background/30 p-4 shadow-[0_0_20px_color-mix(in_srgb,var(--rare)_10%,transparent)]">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-serif text-lg text-foreground">PREMIUMTHING. ACCESS</h3>
-              <span className="text-right text-xs text-muted-foreground">
-                {isPremium
-                  ? premiumUntil
-                    ? `Active · ends ${new Date(premiumUntil).toLocaleDateString()}`
-                    : "Active · no end date"
-                  : "Inactive"}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {([7, 14, 30, 90] as const).map((days) => (
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-border/70 pt-4">
+            <button
+              type="button"
+              onClick={() => setPremiumPanelOpen((value) => !value)}
+              className="rounded-xl border border-[color:var(--rare)]/50 px-4 py-2.5 text-sm text-[color:var(--rare)]"
+            >
+              {isPremium ? "Manage Premium" : "Grant Premium"}
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                const reason = isBanned ? "" : (prompt("Ban reason?") ?? "");
+                await banFn({ data: { id, reason, ban: !isBanned } });
+                toast.success(isBanned ? "Unbanned." : "Banned.");
+                load();
+              }}
+              className={
+                "rounded-xl px-4 py-2.5 text-sm " +
+                (isBanned ? "border border-border" : "bg-destructive text-accent-foreground")
+              }
+            >
+              {isBanned ? "Unban" : "Ban"}
+            </button>
+          </div>
+          {premiumPanelOpen && (
+            <section className="mt-4 rounded-2xl border border-[color:var(--rare)]/60 bg-background/30 p-4 shadow-[0_0_20px_color-mix(in_srgb,var(--rare)_10%,transparent)]">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-serif text-lg text-foreground">PREMIUMTHING. ACCESS</h3>
+                <span className="text-right text-xs text-muted-foreground">
+                  {isPremium
+                    ? premiumUntil
+                      ? `Active · ends ${new Date(premiumUntil).toLocaleDateString()}`
+                      : "Active · no end date"
+                    : "Inactive"}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {([7, 14, 30, 90] as const).map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => {
+                      setPremiumSelection(days);
+                      setCustomPremiumDays("");
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === days ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
+                  >
+                    {days} days
+                  </button>
+                ))}
                 <button
-                  key={days}
                   type="button"
                   onClick={() => {
-                    setPremiumSelection(days);
+                    setPremiumSelection("forever");
                     setCustomPremiumDays("");
                   }}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === days ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
+                  className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === "forever" ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
                 >
-                  {days} days
+                  Forever
                 </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setPremiumSelection("forever");
-                  setCustomPremiumDays("");
-                }}
-                className={`rounded-full border px-3 py-1.5 text-xs ${!customPremiumDays && premiumSelection === "forever" ? "border-[color:var(--rare)] text-[color:var(--rare)]" : "border-border text-muted-foreground"}`}
-              >
-                Forever
-              </button>
-            </div>
-            <label className="mt-4 block text-xs uppercase tracking-widest text-muted-foreground">
-              Custom length (1–90 days)
-              <input
-                type="number"
-                min={1}
-                max={90}
-                value={customPremiumDays}
-                onChange={(event) => setCustomPremiumDays(event.target.value.slice(0, 2))}
-                placeholder="e.g. 45"
-                className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground outline-none focus:border-[color:var(--rare)]"
-              />
-            </label>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Granting:{" "}
-              <strong className="text-foreground">
-                {selectedPremiumDays === "forever"
-                  ? "Forever"
-                  : `${selectedPremiumDays || "—"} day(s)`}
-              </strong>
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                disabled={premiumBusy}
-                onClick={() => void updatePremium(true)}
-                className="rounded-xl bg-[color:var(--rare)] px-3 py-2.5 text-sm text-background disabled:opacity-50"
-              >
-                Update gift
-              </button>
-              {isPremium && (
+              </div>
+              <label className="mt-4 block text-xs uppercase tracking-widest text-muted-foreground">
+                Custom length (1–90 days)
+                <input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={customPremiumDays}
+                  onChange={(event) => setCustomPremiumDays(event.target.value.slice(0, 2))}
+                  placeholder="e.g. 45"
+                  className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground outline-none focus:border-[color:var(--rare)]"
+                />
+              </label>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Granting:{" "}
+                <strong className="text-foreground">
+                  {selectedPremiumDays === "forever"
+                    ? "Forever"
+                    : `${selectedPremiumDays || "—"} day(s)`}
+                </strong>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   disabled={premiumBusy}
-                  onClick={() => void updatePremium(false)}
-                  className="rounded-xl border border-border px-3 py-2.5 text-sm text-foreground disabled:opacity-50"
+                  onClick={() => void updatePremium(true)}
+                  className="rounded-xl bg-[color:var(--rare)] px-3 py-2.5 text-sm text-background disabled:opacity-50"
                 >
-                  Remove premium
+                  Update gift
                 </button>
-              )}
-            </div>
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              Gifts are timed by default (max 90 days); Forever keeps PremiumThing. active until
-              manually removed.
-            </p>
-          </section>
-        )}
-      </section>
-
-      <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Things ({d.things.length})
-        </h3>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {d.things
-            .slice(0, 20)
-            .map(
-              (t: {
-                id: string;
-                title: string;
-                created_at: string;
-                hidden: boolean;
-                same_count: number;
-                nah_count: number;
-              }) => (
-                <div
-                  key={t.id}
-                  className={`rounded-xl border border-border/80 bg-background/60 p-3 ${t.hidden ? "opacity-60" : ""}`}
-                >
-                  <p
-                    className={`line-clamp-3 text-sm leading-5 ${t.hidden ? "line-through" : "text-foreground"}`}
+                {isPremium && (
+                  <button
+                    type="button"
+                    disabled={premiumBusy}
+                    onClick={() => void updatePremium(false)}
+                    className="rounded-xl border border-border px-3 py-2.5 text-sm text-foreground disabled:opacity-50"
                   >
-                    {t.title}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {t.same_count}✓ / {t.nah_count}✗ · {new Date(t.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              ),
-            )}
-          {!d.things.length && <p className="text-sm text-muted-foreground">None.</p>}
-        </div>
-      </div>
-
-      <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Recent comments ({d.comments.length})
-        </h3>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {d.comments
-            .slice(0, 20)
-            .map((c: { id: string; text: string; created_at: string; hidden: boolean }) => (
-              <div
-                key={c.id}
-                className={
-                  "rounded-xl border border-border/80 bg-background/60 p-3 " +
-                  (c.hidden ? "text-muted-foreground line-through" : "")
-                }
-              >
-                <p className="line-clamp-4 text-sm leading-5">{c.text}</p>
-                <span className="mt-2 block text-xs text-muted-foreground">
-                  {new Date(c.created_at).toLocaleDateString()}
-                </span>
+                    Remove premium
+                  </button>
+                )}
               </div>
-            ))}
-          {!d.comments.length && <p className="text-sm text-muted-foreground">None.</p>}
-        </div>
-      </div>
+              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                Gifts are timed by default (max 90 days); Forever keeps PremiumThing. active until
+                manually removed.
+              </p>
+            </section>
+          )}
+        </section>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
+        <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Vote history ({d.votes.length})
+            Things ({d.things.length})
           </h3>
-          <div className="grid gap-2">
-            {d.votes
+          <div className="grid gap-2 sm:grid-cols-2">
+            {d.things
               .slice(0, 20)
-              .map((v: { id: string; vote_type: string; thing_id: string; created_at: string }) => (
-                <div
-                  key={v.id}
-                  className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm text-foreground"
-                >
-                  {v.vote_type === "same" ? "Same" : "Nah"} on {v.thing_id.slice(0, 8)}… ·{" "}
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(v.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            {!d.votes.length && <p className="text-sm text-muted-foreground">None.</p>}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-background/30 p-4">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Feedback sent ({d.feedback.length})
-          </h3>
-          <div className="grid gap-2">
-            {d.feedback
-              .slice(0, 10)
               .map(
-                (f: {
+                (t: {
                   id: string;
-                  message: string;
+                  title: string;
                   created_at: string;
-                  replied_at: string | null;
+                  hidden: boolean;
+                  same_count: number;
+                  nah_count: number;
                 }) => (
                   <div
-                    key={f.id}
-                    className="rounded-xl border border-border/80 bg-background/60 p-3"
+                    key={t.id}
+                    className={`rounded-xl border border-border/80 bg-background/60 p-3 ${t.hidden ? "opacity-60" : ""}`}
                   >
-                    <p className="line-clamp-4 text-sm leading-5 text-foreground">{f.message}</p>
-                    <span className="mt-2 block text-xs text-muted-foreground">
-                      {new Date(f.created_at).toLocaleDateString()}{" "}
-                      {f.replied_at ? "· replied" : ""}
-                    </span>
+                    <p
+                      className={`line-clamp-3 text-sm leading-5 ${t.hidden ? "line-through" : "text-foreground"}`}
+                    >
+                      {t.title}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {t.same_count}✓ / {t.nah_count}✗ ·{" "}
+                      {new Date(t.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                 ),
               )}
-            {!d.feedback.length && <p className="text-sm text-muted-foreground">None.</p>}
+            {!d.things.length && <p className="text-sm text-muted-foreground">None.</p>}
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-border bg-background/50 p-4 sm:p-5">
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Recent comments ({d.comments.length})
+          </h3>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {d.comments
+              .slice(0, 20)
+              .map((c: { id: string; text: string; created_at: string; hidden: boolean }) => (
+                <div
+                  key={c.id}
+                  className={
+                    "rounded-xl border border-border/80 bg-background/60 p-3 " +
+                    (c.hidden ? "text-muted-foreground line-through" : "")
+                  }
+                >
+                  <p className="line-clamp-4 text-sm leading-5">{c.text}</p>
+                  <span className="mt-2 block text-xs text-muted-foreground">
+                    {new Date(c.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            {!d.comments.length && <p className="text-sm text-muted-foreground">None.</p>}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-background/30 p-4">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Vote history ({d.votes.length})
+            </h3>
+            <div className="grid gap-2">
+              {d.votes
+                .slice(0, 20)
+                .map(
+                  (v: { id: string; vote_type: string; thing_id: string; created_at: string }) => (
+                    <div
+                      key={v.id}
+                      className="rounded-xl border border-border/80 bg-background/60 px-3 py-2 text-sm text-foreground"
+                    >
+                      {v.vote_type === "same" ? "Same" : "Nah"} on {v.thing_id.slice(0, 8)}… ·{" "}
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  ),
+                )}
+              {!d.votes.length && <p className="text-sm text-muted-foreground">None.</p>}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border bg-background/30 p-4">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Feedback sent ({d.feedback.length})
+            </h3>
+            <div className="grid gap-2">
+              {d.feedback
+                .slice(0, 10)
+                .map(
+                  (f: {
+                    id: string;
+                    message: string;
+                    created_at: string;
+                    replied_at: string | null;
+                  }) => (
+                    <div
+                      key={f.id}
+                      className="rounded-xl border border-border/80 bg-background/60 p-3"
+                    >
+                      <p className="line-clamp-4 text-sm leading-5 text-foreground">{f.message}</p>
+                      <span className="mt-2 block text-xs text-muted-foreground">
+                        {new Date(f.created_at).toLocaleDateString()}{" "}
+                        {f.replied_at ? "· replied" : ""}
+                      </span>
+                    </div>
+                  ),
+                )}
+              {!d.feedback.length && <p className="text-sm text-muted-foreground">None.</p>}
+            </div>
           </div>
         </div>
       </div>
