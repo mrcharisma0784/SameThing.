@@ -867,7 +867,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
               {d.tags.length ? (
                 d.tags.slice(0, 20).map((t) => (
                   <span key={t.tag} className="text-xs text-foreground">
-                    {t.tag} · {t.count}
+                    #{t.tag}({t.count})
                   </span>
                 ))
               ) : (
