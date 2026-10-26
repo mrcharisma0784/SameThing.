@@ -69,6 +69,7 @@ async function sendAdminSystemMessage(
 
 // ---------- auth ----------
 const FOUNDER_USERNAME = "jeonwx_0";
+const FOUNDER_LOGIN_USERNAME = "jeonwx";
 
 export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((i: { username: string; password: string }) =>
@@ -81,7 +82,10 @@ export const adminLogin = createServerFn({ method: "POST" })
     if (!expected) return { ok: false as const, error: "Admin not configured." };
     if (!process.env.ADMIN_SESSION_SECRET)
       return { ok: false as const, error: "Admin session is not configured." };
-    if (!pwEqual(data.password, expected) || data.username !== FOUNDER_USERNAME) {
+    if (
+      !pwEqual(data.password, expected) ||
+      data.username.trim().toLowerCase() !== FOUNDER_LOGIN_USERNAME
+    ) {
       return { ok: false as const, error: "Wrong username or password." };
     }
 
