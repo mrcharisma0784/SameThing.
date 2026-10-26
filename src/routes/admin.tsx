@@ -1671,11 +1671,32 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
                     ) : (
                       <p className="mt-1 line-clamp-2 text-sm text-foreground">{content}</p>
                     )}
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      owner: @{report.owner?.username ?? report.target_user?.username ?? "unknown"}{" "}
-                      · reported by @{report.reporter?.username ?? "unknown"} ·{" "}
-                      {new Date(report.created_at).toLocaleString()}
-                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Owner
+                        </p>
+                        <p className="mt-1 truncate text-xs text-foreground">
+                          @{report.owner?.username ?? report.target_user?.username ?? "unknown"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Reported by
+                        </p>
+                        <p className="mt-1 truncate text-xs text-foreground">
+                          @{report.reporter?.username ?? "unknown"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Reported at
+                        </p>
+                        <p className="mt-1 text-xs text-foreground">
+                          {new Date(report.created_at).toLocaleString("tr-TR")}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] uppercase tracking-widest text-amber-700 dark:text-amber-300">
                     {report.status}
