@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
-import { Plus, Sparkles } from "lucide-react";
+import { ArrowRight, Plus, Sparkles } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -476,15 +476,19 @@ function DropPage() {
               dropComplete && "drop-action-success",
             )}
           >
-            {dropComplete
-              ? "Dropped."
-              : m.isPending
-                ? "Posting…"
-                : thinking || safetyStatus === "scanning"
-                  ? "Reading safety…"
-                  : blocked
-                    ? "Fix issues to drop"
-                    : "Drop it →"}
+            {dropComplete ? (
+              "Dropped."
+            ) : m.isPending ? (
+              "Posting…"
+            ) : thinking || safetyStatus === "scanning" ? (
+              "Reading safety…"
+            ) : blocked ? (
+              "Fix issues to drop"
+            ) : (
+              <>
+                Drop it <ArrowRight aria-hidden="true" className="ml-1 inline h-3.5 w-3.5" />
+              </>
+            )}
           </Button>
         </div>
       </AppShell>

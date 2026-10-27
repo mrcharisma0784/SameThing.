@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getFeed } from "@/lib/api/feed.functions";
@@ -56,6 +56,9 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
   const feed = useServerFn(getFeed);
   const [filter, setFilter] = useState<FilterKey>("new");
   const [tag, setTag] = useState<string | null>(null);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+  const tagSwipeStart = useRef<{ x: number; y: number } | null>(null);
+  const tagSwipeHandled = useRef(false);
   const [langScope, setLangScope] = useState<string>(() => {
     if (typeof window === "undefined") return "mine";
     const stored = localStorage.getItem("feed:langScope");
@@ -179,7 +182,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
           </section>
 
           {/* Filter pills */}
-          <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+          <div className="mb-4 flex min-w-0 max-w-full items-center gap-2 overflow-hidden">
             {(["new", "trending"] as const).map((f) => (
               <button
                 key={f}
@@ -195,31 +198,88 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               </button>
             ))}
             <span className="mx-1 self-center text-muted-foreground/40">·</span>
-            <button
-              onClick={() => setTag(null)}
-              className={cn(
-                "shrink-0 rounded-full border px-3 py-1.5 text-xs lowercase tracking-wide",
-                tag === null
-                  ? "border-foreground/30 text-foreground"
-                  : "border-border text-muted-foreground",
-              )}
-            >
-              all
-            </button>
-            {feedTags.map((t) => (
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
               <button
-                key={t}
-                onClick={() => setTag(t === tag ? null : t)}
+                type="button"
+                onPointerDown={(event) => {
+                  tagSwipeStart.current = { x: event.clientX, y: event.clientY };
+                  tagSwipeHandled.current = false;
+                }}
+                onPointerUp={(event) => {
+                  const start = tagSwipeStart.current;
+                  tagSwipeStart.current = null;
+                  if (
+                    start &&
+                    event.clientX - start.x > 36 &&
+                    Math.abs(event.clientY - start.y) < 28
+                  ) {
+                    tagSwipeHandled.current = true;
+                    setTagsExpanded(true);
+                  }
+                }}
+                onPointerCancel={() => {
+                  tagSwipeStart.current = null;
+                }}
+                onClick={() => {
+                  if (tagSwipeHandled.current) {
+                    tagSwipeHandled.current = false;
+                    return;
+                  }
+                  setTagsExpanded((expanded) => !expanded);
+                }}
+                aria-expanded={tagsExpanded}
+                aria-label={`Feed tag: ${tag ?? "all"}. ${tagsExpanded ? "Collapse tags" : "Show tags"}`}
                 className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-xs lowercase tracking-wide",
-                  tag === t
-                    ? "border-accent text-accent"
-                    : "border-border text-muted-foreground hover:text-foreground",
+                  "inline-flex shrink-0 touch-pan-y items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs lowercase tracking-wide transition-colors",
+                  tag === null
+                    ? "border-foreground/30 text-foreground"
+                    : "border-accent text-accent",
+                  tagsExpanded && "bg-accent text-accent-foreground",
                 )}
               >
-                {t}
+                {tag ?? "all"}
+                <ChevronRight className="h-3 w-3" />
               </button>
-            ))}
+              <div
+                aria-hidden={!tagsExpanded}
+                className={cn(
+                  "no-scrollbar flex shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden transition-[max-width,opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                  tagsExpanded
+                    ? "max-w-[calc(100vw-12rem)] translate-x-0 opacity-100 md:max-w-[34rem]"
+                    : "pointer-events-none max-w-0 -translate-x-3 opacity-0",
+                )}
+              >
+                {tag !== null && (
+                  <button
+                    type="button"
+                    tabIndex={tagsExpanded ? 0 : -1}
+                    onClick={() => {
+                      setTag(null);
+                      setTagsExpanded(false);
+                    }}
+                    className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs lowercase text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    all
+                  </button>
+                )}
+                {feedTags
+                  .filter((t) => t !== tag)
+                  .map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      tabIndex={tagsExpanded ? 0 : -1}
+                      onClick={() => {
+                        setTag(t);
+                        setTagsExpanded(false);
+                      }}
+                      className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs lowercase text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {t}
+                    </button>
+                  ))}
+              </div>
+            </div>
           </div>
 
           {isLoading && <FeedSkeleton />}

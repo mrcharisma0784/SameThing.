@@ -69,20 +69,28 @@ export const searchThings = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const term = data.q.trim();
+    const isTagSearch = term.startsWith("#");
+    const normalizedTag = term.replace(/^#/, "").trim().toLowerCase();
+    if (isTagSearch && !normalizedTag) return { things: [] as SearchThingRow[] };
     const safe = term.replace(/[\\%_]/g, (c) => `\\${c}`);
     const pattern = `%${safe}%`;
     const lowerTag = term.toLowerCase();
 
     const viewerId = await getOptionalUserId();
-    const { data: rows, error } = await supabaseAdmin
+    const baseQuery = supabaseAdmin
       .from("things")
       .select(
         "id, simplified_text, title, language, tags, is_anonymous, is_open_to_chat, same_count, nah_count, total_votes, similarity_score, comment_count, like_count, is_rare_thing, share_palette, share_font, created_at, user_id",
       )
       .eq("hidden", false)
       .eq("safety_flag", false)
-      .is("deleted_at", null)
-      .or(`title.ilike.${pattern},simplified_text.ilike.${pattern},tags.cs.{${lowerTag}}`)
+      .is("deleted_at", null);
+    const filteredQuery = isTagSearch
+      ? baseQuery.contains("tags", [normalizedTag])
+      : baseQuery.or(
+          `title.ilike.${pattern},simplified_text.ilike.${pattern},tags.cs.{${lowerTag}}`,
+        );
+    const { data: rows, error } = await filteredQuery
       .order("created_at", { ascending: false })
       .limit(Math.min(data.limit * 4, 120));
 

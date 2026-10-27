@@ -434,129 +434,128 @@ export function ThingCard({
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-8 z-20 w-60 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-2xl">
-              {!editOpen ? (
-                <>
+          <div
+            aria-hidden={!menuOpen}
+            inert={!menuOpen}
+            className={`absolute right-0 top-7 z-20 w-60 overflow-hidden rounded-2xl border border-border bg-popover p-1 shadow-2xl transition-[opacity,transform,visibility] duration-200 ease-out motion-reduce:transition-none ${menuOpen ? "visible translate-y-0 scale-100 opacity-100 delay-0" : "invisible -translate-y-1 scale-[0.98] opacity-0 delay-200"}`}
+          >
+            {!editOpen ? (
+              <>
+                <button
+                  type="button"
+                  onClick={openShare}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary"
+                >
+                  <Share2 className="h-4 w-4" /> Share
+                </button>
+                {isOwn ? (
                   <button
                     type="button"
-                    onClick={openShare}
+                    onClick={() => setEditOpen(true)}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary"
                   >
-                    <Share2 className="h-4 w-4" /> Share
+                    <Pencil className="h-4 w-4" /> Edit
                   </button>
-                  {isOwn ? (
-                    <button
-                      type="button"
-                      onClick={() => setEditOpen(true)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary"
-                    >
-                      <Pencil className="h-4 w-4" /> Edit
-                    </button>
-                  ) : (
-                    <div className="mt-1 border-t border-border pt-1">
-                      <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Report
-                      </p>
-                      {[
-                        { k: "harmful", l: "Harmful / violence" },
-                        { k: "spam", l: "Spam" },
-                        { k: "hate", l: "Hate speech" },
-                        { k: "sexual", l: "Sexual content" },
-                        { k: "self-harm risk", l: "Self-harm risk" },
-                        { k: "other", l: "Other" },
-                      ].map((r) => (
-                        <button
-                          key={r.k}
-                          type="button"
-                          className="block w-full rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"
-                          onClick={() => void handleReport(r.k)}
-                        >
-                          {r.l}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setEditOpen(false)}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-secondary"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" /> Edit Thing
-                  </button>
-                  <button
-                    type="button"
-                    disabled={ownerActionBusy}
-                    onClick={() => void ownerUpdate({ is_anonymous: !local.is_anonymous })}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
-                  >
-                    {local.is_anonymous ? (
-                      <>
-                        <Eye className="h-4 w-4" /> Make public
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="h-4 w-4" /> Make anonymous
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={ownerActionBusy}
-                    onClick={() => void ownerUpdate({ comments_closed: !local.comments_closed })}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
-                  >
-                    {local.comments_closed ? (
-                      <>
-                        <MessageSquare className="h-4 w-4" /> Open comments
-                      </>
-                    ) : (
-                      <>
-                        <MessageSquareOff className="h-4 w-4" /> Close comments
-                      </>
-                    )}
-                  </button>
+                ) : (
                   <div className="mt-1 border-t border-border pt-1">
                     <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                      Boost MyThing. ·{" "}
-                      {isPremium || labThingActive
-                        ? "LabThing. free"
-                        : `${credits} credits available`}
+                      Report
                     </p>
-                    {([6, 24, 72] as const).map((hours) => (
+                    {[
+                      { k: "harmful", l: "Harmful / violence" },
+                      { k: "spam", l: "Spam" },
+                      { k: "hate", l: "Hate speech" },
+                      { k: "sexual", l: "Sexual content" },
+                      { k: "self-harm risk", l: "Self-harm risk" },
+                      { k: "other", l: "Other" },
+                    ].map((r) => (
                       <button
-                        key={hours}
+                        key={r.k}
                         type="button"
-                        disabled={
-                          ownerActionBusy ||
-                          (!isPremium && !labThingActive && credits < boostCost(hours))
-                        }
-                        onClick={() => void boostOwnThing(hours)}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${canBoost ? "hover:bg-secondary" : "opacity-45"}`}
+                        className="block w-full rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"
+                        onClick={() => void handleReport(r.k)}
                       >
-                        <Rocket className="h-4 w-4" /> Under newest ·{" "}
-                        {hours === 72 ? "3 days" : `${hours} hours`} ·{" "}
-                        {boostCost(hours) === 0 ? "free" : `${boostCost(hours)} credits`}
+                        {r.l}
                       </button>
                     ))}
                   </div>
-                  <div className="mt-1 border-t border-border pt-1">
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(false)}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-secondary"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" /> Edit Thing
+                </button>
+                <button
+                  type="button"
+                  disabled={ownerActionBusy}
+                  onClick={() => void ownerUpdate({ is_anonymous: !local.is_anonymous })}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                >
+                  {local.is_anonymous ? (
+                    <>
+                      <Eye className="h-4 w-4" /> Make public
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-4 w-4" /> Make anonymous
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  disabled={ownerActionBusy}
+                  onClick={() => void ownerUpdate({ comments_closed: !local.comments_closed })}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-foreground hover:bg-secondary disabled:opacity-50"
+                >
+                  {local.comments_closed ? (
+                    <>
+                      <MessageSquare className="h-4 w-4" /> Open comments
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquareOff className="h-4 w-4" /> Close comments
+                    </>
+                  )}
+                </button>
+                <div className="mt-1 border-t border-border pt-1">
+                  <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Boost MyThing. ·{" "}
+                    {isPremium || labThingActive
+                      ? "LabThing. free"
+                      : `${credits} credits available`}
+                  </p>
+                  {([6, 24, 72] as const).map((hours) => (
                     <button
+                      key={hours}
                       type="button"
                       disabled={ownerActionBusy}
-                      onClick={() => void removeOwnThing()}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                      onClick={() => void boostOwnThing(hours)}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${canBoost ? "hover:bg-secondary" : "opacity-45"}`}
                     >
-                      <Trash2 className="h-4 w-4" /> Delete thing
+                      <Rocket className="h-4 w-4" /> Under newest ·{" "}
+                      {hours === 72 ? "3 days" : `${hours} hours`} ·{" "}
+                      {boostCost(hours) === 0 ? "free" : `${boostCost(hours)} credits`}
                     </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+                  ))}
+                </div>
+                <div className="mt-1 border-t border-border pt-1">
+                  <button
+                    type="button"
+                    disabled={ownerActionBusy}
+                    onClick={() => void removeOwnThing()}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete thing
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

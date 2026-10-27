@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, X, AtSign, Star } from "lucide-react";
+import { Search as SearchIcon, X, AtSign, Hash, Star } from "lucide-react";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
 import { searchThings, searchUsers } from "@/lib/api/search.functions";
 import { ThingCard, type ThingCardData } from "@/components/ThingCard";
@@ -46,14 +46,18 @@ function SearchPage() {
     }
     demoStarted.current = true;
 
-    const sample = "@usernanme";
+    const samples = ["@username", "#tag"];
+    let sampleIndex = 0;
     let typed = 0;
-    let erased = sample.length;
+    let erased = 0;
     let typeTimer: number | undefined;
     let pauseTimer: number | undefined;
     let eraseTimer: number | undefined;
 
-    const startTimer = window.setTimeout(() => {
+    const typeSample = () => {
+      const sample = samples[sampleIndex];
+      typed = 0;
+      erased = sample.length;
       typeTimer = window.setInterval(() => {
         typed += 1;
         setDemoText(sample.slice(0, typed));
@@ -66,17 +70,24 @@ function SearchPage() {
               if (erased <= 0) {
                 window.clearInterval(eraseTimer);
                 setDemoText("");
-                try {
-                  localStorage.setItem(seenKey, "done");
-                } catch {
-                  // The animation can still complete without persistence.
+                sampleIndex += 1;
+                if (sampleIndex < samples.length) {
+                  pauseTimer = window.setTimeout(typeSample, 300);
+                } else {
+                  try {
+                    localStorage.setItem(seenKey, "done");
+                  } catch {
+                    // The animation can still complete without persistence.
+                  }
                 }
               }
             }, 75);
           }, 500);
         }
       }, 95);
-    }, 500);
+    };
+
+    const startTimer = window.setTimeout(typeSample, 500);
 
     return () => {
       window.clearTimeout(startTimer);
@@ -96,6 +107,8 @@ function SearchPage() {
 
   const isUserMode = debounced.startsWith("@");
   const userTerm = debounced.replace(/^@/, "");
+  const isTagMode = debounced.startsWith("#");
+  const tagTerm = debounced.replace(/^#/, "").trim();
 
   const { data: things, isFetching: thingsFetching } = useQuery({
     queryKey: ["search", debounced],
@@ -103,7 +116,7 @@ function SearchPage() {
       debounced.length >= 2
         ? ((await searchThings({ data: { q: debounced } })).things as ThingCardData[])
         : [],
-    enabled: !isUserMode && debounced.length >= 2,
+    enabled: !isUserMode && (isTagMode ? tagTerm.length >= 1 : debounced.length >= 2),
   });
 
   const { data: users, isFetching: usersFetching } = useQuery({
@@ -116,7 +129,11 @@ function SearchPage() {
   });
 
   const isFetching = isUserMode ? usersFetching : thingsFetching;
-  const ready = isUserMode ? userTerm.length >= 1 : debounced.length >= 2;
+  const ready = isUserMode
+    ? userTerm.length >= 1
+    : isTagMode
+      ? tagTerm.length >= 1
+      : debounced.length >= 2;
 
   return (
     <OnboardingGate>
@@ -127,6 +144,8 @@ function SearchPage() {
         <div className="mt-5 relative">
           {isUserMode || demoText.startsWith("@") ? (
             <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
+          ) : isTagMode || demoText.startsWith("#") ? (
+            <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
           ) : (
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           )}
@@ -153,7 +172,11 @@ function SearchPage() {
         <div className="mt-6 flex flex-col gap-3">
           {!ready && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-xs uppercase tracking-widest text-muted-foreground">
-              {isUserMode ? "Type a username after @" : "Type at least 2 characters"}
+              {isUserMode
+                ? "Type a username after @"
+                : isTagMode
+                  ? "Type a tag after #"
+                  : "Type at least 2 characters"}
             </p>
           )}
           {ready && isFetching && (
