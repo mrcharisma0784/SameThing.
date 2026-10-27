@@ -59,6 +59,10 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const tagSwipeStart = useRef<{ x: number; y: number } | null>(null);
   const tagSwipeHandled = useRef(false);
+  const languageSwipeStart = useRef<{ x: number; y: number } | null>(null);
+  const languageSwipeHandled = useRef(false);
+  const previewTimers = useRef<number[]>([]);
+  const previewActive = useRef(false);
   const [langScope, setLangScope] = useState<string>(() => {
     if (typeof window === "undefined") return "mine";
     const stored = localStorage.getItem("feed:langScope");
@@ -67,6 +71,50 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
       : "mine";
   });
   const [languageExpanded, setLanguageExpanded] = useState(false);
+
+  const finishPreviewOnInteraction = () => {
+    if (!previewActive.current) return;
+    previewActive.current = false;
+    previewTimers.current.forEach(window.clearTimeout);
+    previewTimers.current = [];
+    try {
+      localStorage.setItem(`samething:feed-selector-preview:${profile?.id ?? "guest"}`, "done");
+    } catch {
+      // The preview can still be safely interrupted when storage is unavailable.
+    }
+  };
+
+  useEffect(() => {
+    if (!profile?.onboarded_at || !profile.demographics_completed_at) return;
+    const seenKey = `samething:feed-selector-preview:${profile.id ?? "guest"}`;
+    try {
+      if (localStorage.getItem(seenKey)) return;
+    } catch {
+      // Continue with the preview even when storage is unavailable.
+    }
+
+    previewActive.current = true;
+    previewTimers.current = [
+      window.setTimeout(() => setLanguageExpanded(true), 350),
+      window.setTimeout(() => setLanguageExpanded(false), 1450),
+      window.setTimeout(() => setTagsExpanded(true), 1900),
+      window.setTimeout(() => setTagsExpanded(false), 3000),
+      window.setTimeout(() => {
+        previewActive.current = false;
+        previewTimers.current = [];
+        try {
+          localStorage.setItem(seenKey, "done");
+        } catch {
+          // Storage is optional; this preview remains one-time when available.
+        }
+      }, 3550),
+    ];
+    return () => {
+      previewTimers.current.forEach(window.clearTimeout);
+      previewTimers.current = [];
+      previewActive.current = false;
+    };
+  }, [profile?.demographics_completed_at, profile?.id, profile?.onboarded_at]);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("feed:langScope", langScope);
@@ -127,11 +175,39 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setLanguageExpanded((expanded) => !expanded)}
+                  onPointerDown={(event) => {
+                    finishPreviewOnInteraction();
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    languageSwipeStart.current = { x: event.clientX, y: event.clientY };
+                    languageSwipeHandled.current = false;
+                  }}
+                  onPointerUp={(event) => {
+                    const start = languageSwipeStart.current;
+                    languageSwipeStart.current = null;
+                    if (
+                      start &&
+                      event.clientX - start.x > 36 &&
+                      Math.abs(event.clientY - start.y) < 28
+                    ) {
+                      languageSwipeHandled.current = true;
+                      setLanguageExpanded(true);
+                    }
+                  }}
+                  onPointerCancel={() => {
+                    languageSwipeStart.current = null;
+                  }}
+                  onClick={() => {
+                    if (languageSwipeHandled.current) {
+                      languageSwipeHandled.current = false;
+                      return;
+                    }
+                    finishPreviewOnInteraction();
+                    setLanguageExpanded((expanded) => !expanded);
+                  }}
                   aria-expanded={languageExpanded}
                   aria-label={`Feed language: ${languageLabel}. ${languageExpanded ? "Collapse" : "Change language"}`}
                   className={cn(
-                    "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                    "inline-flex shrink-0 touch-pan-y items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
                     languageExpanded
                       ? "border-accent bg-accent text-accent-foreground"
                       : "border-border bg-card text-muted-foreground hover:text-foreground",
@@ -154,6 +230,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                       type="button"
                       tabIndex={languageExpanded ? 0 : -1}
                       onClick={() => {
+                        finishPreviewOnInteraction();
                         setLangScope("all");
                         setLanguageExpanded(false);
                       }}
@@ -168,6 +245,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                       type="button"
                       tabIndex={languageExpanded ? 0 : -1}
                       onClick={() => {
+                        finishPreviewOnInteraction();
                         setLangScope(item.code);
                         setLanguageExpanded(false);
                       }}
@@ -186,7 +264,10 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
             {(["new", "trending"] as const).map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  finishPreviewOnInteraction();
+                  setFilter(f);
+                }}
                 className={cn(
                   "shrink-0 rounded-full border px-3 py-1.5 text-xs uppercase tracking-widest transition-colors",
                   filter === f
@@ -202,6 +283,8 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
               <button
                 type="button"
                 onPointerDown={(event) => {
+                  finishPreviewOnInteraction();
+                  event.currentTarget.setPointerCapture(event.pointerId);
                   tagSwipeStart.current = { x: event.clientX, y: event.clientY };
                   tagSwipeHandled.current = false;
                 }}
@@ -225,6 +308,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                     tagSwipeHandled.current = false;
                     return;
                   }
+                  finishPreviewOnInteraction();
                   setTagsExpanded((expanded) => !expanded);
                 }}
                 aria-expanded={tagsExpanded}
@@ -254,6 +338,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                     type="button"
                     tabIndex={tagsExpanded ? 0 : -1}
                     onClick={() => {
+                      finishPreviewOnInteraction();
                       setTag(null);
                       setTagsExpanded(false);
                     }}
@@ -270,6 +355,7 @@ function AuthenticatedFeedPage({ profile }: { profile: ReturnType<typeof useAuth
                       type="button"
                       tabIndex={tagsExpanded ? 0 : -1}
                       onClick={() => {
+                        finishPreviewOnInteraction();
                         setTag(t);
                         setTagsExpanded(false);
                       }}

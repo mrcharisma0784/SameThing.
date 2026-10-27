@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
+import { renderSpecialTerms } from "@/components/MentionTextarea";
 import { MyQuoteShareModal } from "@/components/MyQuoteShareModal";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -545,7 +546,7 @@ export function QuoteOfTheDay() {
               >
                 <div className="mb-3 flex items-center justify-between gap-3">{authorRow}</div>
                 <p className="pr-8 font-serif text-xl italic leading-snug text-foreground">
-                  “{item.text}”
+                  “{renderSpecialTerms(item.text)}”
                 </p>
                 <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="mr-auto text-[10px] uppercase tracking-widest text-muted-foreground/75">

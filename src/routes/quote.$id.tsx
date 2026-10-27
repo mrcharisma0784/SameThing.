@@ -30,7 +30,11 @@ import {
 import { deleteComment, reportTarget, updateComment } from "@/lib/api/things.functions";
 import { getSiteUrl } from "@/lib/site-url";
 import { relativeTime } from "@/lib/thing-helpers";
-import { MentionTextarea, renderWithMentions } from "@/components/MentionTextarea";
+import {
+  MentionTextarea,
+  renderSpecialTerms,
+  renderWithMentions,
+} from "@/components/MentionTextarea";
 import { useValidMentions } from "@/hooks/use-valid-mentions";
 import {
   AlertDialog,
@@ -524,7 +528,7 @@ function QuoteDetailPage() {
             Quote of the day
           </p>
           <blockquote className="mt-7 font-serif text-2xl leading-tight text-foreground sm:text-3xl">
-            “{quote.text}”
+            “{renderSpecialTerms(quote.text)}”
           </blockquote>
           {quote.author && !quote.is_anonymous && (
             <p className="mt-5 text-sm italic text-muted-foreground">— {quote.author}</p>

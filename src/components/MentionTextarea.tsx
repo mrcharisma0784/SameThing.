@@ -146,6 +146,33 @@ export function extractMentions(text: string): string[] {
   return Array.from(out);
 }
 
+const SPECIAL_TERM_CLASS = "rounded bg-accent/10 px-1 text-accent";
+const SPECIAL_TERM_RE = /\b(?:same|nah|samething)\b/gi;
+
+/** Render the special product terms without making them interactive. */
+// eslint-disable-next-line react-refresh/only-export-components -- Shared inline renderer used by other text surfaces.
+export function renderSpecialTerms(text: string) {
+  const parts: Array<string | { value: string }> = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  SPECIAL_TERM_RE.lastIndex = 0;
+  while ((match = SPECIAL_TERM_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push({ value: match[0] });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.map((part, index) =>
+    typeof part === "string" ? (
+      <span key={index}>{part}</span>
+    ) : (
+      <span key={index} className={SPECIAL_TERM_CLASS}>
+        {part.value}
+      </span>
+    ),
+  );
+}
+
 /** Render text with @mentions. Only linkify if username is in `validUsernames`. */
 export function renderWithMentions(text: string, validUsernames?: Set<string>) {
   const parts: Array<string | { u: string }> = [];
@@ -159,7 +186,7 @@ export function renderWithMentions(text: string, validUsernames?: Set<string>) {
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts.map((p, i) => {
-    if (typeof p === "string") return <span key={i}>{p}</span>;
+    if (typeof p === "string") return <span key={i}>{renderSpecialTerms(p)}</span>;
     const uname = p.u.toLowerCase();
     const isValid = validUsernames ? validUsernames.has(uname) : true;
     if (!isValid) return <span key={i}>@{p.u}</span>;
