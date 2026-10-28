@@ -68,7 +68,7 @@ type Quote = {
   like_count: number;
   comment_count?: number;
   created_at: string;
-  profile?: { username: string; emoji: string; plan?: string } | null;
+  profile?: { username: string; emoji: string; avatar_url?: string | null; plan?: string } | null;
   is_mine?: boolean;
 };
 
@@ -82,7 +82,7 @@ type CommentRow = {
   parent_id?: string | null;
   pinned_at?: string | null;
   is_mine?: boolean;
-  profile?: { username: string; emoji: string; plan?: string } | null;
+  profile?: { username: string; emoji: string; avatar_url?: string | null; plan?: string } | null;
 };
 
 function QuoteDetailPage() {
@@ -324,7 +324,11 @@ function QuoteDetailPage() {
                   className="flex items-center gap-2 hover:opacity-80"
                 >
                   <span className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">
-                    <ProfileGlyph value={commentAuthor.emoji} className="h-3 w-3" />
+                    <ProfileGlyph
+                      value={commentAuthor.emoji}
+                      photoUrl={commentAuthor.avatar_url}
+                      className="h-3 w-3"
+                    />
                   </span>
                   <span className="text-xs text-foreground">@{commentAuthor.username}</span>
                 </Link>
@@ -541,7 +545,11 @@ function QuoteDetailPage() {
                 className="flex items-center gap-2 text-sm hover:opacity-80"
               >
                 <span className="grid h-7 w-7 place-items-center rounded-full border border-border bg-background">
-                  <ProfileGlyph value={author.emoji} className="h-3.5 w-3.5" />
+                  <ProfileGlyph
+                    value={author.emoji}
+                    photoUrl={author.avatar_url}
+                    className="h-3.5 w-3.5"
+                  />
                 </span>
                 <span>@{author.username}</span>
               </Link>

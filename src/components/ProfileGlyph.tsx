@@ -1,42 +1,20 @@
 import { Asterisk } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AVATARS } from "@/lib/avatars";
 
-const avatarAssetByChar = new Map(
-  AVATARS.map((avatar, index) => [
-    avatar.char,
-    `/avatar-icons/avatar-${String(index + 1).padStart(2, "0")}.svg`,
-  ]),
-);
-
+/** Shared avatar mark: uploaded photo when present, otherwise the neutral SameThing star. */
 export function ProfileGlyph({
-  value,
+  photoUrl,
   className,
-  strokeWidth: _strokeWidth = 1.7,
 }: {
   value?: string | null;
+  photoUrl?: string | null;
   className?: string;
   strokeWidth?: number;
 }) {
-  const asset = value ? avatarAssetByChar.get(value) : undefined;
-  if (!asset) {
-    return <Asterisk aria-hidden="true" className={cn("shrink-0", className)} />;
+  if (photoUrl) {
+    return (
+      <img src={photoUrl} alt="" className={cn("shrink-0 rounded-full object-cover", className)} />
+    );
   }
-
-  return (
-    <span
-      aria-hidden="true"
-      className={cn("inline-block shrink-0 bg-current", className)}
-      style={{
-        maskImage: `url(${asset})`,
-        WebkitMaskImage: `url(${asset})`,
-        maskPosition: "center",
-        WebkitMaskPosition: "center",
-        maskRepeat: "no-repeat",
-        WebkitMaskRepeat: "no-repeat",
-        maskSize: "contain",
-        WebkitMaskSize: "contain",
-      }}
-    />
-  );
+  return <Asterisk aria-hidden="true" className={cn("shrink-0", className)} />;
 }

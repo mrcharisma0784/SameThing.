@@ -11,11 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyThings, updateMyProfile } from "@/lib/api/me.functions";
 import { OnboardingGate } from "@/components/OnboardingGate";
-import { Lock, Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_AVATAR, SELECTABLE_AVATARS } from "@/lib/avatars";
 import { getSiteUrl } from "@/lib/site-url";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
+import { ProfilePhotoPicker, type PreparedProfilePhoto } from "@/components/ProfilePhotoPicker";
+import { uploadMyProfilePhoto, removeMyProfilePhoto } from "@/lib/api/me.functions";
 import { effectivePlan } from "@/lib/premium";
 import { getMyConnectionCounts } from "@/lib/api/social.functions";
 import { profileDisplayTags } from "@/lib/test-user";
@@ -40,9 +41,11 @@ function MePage() {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const update = useServerFn(updateMyProfile);
+  const uploadPhoto = useServerFn(uploadMyProfilePhoto);
+  const removePhoto = useServerFn(removeMyProfilePhoto);
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   const [editing, setEditing] = useState(false);
-  const [emoji, setEmoji] = useState(profile?.emoji || DEFAULT_AVATAR);
   const [bio, setBio] = useState(profile?.bio || "");
   const [username, setUsername] = useState(profile?.username || "");
   const [saving, setSaving] = useState(false);
@@ -69,7 +72,7 @@ function MePage() {
   const saveEdit = async () => {
     setSaving(true);
     const res = await update({
-      data: { emoji, bio, username: username !== profile?.username ? username : undefined },
+      data: { bio, username: username !== profile?.username ? username : undefined },
     });
     setSaving(false);
     if (res.error) {
@@ -91,7 +94,11 @@ function MePage() {
               <div
                 className={`grid h-14 w-14 place-items-center rounded-full bg-background text-2xl ${plan === "premium" ? "premium-ring" : ""}`}
               >
-                <ProfileGlyph value={profile?.emoji} className="h-7 w-7" />
+                <ProfileGlyph
+                  value={profile?.emoji}
+                  photoUrl={profile?.avatar_url as string | null}
+                  className="h-7 w-7"
+                />
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -174,50 +181,54 @@ function MePage() {
                     className="mt-1 h-9 bg-card"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Profile icon
+                    Profile photo
                   </Label>
-
-                  <div className="mt-2 grid grid-cols-8 gap-1.5">
-                    {SELECTABLE_AVATARS.map((a) => {
-                      const locked = a.premium && plan !== "premium";
-                      const selected = emoji === a.char;
-                      return (
-                        <button
-                          key={a.char}
-                          onClick={() => {
-                            if (locked) {
-                              toast.error("PremiumThing. icon — upgrade to use it.");
-                              return;
-                            }
-                            setEmoji(a.char);
-                          }}
-                          aria-label={locked ? `${a.char} (PremiumThing. only)` : a.char}
-                          className={`relative grid aspect-square w-full min-w-0 place-items-center rounded-full border text-base transition-colors ${
-                            selected
-                              ? "border-accent bg-accent/15 text-accent"
-                              : locked
-                                ? "border-[color:var(--rare)]/80 bg-background/40 text-foreground"
-                                : "border-border bg-background/40 text-foreground hover:border-accent/60"
-                          }`}
-                        >
-                          <ProfileGlyph
-                            value={a.char}
-                            className="h-[18px] w-[18px] sm:h-5 sm:w-5"
-                          />
-                          {locked && (
-                            <span className="absolute -right-1 -top-1 grid h-3.5 w-3.5 place-items-center rounded-full border border-[color:var(--rare)]/70 bg-background text-[color:var(--rare)]">
-                              <Lock className="h-2 w-2" />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Gold icons are PremiumThing. only.
-                  </p>
+                  <ProfilePhotoPicker
+                    premium={plan === "premium"}
+                    busy={photoBusy || saving}
+                    onPrepared={(photo: PreparedProfilePhoto) => {
+                      void (async () => {
+                        setPhotoBusy(true);
+                        try {
+                          const res = await uploadPhoto({ data: photo });
+                          if (!res.ok) {
+                            toast.error(res.error);
+                            return;
+                          }
+                          await refreshProfile();
+                          toast.success("Profile photo saved.");
+                        } catch {
+                          toast.error("Photo upload failed. Please try again.");
+                        } finally {
+                          setPhotoBusy(false);
+                        }
+                      })();
+                    }}
+                  />
+                  {profile?.avatar_url && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={photoBusy || saving}
+                      onClick={() => {
+                        void (async () => {
+                          setPhotoBusy(true);
+                          const res = await removePhoto();
+                          setPhotoBusy(false);
+                          if (!res.ok) {
+                            toast.error(res.error);
+                            return;
+                          }
+                          await refreshProfile();
+                          toast.success("Profile photo removed.");
+                        })();
+                      }}
+                    >
+                      Remove photo
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">

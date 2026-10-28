@@ -10,10 +10,12 @@ import { completeOnboarding } from "@/lib/api/things.functions";
 import { saveDemographics } from "@/lib/api/me.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DEFAULT_AVATAR, SELECTABLE_AVATARS } from "@/lib/avatars";
+import { DEFAULT_AVATAR } from "@/lib/avatars";
 import { effectivePlan } from "@/lib/premium";
+import { ProfilePhotoPicker, type PreparedProfilePhoto } from "@/components/ProfilePhotoPicker";
+import { uploadMyProfilePhoto } from "@/lib/api/me.functions";
 import { ProfileGlyph } from "@/components/ProfileGlyph";
-import { Lock } from "lucide-react";
+
 const GENDERS = ["woman", "man"];
 
 /** Wraps a screen and ensures the user has completed onboarding and demographics. */
@@ -21,6 +23,8 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   const { user, profile, refreshProfile } = useAuth();
   const onboard = useServerFn(completeOnboarding);
   const saveDemo = useServerFn(saveDemographics);
+  const uploadPhoto = useServerFn(uploadMyProfilePhoto);
+  const [queuedPhoto, setQueuedPhoto] = useState<PreparedProfilePhoto | null>(null);
   const [step, setStep] = useState(0);
   const [username, setUsername] = useState("");
   const [emoji, setEmoji] = useState(DEFAULT_AVATAR);
@@ -62,6 +66,17 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
     if (res.error) {
       toast.error(res.error);
       return;
+    }
+    if (queuedPhoto) {
+      try {
+        const photoRes = await uploadPhoto({ data: queuedPhoto });
+        if (!photoRes.ok)
+          toast.error(`Your account was created, but the photo was not saved: ${photoRes.error}`);
+        else toast.success("Profile photo saved.");
+      } catch {
+        toast.error("Your account was created, but the photo could not be uploaded.");
+      }
+      setQueuedPhoto(null);
     }
     await refreshProfile();
     setStep(3);
@@ -178,44 +193,19 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
               </div>
               <div>
                 <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Profile icon
+                  Optional profile photo
                 </Label>
-                <div className="mt-2 grid grid-cols-8 gap-1.5">
-                  {SELECTABLE_AVATARS.map((avatar) => {
-                    const locked = avatar.premium && effectivePlan(profile) !== "premium";
-                    return (
-                      <button
-                        key={avatar.char}
-                        type="button"
-                        onClick={() => {
-                          if (locked) {
-                            toast.error("PremiumThing. icon — upgrade to use it.");
-                            return;
-                          }
-                          setEmoji(avatar.char);
-                        }}
-                        aria-label={locked ? `${avatar.char} (PremiumThing. only)` : avatar.char}
-                        className={`relative grid aspect-square w-full min-w-0 place-items-center rounded-full border transition-colors ${
-                          emoji === avatar.char
-                            ? "border-accent bg-accent/15 text-accent"
-                            : locked
-                              ? "border-[color:var(--rare)]/80 bg-background/40 text-foreground"
-                              : "border-border bg-background/40 text-foreground hover:border-accent/60"
-                        }`}
-                      >
-                        <ProfileGlyph
-                          value={avatar.char}
-                          className="h-4 w-4 sm:h-[18px] sm:w-[18px]"
-                        />
-                        {locked && (
-                          <span className="absolute -right-1 -top-1 grid h-3.5 w-3.5 place-items-center rounded-full border border-[color:var(--rare)]/70 bg-background text-[color:var(--rare)]">
-                            <Lock className="h-2 w-2" />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                <div className="mt-2">
+                  <ProfilePhotoPicker
+                    premium={effectivePlan(profile) === "premium"}
+                    onPrepared={setQueuedPhoto}
+                  />
                 </div>
+                {queuedPhoto && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Photo selected; it will upload after your profile is saved.
+                  </p>
+                )}
               </div>
               <div>
                 <Label className="text-xs uppercase tracking-widest text-muted-foreground">

@@ -100,7 +100,11 @@ function DropPage() {
 
   useEffect(() => {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const prompts = ["The exact thought, fear, habit, or moment.", "Use @username to tag someone."];
+    const prompts = [
+      "The exact thought, fear, habit, or moment.",
+      "Use mention to tag someone.",
+      "Use #tag to tag something.",
+    ];
     let promptIndex = 0;
     let characterIndex = 0;
     let deleting = false;
@@ -116,7 +120,11 @@ function DropPage() {
         delay = 1100;
       } else if (deleting && characterIndex === 0) {
         deleting = false;
-        promptIndex = (promptIndex + 1) % prompts.length;
+        promptIndex += 1;
+        if (promptIndex >= prompts.length) {
+          setPlaceholder(prompts[0]);
+          return;
+        }
         delay = 300;
       }
       timer = window.setTimeout(tick, delay);

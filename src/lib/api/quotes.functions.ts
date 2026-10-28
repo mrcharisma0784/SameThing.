@@ -49,7 +49,10 @@ async function enrichQuotes(rows: any[], currentUserId?: string | null) {
   const userIds = [...new Set(rows.map((row) => row.user_id).filter(Boolean))] as string[];
   const [{ data: profiles }, { data: likes }] = await Promise.all([
     userIds.length
-      ? db.from("profiles").select("id, username, emoji, plan, premium_until").in("id", userIds)
+      ? db
+          .from("profiles")
+          .select("id, username, emoji, avatar_url, plan, premium_until")
+          .in("id", userIds)
       : Promise.resolve({ data: [] as any[] }),
     currentUserId && rows.length
       ? db
@@ -82,7 +85,7 @@ async function enrichQuoteComments(rows: any[], currentUserId?: string | null) {
   const { data: profiles } = userIds.length
     ? await supabaseAdmin
         .from("profiles")
-        .select("id, username, emoji, plan, premium_until")
+        .select("id, username, emoji, avatar_url, plan, premium_until")
         .in("id", userIds)
     : { data: [] as any[] };
   const profileById = new Map((profiles ?? []).map((profile: any) => [profile.id, profile]));

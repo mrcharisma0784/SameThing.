@@ -101,6 +101,7 @@ type CommentRow = {
   author?: {
     username: string;
     emoji: string;
+    avatar_url?: string | null;
     plan?: string;
   } | null;
 };
@@ -303,7 +304,11 @@ function ThingDetail() {
           className="flex items-center gap-2 hover:opacity-80"
         >
           <div className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">
-            <ProfileGlyph value={c.author.emoji} className="h-3 w-3" />
+            <ProfileGlyph
+              value={c.author.emoji}
+              photoUrl={c.author.avatar_url}
+              className="h-3 w-3"
+            />
           </div>
           <span className="text-xs text-foreground">@{c.author.username}</span>
           {creatorBadge}

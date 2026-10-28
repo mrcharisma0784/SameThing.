@@ -113,7 +113,7 @@ export const listMyBlockedUsers = createServerFn({ method: "GET" })
     if (!ids.length) return { items: [] };
     const { data: profiles, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, emoji, plan, premium_until, bio")
+      .select("id, username, emoji, avatar_url, plan, premium_until, bio")
       .in("id", ids)
       .is("banned_at", null);
     if (profileError) throw new Error("Blocked profiles are temporarily unavailable.");
@@ -171,7 +171,7 @@ export const getProfileConnections = createServerFn({ method: "GET" })
 
     const { data: owner } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, emoji, plan, premium_until")
+      .select("id, username, emoji, avatar_url, plan, premium_until")
       .eq("username", data.username)
       .maybeSingle();
     if (!owner) return { owner: null, items: [] };
@@ -230,7 +230,7 @@ export const getProfileConnections = createServerFn({ method: "GET" })
 
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, emoji, plan, premium_until, bio")
+      .select("id, username, emoji, avatar_url, plan, premium_until, bio")
       .in("id", visibleIds)
       .is("banned_at", null);
     if (profilesError) throw new Error(profilesError.message);

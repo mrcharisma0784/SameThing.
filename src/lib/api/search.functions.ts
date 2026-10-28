@@ -34,6 +34,7 @@ type SearchUserRow = {
   id: string;
   username: string;
   emoji: string | null;
+  avatar_url: string | null;
   bio: string | null;
   plan: string | null;
   premium_until: string | null;
@@ -116,7 +117,57 @@ export const searchThings = createServerFn({ method: "GET" })
         }),
       )
       .slice(0, data.limit);
-    return { things: visibleRows.map(maskUser) };
+    const authorIds = [
+      ...new Set(
+        visibleRows
+          .filter((row) => !row.is_anonymous && row.user_id)
+          .map((row) => row.user_id as string),
+      ),
+    ];
+    const profilesById = new Map<
+      string,
+      Pick<
+        SearchUserRow,
+        | "username"
+        | "emoji"
+        | "avatar_url"
+        | "plan"
+        | "is_test_user"
+        | "test_user_until"
+        | "test_user_label"
+      >
+    >();
+    if (authorIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select(
+          "id, username, emoji, avatar_url, plan, is_test_user, test_user_until, test_user_label",
+        )
+        .in("id", authorIds);
+      if (profileError) {
+        console.error("search author profile error", profileError);
+      } else {
+        for (const profile of profiles ?? []) {
+          profilesById.set(profile.id, {
+            username: profile.username,
+            emoji: profile.emoji,
+            avatar_url: profile.avatar_url,
+            plan: profile.plan,
+            is_test_user: profile.is_test_user,
+            test_user_until: profile.test_user_until,
+            test_user_label: profile.test_user_label,
+          });
+        }
+      }
+    }
+    return {
+      things: visibleRows.map((row) =>
+        maskUser({
+          ...row,
+          author: !row.is_anonymous && row.user_id ? (profilesById.get(row.user_id) ?? null) : null,
+        }),
+      ),
+    };
   });
 
 // ---- User search (by @username) -----------------------------------
@@ -136,7 +187,7 @@ export const searchUsers = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, username, emoji, bio, plan, premium_until, is_test_user, test_user_until, test_user_label",
+        "id, username, emoji, avatar_url, bio, plan, premium_until, is_test_user, test_user_until, test_user_label",
       )
       .ilike("username", `${safe}%`)
       .order("username", { ascending: true })

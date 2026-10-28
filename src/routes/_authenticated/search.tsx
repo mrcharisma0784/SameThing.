@@ -210,7 +210,7 @@ function SearchPage() {
                   <span
                     className={`grid h-10 w-10 place-items-center rounded-full border border-border bg-background text-foreground ${u.plan === "premium" ? "premium-ring" : ""}`}
                   >
-                    <ProfileGlyph value={u.emoji} className="h-5 w-5" />
+                    <ProfileGlyph value={u.emoji} photoUrl={u.avatar_url} className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">

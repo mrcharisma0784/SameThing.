@@ -47,6 +47,7 @@ type ProfileRow = {
   id: string;
   username: string;
   emoji: string;
+  avatar_url: string | null;
   plan: string | null;
 };
 
@@ -67,6 +68,7 @@ export type LeaderboardEntry = {
   label: string;
   username?: string;
   emoji?: string;
+  avatar_url?: string | null;
   plan?: string | null;
   score: number;
   scoreLabel: string;
@@ -149,7 +151,7 @@ async function getProfiles(ids: string[]) {
   if (ids.length === 0) return new Map<string, ProfileRow>();
   const { data, error } = await supabaseAdmin
     .from("profiles")
-    .select("id, username, emoji, plan")
+    .select("id, username, emoji, avatar_url, plan")
     .in("id", ids)
     .limit(500);
   if (error) {
@@ -429,6 +431,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
         label: profile?.username ? `@${profile.username}` : "quiet profile",
         username: profile?.username,
         emoji: profile?.emoji,
+        avatar_url: profile?.avatar_url,
         plan: profile?.plan,
         score,
         scoreLabel: `${scoreLabel(score)} signal${score === 1 ? "" : "s"}`,
@@ -446,6 +449,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
         label: shorten(quote.text),
         username: profile?.username,
         emoji: profile?.emoji,
+        avatar_url: profile?.avatar_url,
         plan: profile?.plan,
         score,
         scoreLabel: `${scoreLabel(score)} echo${score === 1 ? "" : "es"}`,

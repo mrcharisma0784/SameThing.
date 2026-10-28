@@ -186,6 +186,9 @@ export type Database = {
           allow_mentions: boolean;
           ban_reason: string | null;
           banned_at: string | null;
+          avatar_url: string | null;
+          profile_photo_change_date: string | null;
+          profile_photo_change_count: number;
           bio: string | null;
           created_at: string;
           custom_tags: string[];
@@ -222,6 +225,9 @@ export type Database = {
           allow_mentions?: boolean;
           ban_reason?: string | null;
           banned_at?: string | null;
+          avatar_url?: string | null;
+          profile_photo_change_date?: string | null;
+          profile_photo_change_count?: number;
           bio?: string | null;
           created_at?: string;
           custom_tags?: string[];

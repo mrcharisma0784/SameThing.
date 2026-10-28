@@ -74,7 +74,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={`grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-base ${effectivePlan(profile) === "premium" ? "premium-ring" : ""}`}
                 aria-label="My profile"
               >
-                <ProfileGlyph value={profile.emoji} className="h-5 w-5" />
+                <ProfileGlyph
+                  value={profile.emoji}
+                  photoUrl={profile.avatar_url}
+                  className="h-5 w-5"
+                />
               </Link>
             )}
           </div>

@@ -69,6 +69,7 @@ export type ThingCardData = {
   author?: {
     username: string;
     emoji: string;
+    avatar_url?: string | null;
     plan?: string;
   } | null;
 };
@@ -380,7 +381,11 @@ export function ThingCard({
               <div
                 className={`grid h-7 w-7 place-items-center rounded-full border border-border bg-background/60 text-sm ${local.author.plan === "premium" ? "premium-ring" : ""}`}
               >
-                <ProfileGlyph value={local.author.emoji} className="h-3.5 w-3.5" />
+                <ProfileGlyph
+                  value={local.author.emoji}
+                  photoUrl={local.author.avatar_url}
+                  className="h-3.5 w-3.5"
+                />
               </div>
               <span className="truncate text-xs text-foreground">@{local.author.username}</span>
             </Link>
@@ -394,7 +399,11 @@ export function ThingCard({
               <div
                 className={`grid h-7 w-7 place-items-center rounded-full border border-border bg-background/60 text-sm ${local.author.plan === "premium" ? "premium-ring" : ""}`}
               >
-                <ProfileGlyph value={local.author.emoji} className="h-3.5 w-3.5" />
+                <ProfileGlyph
+                  value={local.author.emoji}
+                  photoUrl={local.author.avatar_url}
+                  className="h-3.5 w-3.5"
+                />
               </div>
               <span className="truncate text-xs text-foreground">@{local.author.username}</span>
             </Link>

@@ -104,7 +104,11 @@ function ConnectionsPage() {
                     <Star className="h-3 w-3 fill-current" aria-label="PremiumThing." />
                   </span>
                 )}
-                <ProfileGlyph value={person.emoji} className="h-5 w-5" />
+                <ProfileGlyph
+                  value={person.emoji}
+                  photoUrl={person.avatar_url}
+                  className="h-5 w-5"
+                />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-2">

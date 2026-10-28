@@ -140,12 +140,12 @@ function PrivacyPage() {
 
         <Section title="4. Public, anonymous and private display">
           <p className="text-muted-foreground">
-            Public Things, non-anonymous quotes and public profile information can be viewed by
-            other people and may be copied or shared outside SameThing. Choosing anonymous display
-            hides your username from ordinary readers, but the account relationship remains
-            available to SameThing. for moderation, abuse prevention and legal compliance. Anonymous
-            does not mean that the service cannot associate content with the account that created
-            it.
+            Public Things, non-anonymous quotes, profile photos and other public profile information
+            can be viewed by other people and may be copied or shared outside SameThing. You can
+            remove your profile photo from your profile settings. Choosing anonymous display hides
+            your username from ordinary readers, but the account relationship remains available to
+            SameThing. for moderation, abuse prevention and legal compliance. Anonymous does not
+            mean that the service cannot associate content with the account that created it.
           </p>
         </Section>
 

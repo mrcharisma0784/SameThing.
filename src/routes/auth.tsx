@@ -39,6 +39,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsWarningCount, setTermsWarningCount] = useState(0);
   const [referralCode, setReferralCode] = useState("");
   const [banNotice, setBanNotice] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -152,7 +153,11 @@ function AuthPage() {
   };
 
   const google = async () => {
-    if (mode === "signup" && !acceptedTerms) return;
+    if (mode === "signup" && !acceptedTerms) {
+      toast.error("Please accept the Terms & Privacy before continuing with Google.");
+      setTermsWarningCount((count) => count + 1);
+      return;
+    }
     setLoading(true);
     try {
       const cleanReferral = referralCode.trim();
@@ -219,7 +224,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={google}
-                    disabled={loading || (mode === "signup" && !acceptedTerms)}
+                    disabled={loading}
                     aria-label="Continue with Google"
                     title="Continue with Google"
                     className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/80 text-foreground transition-colors hover:border-accent/50 hover:bg-secondary disabled:opacity-50"
@@ -377,13 +382,16 @@ function AuthPage() {
                         onChange={(e) => setAcceptedTerms(e.target.checked)}
                         className="mt-0.5 h-4 w-4 accent-[color:var(--accent)]"
                       />
-                      <span>
+                      <span
+                        key={`terms-copy-${termsWarningCount}`}
+                        className={termsWarningCount ? "terms-label-shimmer" : undefined}
+                      >
                         I agree to the{" "}
-                        <a href="/terms?minimal=1" className="text-foreground underline">
+                        <a href="/terms?minimal=1" className="underline">
                           Terms
                         </a>{" "}
                         and{" "}
-                        <a href="/privacy?minimal=1" className="text-foreground underline">
+                        <a href="/privacy?minimal=1" className="underline">
                           Privacy
                         </a>
                         .

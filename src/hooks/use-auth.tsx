@@ -7,6 +7,7 @@ type Profile = {
   id: string;
   username: string;
   emoji: string;
+  avatar_url?: string | null;
   bio: string | null;
   language: string;
   is_anon_default: boolean;

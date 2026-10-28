@@ -78,13 +78,14 @@ async function attachAuthors<T extends ThingRow>(rows: T[]) {
   const { data: profs } = (await supabaseAdmin
     .from("profiles")
     .select(
-      "id, username, emoji, plan, premium_until, is_test_user, test_user_until, test_user_label",
+      "id, username, emoji, avatar_url, plan, premium_until, is_test_user, test_user_until, test_user_label",
     )
     .in("id", ids)) as unknown as {
     data: Array<{
       id: string;
       username: string;
       emoji: string;
+      avatar_url: string | null;
       plan: string;
       premium_until?: string | null;
       is_test_user?: boolean | null;
@@ -97,6 +98,7 @@ async function attachAuthors<T extends ThingRow>(rows: T[]) {
     {
       username: string;
       emoji: string;
+      avatar_url: string | null;
       plan: string;
       premium_until?: string | null;
       is_test_user?: boolean | null;
@@ -108,6 +110,7 @@ async function attachAuthors<T extends ThingRow>(rows: T[]) {
     map.set(p.id, {
       username: p.username,
       emoji: p.emoji,
+      avatar_url: p.avatar_url ?? null,
       plan: effectivePlan(p),
       premium_until: p.premium_until ?? null,
       is_test_user: p.is_test_user ?? false,

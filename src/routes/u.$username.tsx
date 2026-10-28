@@ -174,7 +174,11 @@ function PublicProfilePage() {
               <div
                 className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border border-accent/50 bg-background text-3xl ${profile.plan === "premium" ? "premium-ring" : ""}`}
               >
-                <ProfileGlyph value={profile.emoji} className="h-8 w-8" />
+                <ProfileGlyph
+                  value={profile.emoji}
+                  photoUrl={profile.avatar_url}
+                  className="h-8 w-8"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">

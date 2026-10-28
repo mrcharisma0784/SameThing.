@@ -126,7 +126,7 @@ export function MentionTextarea({
               className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm ${i === active ? "bg-accent/15 text-foreground" : "text-muted-foreground hover:bg-secondary/40"}`}
             >
               <span className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">
-                <ProfileGlyph value={u.emoji} className="h-3.5 w-3.5" />
+                <ProfileGlyph value={u.emoji} photoUrl={u.avatar_url} className="h-3.5 w-3.5" />
               </span>
               <span>@{u.username}</span>
             </button>
@@ -175,18 +175,26 @@ export function renderSpecialTerms(text: string) {
 
 /** Render text with @mentions. Only linkify if username is in `validUsernames`. */
 export function renderWithMentions(text: string, validUsernames?: Set<string>) {
-  const parts: Array<string | { u: string }> = [];
-  const re = /@([a-z0-9_]{2,24})/gi;
+  const parts: Array<string | { u: string } | { tag: string }> = [];
+  const re = /@([a-z0-9_]{2,24})|#([a-z0-9_-]{1,24})/gi;
   let last = 0;
   let match: RegExpExecArray | null;
   while ((match = re.exec(text)) !== null) {
     if (match.index > last) parts.push(text.slice(last, match.index));
-    parts.push({ u: match[1] });
+    if (match[1]) parts.push({ u: match[1] });
+    else if (match[2]) parts.push({ tag: match[2] });
     last = match.index + match[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts.map((p, i) => {
     if (typeof p === "string") return <span key={i}>{renderSpecialTerms(p)}</span>;
+    if ("tag" in p) {
+      return (
+        <span key={i} className="rounded bg-accent/10 px-1 text-accent">
+          #{p.tag}
+        </span>
+      );
+    }
     const uname = p.u.toLowerCase();
     const isValid = validUsernames ? validUsernames.has(uname) : true;
     if (!isValid) return <span key={i}>@{p.u}</span>;

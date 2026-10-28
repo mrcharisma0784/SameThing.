@@ -7,9 +7,9 @@ import { effectivePlan } from "@/lib/premium";
 import { getVisibilityContext, isVisibleTarget } from "@/lib/content-visibility.server";
 
 const PROFILE_COLS =
-  "id, username, emoji, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited, deletion_scheduled_for, deletion_cancelled_until";
+  "id, username, emoji, avatar_url, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited, deletion_scheduled_for, deletion_cancelled_until";
 const PROFILE_COLS_LEGACY = PROFILE_COLS.replace(
-  ", deletion_scheduled_for, deletion_cancelled_until",
+  ", avatar_url, deletion_scheduled_for, deletion_cancelled_until",
   "",
 );
 
@@ -24,19 +24,33 @@ type HiddenContentItem = {
   admin_hidden: boolean;
   text: string | null;
   title: string | null;
-  author: { username: string; emoji: string; plan: string } | null;
+  author: { username: string; emoji: string; avatar_url?: string | null; plan: string } | null;
 };
 
 async function attachOwnAuthor<
   T extends { user_id?: string | null; is_anonymous?: boolean | null },
->(rows: T[], prof: { id: string; username: string; emoji: string; plan?: string | null } | null) {
+>(
+  rows: T[],
+  prof: {
+    id: string;
+    username: string;
+    emoji: string;
+    avatar_url?: string | null;
+    plan?: string | null;
+  } | null,
+) {
   if (!prof) return rows.map((r) => ({ ...r, author: null, is_mine: true }));
   return rows.map((r) => ({
     ...r,
     is_mine: true,
     author: r.is_anonymous
       ? null
-      : { username: prof.username, emoji: prof.emoji, plan: prof.plan ?? "free" },
+      : {
+          username: prof.username,
+          emoji: prof.emoji,
+          avatar_url: prof.avatar_url ?? null,
+          plan: prof.plan ?? "free",
+        },
     user_id: r.is_anonymous ? null : (r.user_id ?? null),
   }));
 }
@@ -228,7 +242,7 @@ export const getMyThings = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("id, username, emoji, plan, premium_until")
+      .select("id, username, emoji, avatar_url, plan, premium_until")
       .eq("id", context.userId)
       .maybeSingle();
     const { data, error } = await supabaseAdmin
@@ -440,7 +454,6 @@ const EditInput = z.object({
     .max(24)
     .regex(/^[a-z0-9_]+$/)
     .optional(),
-  emoji: z.string().min(1).max(4).optional(),
   bio: z.string().max(160).optional().nullable(),
   language: z.string().min(2).max(5).optional(),
   messages_open: z.boolean().optional(),
@@ -502,10 +515,9 @@ export const updateMyProfile = createServerFn({ method: "POST" })
       };
     }
 
-    // PremiumThing. gating for themes and premium profile icons
-    if (data.theme !== undefined || data.emoji !== undefined) {
+    // PremiumThing. gating for themes
+    if (data.theme !== undefined) {
       const { isPremiumTheme, isValidTheme } = await import("@/lib/themes");
-      const { isPremiumAvatar } = await import("@/lib/avatars");
       const { data: planRow } = await supabaseAdmin
         .from("profiles")
         .select("plan, premium_until")
@@ -516,9 +528,6 @@ export const updateMyProfile = createServerFn({ method: "POST" })
         if (!isValidTheme(data.theme)) return { error: "Unknown theme." };
         if (isPremiumTheme(data.theme) && !isPremium)
           return { error: "That theme is PremiumThing. only." };
-      }
-      if (data.emoji !== undefined && isPremiumAvatar(data.emoji) && !isPremium) {
-        return { error: "That icon is PremiumThing. only." };
       }
     }
 
@@ -583,7 +592,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
     const { data: prof } = (await supabaseAdmin
       .from("profiles")
       .select(
-        "id, username, emoji, bio, plan, premium_until, rare_thing_count, onboarded_at, is_test_user, test_user_until, test_user_label, same_credits_unlimited",
+        "id, username, emoji, avatar_url, bio, plan, premium_until, rare_thing_count, onboarded_at, is_test_user, test_user_until, test_user_label, same_credits_unlimited",
       )
       .eq("username", data.username)
       .maybeSingle()) as unknown as {
@@ -591,6 +600,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
         id: string;
         username: string;
         emoji: string;
+        avatar_url: string | null;
         bio: string | null;
         plan: string;
         premium_until: string | null;
@@ -756,4 +766,213 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       return { error: "Could not delete auth user." };
     }
     return { error: null as string | null };
+  });
+
+const ProfilePhotoInput = z.object({
+  image: z.string().min(1).max(7_000_000),
+  mime: z.enum(["image/webp", "image/gif"]),
+});
+function validateProfileImage(bytes: Uint8Array, mime: string) {
+  if (mime === "image/webp") {
+    if (
+      bytes.length > 5 * 1024 * 1024 ||
+      bytes.length < 26 ||
+      String.fromCharCode(...bytes.slice(0, 4)) !== "RIFF" ||
+      String.fromCharCode(...bytes.slice(8, 12)) !== "WEBP" ||
+      new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(4, true) !==
+        bytes.length - 8
+    )
+      throw new Error("Invalid WebP image.");
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let offset = 12;
+    let dimensions: { width: number; height: number } | null = null;
+    while (offset + 8 <= bytes.length) {
+      const kind = String.fromCharCode(...bytes.slice(offset, offset + 4));
+      const size = view.getUint32(offset + 4, true);
+      const data = offset + 8;
+      if (size > bytes.length - data) throw new Error("Malformed WebP image.");
+      if (kind === "VP8X" && size >= 10) {
+        dimensions = {
+          width: 1 + bytes[data + 4] + (bytes[data + 5] << 8) + (bytes[data + 6] << 16),
+          height: 1 + bytes[data + 7] + (bytes[data + 8] << 8) + (bytes[data + 9] << 16),
+        };
+      } else if (
+        kind === "VP8 " &&
+        size >= 10 &&
+        bytes[data + 3] === 0x9d &&
+        bytes[data + 4] === 0x01 &&
+        bytes[data + 5] === 0x2a
+      ) {
+        dimensions = {
+          width: (bytes[data + 6] | (bytes[data + 7] << 8)) & 0x3fff,
+          height: (bytes[data + 8] | (bytes[data + 9] << 8)) & 0x3fff,
+        };
+      } else if (kind === "VP8L" && size >= 5 && bytes[data] === 0x2f) {
+        dimensions = {
+          width: 1 + bytes[data + 1] + ((bytes[data + 2] & 0x3f) << 8),
+          height:
+            1 + (bytes[data + 2] >> 6) + (bytes[data + 3] << 2) + ((bytes[data + 4] & 0x0f) << 10),
+        };
+      }
+      offset = data + size + (size & 1);
+    }
+    if (offset !== bytes.length || dimensions?.width !== 512 || dimensions?.height !== 512)
+      throw new Error("Profile photos must be valid, square 512 × 512 WebP images.");
+    return;
+  }
+  if (
+    bytes.length > 2 * 1024 * 1024 ||
+    bytes.length < 14 ||
+    (String.fromCharCode(...bytes.slice(0, 6)) !== "GIF87a" &&
+      String.fromCharCode(...bytes.slice(0, 6)) !== "GIF89a")
+  )
+    throw new Error("Invalid GIF image.");
+  const width = bytes[6] | (bytes[7] << 8),
+    height = bytes[8] | (bytes[9] << 8);
+  if (!width || !height || width > 2048 || height > 2048)
+    throw new Error("GIF dimensions are not supported.");
+  let i = 13,
+    frames = 0,
+    duration = 0,
+    delay = 0,
+    hasTrailer = false;
+  const packed = bytes[10];
+  if (packed & 0x80) i += 3 * (1 << ((packed & 7) + 1));
+  if (i > bytes.length) throw new Error("Malformed GIF.");
+  const skipSubBlocks = () => {
+    while (i < bytes.length) {
+      const n = bytes[i++];
+      if (!n) return;
+      if (i + n > bytes.length) throw new Error("Malformed GIF.");
+      i += n;
+    }
+    throw new Error("Malformed GIF.");
+  };
+  while (i < bytes.length) {
+    const marker = bytes[i++];
+    if (marker === 0x3b) {
+      hasTrailer = true;
+      break;
+    }
+    if (marker === 0x21) {
+      if (i >= bytes.length) throw new Error("Malformed GIF.");
+      const label = bytes[i++];
+      if (label === 0xf9) {
+        if (i + 6 > bytes.length || bytes[i++] !== 4) throw new Error("Malformed GIF.");
+        i++;
+        delay = bytes[i] | (bytes[i + 1] << 8);
+        i += 2;
+        if (bytes[i++] !== 0) throw new Error("Malformed GIF.");
+      } else {
+        skipSubBlocks();
+      }
+    } else if (marker === 0x2c) {
+      if (i + 9 > bytes.length) throw new Error("Malformed GIF.");
+      const frameLeft = bytes[i] | (bytes[i + 1] << 8);
+      const frameTop = bytes[i + 2] | (bytes[i + 3] << 8);
+      const frameWidth = bytes[i + 4] | (bytes[i + 5] << 8);
+      const frameHeight = bytes[i + 6] | (bytes[i + 7] << 8);
+      const local = bytes[i + 8];
+      if (
+        !frameWidth ||
+        !frameHeight ||
+        frameLeft + frameWidth > width ||
+        frameTop + frameHeight > height
+      )
+        throw new Error("GIF frame dimensions are not supported.");
+      i += 9;
+      if (local & 0x80) i += 3 * (1 << ((local & 7) + 1));
+      if (i >= bytes.length || bytes[i] < 2 || bytes[i] > 8) throw new Error("Malformed GIF.");
+      i++;
+      skipSubBlocks();
+      frames++;
+      if (delay < 9) throw new Error("GIF frames must be at least 9 centiseconds apart.");
+      duration += delay;
+      if (frames > 60 || duration > 500)
+        throw new Error("GIFs must be 5 seconds or shorter and contain at most 60 frames.");
+      delay = 0;
+    } else throw new Error("Malformed GIF.");
+  }
+  if (!frames || !hasTrailer || i !== bytes.length) throw new Error("Malformed GIF image.");
+}
+export const uploadMyProfilePhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => ProfilePhotoInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const raw = data.image.replace(/^data:[^,]+,/, "");
+    const bytes = Buffer.from(raw, "base64");
+    if (!bytes.length || bytes.toString("base64").replace(/=+$/, "") !== raw.replace(/=+$/, ""))
+      return { ok: false as const, error: "Invalid image data." };
+    try {
+      validateProfileImage(new Uint8Array(bytes), data.mime);
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : "Invalid image." };
+    }
+    const db = supabaseAdmin as any;
+    const { data: planRow, error: planError } = await db
+      .from("profiles")
+      .select("plan, premium_until, avatar_url")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (planError || !planRow) return { ok: false as const, error: "Profile is unavailable." };
+    if (data.mime === "image/gif" && effectivePlan(planRow) !== "premium")
+      return { ok: false as const, error: "Animated GIF profile photos require Premium." };
+    const key = `${context.userId}/${crypto.randomUUID()}.${data.mime === "image/gif" ? "gif" : "webp"}`;
+    const { error: uploadError } = await db.storage
+      .from("profile-photos")
+      .upload(key, bytes, { contentType: data.mime, upsert: false });
+    if (uploadError) return { ok: false as const, error: "Photo upload failed. Please try again." };
+    const { data: pub } = db.storage.from("profile-photos").getPublicUrl(key);
+    const { data: result, error } = await db.rpc("set_profile_avatar", {
+      _user_id: context.userId,
+      _avatar_url: pub.publicUrl,
+    });
+    if (error || !result?.ok) {
+      await db.storage.from("profile-photos").remove([key]);
+      return {
+        ok: false as const,
+        error:
+          result?.reason === "daily_limit"
+            ? "You have used all 3 profile-photo changes for today (UTC). Try again tomorrow."
+            : "Could not save your profile photo.",
+      };
+    }
+    const oldPath =
+      typeof planRow.avatar_url === "string"
+        ? planRow.avatar_url.split("/profile-photos/").pop()?.split("?")[0]
+        : null;
+    if (oldPath && oldPath.startsWith(`${context.userId}/`) && oldPath !== key)
+      await db.storage.from("profile-photos").remove([oldPath]);
+    return { ok: true as const, avatar_url: pub.publicUrl };
+  });
+export const removeMyProfilePhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: current } = await db
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const { data, error } = await db.rpc("set_profile_avatar", {
+      _user_id: context.userId,
+      _avatar_url: null,
+    });
+    if (error || !data?.ok)
+      return {
+        ok: false as const,
+        error:
+          data?.reason === "daily_limit"
+            ? "You have used all 3 profile-photo changes for today (UTC). Try again tomorrow."
+            : "Could not remove your profile photo.",
+      };
+    const oldPath =
+      typeof current?.avatar_url === "string"
+        ? current.avatar_url.split("/profile-photos/").pop()?.split("?")[0]
+        : null;
+    if (oldPath?.startsWith(`${context.userId}/`))
+      await db.storage.from("profile-photos").remove([oldPath]);
+    return { ok: true as const };
   });
