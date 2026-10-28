@@ -102,7 +102,7 @@ function DropPage() {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const prompts = [
       "The exact thought, fear, habit, or moment.",
-      "Use mention to tag someone.",
+      "Use @username to mention someone.",
       "Use #tag to tag something.",
     ];
     let promptIndex = 0;

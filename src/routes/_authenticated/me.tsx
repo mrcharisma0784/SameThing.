@@ -97,7 +97,7 @@ function MePage() {
                 <ProfileGlyph
                   value={profile?.emoji}
                   photoUrl={profile?.avatar_url as string | null}
-                  className="h-7 w-7"
+                  className="h-full w-full"
                 />
               </div>
               <div className="flex-1">
@@ -215,14 +215,19 @@ function MePage() {
                       onClick={() => {
                         void (async () => {
                           setPhotoBusy(true);
-                          const res = await removePhoto();
-                          setPhotoBusy(false);
-                          if (!res.ok) {
-                            toast.error(res.error);
-                            return;
+                          try {
+                            const res = await removePhoto();
+                            if (!res.ok) {
+                              toast.error(res.error);
+                              return;
+                            }
+                            await refreshProfile();
+                            toast.success("Profile photo removed.");
+                          } catch {
+                            toast.error("Could not remove your profile photo. Please try again.");
+                          } finally {
+                            setPhotoBusy(false);
                           }
-                          await refreshProfile();
-                          toast.success("Profile photo removed.");
                         })();
                       }}
                     >

@@ -8,10 +8,11 @@ import { getVisibilityContext, isVisibleTarget } from "@/lib/content-visibility.
 
 const PROFILE_COLS =
   "id, username, emoji, avatar_url, bio, language, is_anon_default, rare_thing_count, onboarded_at, last_post_at, last_comment_at, custom_tags, warnings_count, banned_at, muted_until, plan, premium_until, referral_code, same_credits, tour_completed_at, messages_open, username_changed_at, inbox_seen_at, allow_mentions, gender, age_range, demographics_completed_at, theme, feed_tags, notification_prefs, notification_retention_hours, is_test_user, test_user_until, test_user_label, same_credits_unlimited, deletion_scheduled_for, deletion_cancelled_until";
-const PROFILE_COLS_LEGACY = PROFILE_COLS.replace(
-  ", avatar_url, deletion_scheduled_for, deletion_cancelled_until",
+const PROFILE_COLS_NO_DELETION = PROFILE_COLS.replace(
+  ", deletion_scheduled_for, deletion_cancelled_until",
   "",
 );
+const PROFILE_COLS_LEGACY = PROFILE_COLS_NO_DELETION.replace(", avatar_url", "");
 
 type HiddenContentItem = {
   report_id: string;
@@ -71,19 +72,30 @@ export const getMyProfile = createServerFn({ method: "GET" })
     const error = firstRead.error;
     if (error) {
       // Keep existing accounts usable while a production migration is being applied.
-      const legacy = (await supabaseAdmin
+      let fallback = (await supabaseAdmin
         .from("profiles")
-        .select(PROFILE_COLS_LEGACY)
+        .select(PROFILE_COLS_NO_DELETION)
         .eq("id", context.userId)
         .maybeSingle()) as unknown as {
         data: Record<string, unknown> | null;
         error: { message: string } | null;
       };
-      if (legacy.error) {
-        console.error("getMyProfile", error);
+      if (fallback.error) {
+        // Older deployments may also predate avatar_url. Keep this list independently correct.
+        fallback = (await supabaseAdmin
+          .from("profiles")
+          .select(PROFILE_COLS_LEGACY)
+          .eq("id", context.userId)
+          .maybeSingle()) as unknown as {
+          data: Record<string, unknown> | null;
+          error: { message: string } | null;
+        };
+      }
+      if (fallback.error) {
+        console.error("getMyProfile", { current: error, fallback: fallback.error });
         return { profile: null };
       }
-      data = legacy.data;
+      data = fallback.data;
     }
     if (!data) return { profile: null };
     const profile = { ...data, plan: effectivePlan(data) };
@@ -858,10 +870,11 @@ function validateProfileImage(bytes: Uint8Array, mime: string) {
       if (i >= bytes.length) throw new Error("Malformed GIF.");
       const label = bytes[i++];
       if (label === 0xf9) {
-        if (i + 6 > bytes.length || bytes[i++] !== 4) throw new Error("Malformed GIF.");
+        if (i + 6 > bytes.length || bytes[i] !== 4) throw new Error("Malformed GIF.");
+        i++;
         i++;
         delay = bytes[i] | (bytes[i + 1] << 8);
-        i += 2;
+        i += 3;
         if (bytes[i++] !== 0) throw new Error("Malformed GIF.");
       } else {
         skipSubBlocks();
