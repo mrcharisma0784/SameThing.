@@ -97,7 +97,8 @@ function MePage() {
                 <ProfileGlyph
                   value={profile?.emoji}
                   photoUrl={profile?.avatar_url as string | null}
-                  className="h-full w-full"
+                  photoClassName="h-full w-full"
+                  className="h-7 w-7"
                 />
               </div>
               <div className="flex-1">

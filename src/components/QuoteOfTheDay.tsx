@@ -44,6 +44,7 @@ export type QuoteCommentItem = {
   profile?: {
     username: string;
     emoji: string;
+    avatar_url?: string | null;
     plan?: string;
   } | null;
 };
@@ -62,6 +63,7 @@ export type QuoteItem = {
   profile?: {
     username: string;
     emoji: string;
+    avatar_url?: string | null;
     plan?: string;
   } | null;
   liked_by_me?: boolean;
@@ -521,7 +523,12 @@ export function QuoteOfTheDay() {
                     item.profile!.plan === "premium" && "premium-ring",
                   )}
                 >
-                  <ProfileGlyph value={item.profile!.emoji} className="h-3.5 w-3.5" />
+                  <ProfileGlyph
+                    value={item.profile!.emoji}
+                    photoUrl={item.profile!.avatar_url}
+                    photoClassName="h-full w-full"
+                    className="h-3.5 w-3.5"
+                  />
                 </span>
                 <span className="truncate text-xs text-foreground">@{item.profile!.username}</span>
               </Link>

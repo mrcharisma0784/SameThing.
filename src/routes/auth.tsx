@@ -9,6 +9,7 @@ import { Brand } from "@/components/Brand";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Phone } from "lucide-react";
+import { pulseHaptic } from "@/lib/haptics";
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
     mode: z.enum(["signin", "signup"]).optional(),
@@ -462,14 +463,15 @@ function Typewriter({ text, className }: { text: string; className?: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     setI(0);
+    let typed = 0;
     const id = setInterval(() => {
-      setI((prev) => {
-        if (prev >= text.length) {
-          clearInterval(id);
-          return prev;
-        }
-        return prev + 1;
-      });
+      if (typed >= text.length) {
+        clearInterval(id);
+        return;
+      }
+      typed += 1;
+      setI(typed);
+      pulseHaptic(6);
     }, 35);
     return () => clearInterval(id);
   }, [text]);

@@ -11,6 +11,7 @@ import { OnboardingGate } from "@/components/OnboardingGate";
 import { useAuth } from "@/hooks/use-auth";
 import { profileDisplayTags } from "@/lib/test-user";
 import { displayBio } from "@/lib/profile-display";
+import { pulseHaptic } from "@/lib/haptics";
 
 export const Route = createFileRoute("/_authenticated/search")({
   head: () => ({ meta: [{ title: "Search · SameThing." }] }),
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/search")({
 type UserHit = {
   username: string;
   emoji: string;
+  avatar_url?: string | null;
   bio: string | null;
   plan?: string;
   premium_until?: string | null;
@@ -61,12 +63,14 @@ function SearchPage() {
       typeTimer = window.setInterval(() => {
         typed += 1;
         setDemoText(sample.slice(0, typed));
+        pulseHaptic(6);
         if (typed >= sample.length) {
           window.clearInterval(typeTimer);
           pauseTimer = window.setTimeout(() => {
             eraseTimer = window.setInterval(() => {
               erased -= 1;
               setDemoText(sample.slice(0, erased));
+              pulseHaptic(6);
               if (erased <= 0) {
                 window.clearInterval(eraseTimer);
                 setDemoText("");
@@ -210,7 +214,12 @@ function SearchPage() {
                   <span
                     className={`grid h-10 w-10 place-items-center rounded-full border border-border bg-background text-foreground ${u.plan === "premium" ? "premium-ring" : ""}`}
                   >
-                    <ProfileGlyph value={u.emoji} photoUrl={u.avatar_url} className="h-5 w-5" />
+                    <ProfileGlyph
+                      value={u.emoji}
+                      photoUrl={u.avatar_url}
+                      photoClassName="h-full w-full"
+                      className="h-5 w-5"
+                    />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">

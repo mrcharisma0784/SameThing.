@@ -36,6 +36,7 @@ type PublicProfile = {
   id: string;
   username: string;
   emoji: string;
+  avatar_url?: string | null;
   bio: string | null;
   plan: string;
   rare_thing_count: number;
@@ -177,6 +178,7 @@ function PublicProfilePage() {
                 <ProfileGlyph
                   value={profile.emoji}
                   photoUrl={profile.avatar_url}
+                  photoClassName="h-full w-full"
                   className="h-8 w-8"
                 />
               </div>

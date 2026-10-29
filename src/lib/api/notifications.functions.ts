@@ -21,6 +21,7 @@ export type NotificationItem = {
   comment_id?: string | null;
   link?: string | null;
   system_id?: string | null;
+  mandatory?: boolean;
 };
 
 type NotificationPrefs = {
@@ -33,6 +34,8 @@ type NotificationPrefs = {
   only_one: boolean;
   follow: boolean;
   system: boolean;
+  silent: boolean;
+  silent_off_at?: string | null;
 };
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -45,6 +48,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
   only_one: true,
   follow: true,
   system: true,
+  silent: false,
 };
 
 const RETENTION_DEFAULT_HOURS = 720;
@@ -296,10 +300,12 @@ export const getMyNotifications = createServerFn({ method: "GET" })
         created_at: m.created_at,
         link: m.link,
         system_id: m.id,
+        mandatory: ["warning", "moderation", "security", "legal"].includes(m.kind),
       });
     }
 
     const filtered = items.filter((item) => {
+      if (prefs.silent) return item.kind === "system" && item.mandatory === true;
       if (item.kind === "comment") return prefs.comment;
       if (item.kind === "like") return prefs.like;
       if (item.kind === "quote_comment" || item.kind === "quote_like") return prefs.quote_activity;
@@ -311,8 +317,15 @@ export const getMyNotifications = createServerFn({ method: "GET" })
       return true;
     });
     filtered.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    const unread = filtered.filter((item) => +new Date(item.created_at) > seenAt).length;
-    return { items: filtered.slice(0, 80), unread };
+    const unread = prefs.silent
+      ? 0
+      : filtered.filter((item) => +new Date(item.created_at) > seenAt).length;
+    return {
+      items: filtered.slice(0, 80),
+      unread,
+      silent: prefs.silent,
+      silentOffAt: prefs.silent_off_at ?? null,
+    };
   });
 
 export const getInboxUnread = createServerFn({ method: "GET" })
@@ -345,6 +358,7 @@ export const getInboxUnread = createServerFn({ method: "GET" })
       notification_retention_hours?: number;
     } | null;
     const prefs: NotificationPrefs = { ...DEFAULT_PREFS, ...(profRow?.notification_prefs ?? {}) };
+    if (prefs.silent) return { unread: 0 };
     const cutoff = getRetentionCutoff(
       Number(profRow?.notification_retention_hours ?? RETENTION_DEFAULT_HOURS),
     );

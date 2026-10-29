@@ -307,6 +307,7 @@ function ThingDetail() {
             <ProfileGlyph
               value={c.author.emoji}
               photoUrl={c.author.avatar_url}
+              photoClassName="h-full w-full"
               className="h-3 w-3"
             />
           </div>

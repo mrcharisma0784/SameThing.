@@ -6,12 +6,14 @@ import { ArrowDown, ArrowUp, ChevronLeft, Lock, Plus, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import { addCustomTag, updateMyProfile } from "@/lib/api/me.functions";
 import { DEFAULT_THEME, THEMES } from "@/lib/themes";
 import { TAGS } from "@/lib/thing-helpers";
 import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
+import { areHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 
 export const Route = createFileRoute("/_authenticated/appearance")({
   head: () => ({
@@ -27,6 +29,7 @@ function AppearancePage() {
   const { profile, refreshProfile } = useAuth();
   const updateFn = useServerFn(updateMyProfile);
   const addTagFn = useServerFn(addCustomTag);
+  const [hapticsEnabled, setHapticsEnabledState] = useState(true);
   const isPremium = effectivePlan(profile) === "premium";
   const theme = profile?.theme ?? DEFAULT_THEME;
   const allTags = useMemo(() => [...TAGS, ...(profile?.custom_tags ?? [])], [profile?.custom_tags]);
@@ -37,6 +40,7 @@ function AppearancePage() {
   const [draftTags, setDraftTags] = useState<string[]>(savedTags);
   const [savingTags, setSavingTags] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
+  useEffect(() => setHapticsEnabledState(areHapticsEnabled()), []);
   useEffect(() => setDraftTags(savedTags), [savedTags]);
   const inactiveTags = allTags.filter((tag) => !draftTags.includes(tag));
   const matchingTags = inactiveTags.filter((tag) =>
@@ -136,6 +140,34 @@ function AppearancePage() {
         <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
           how SameThing. looks & what your feed shows
         </p>
+
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label
+                htmlFor="haptics-toggle"
+                className="text-xs uppercase tracking-widest text-muted-foreground"
+              >
+                Haptic feedback
+              </Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Gentle taps for typing animations, selections, and controls.
+              </p>
+            </div>
+            <Switch
+              id="haptics-toggle"
+              checked={hapticsEnabled}
+              onCheckedChange={(enabled) => {
+                setHapticsEnabledState(enabled);
+                setHapticsEnabled(enabled);
+              }}
+              aria-label="Haptic feedback"
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Saved in this browser. Vibration depends on browser and device support.
+          </p>
+        </section>
 
         <section className="mt-5 rounded-2xl border border-border bg-card p-5">
           <Label className="text-xs uppercase tracking-widest text-muted-foreground">Theme</Label>

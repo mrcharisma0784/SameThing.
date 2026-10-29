@@ -26,7 +26,7 @@ export function WebInboxNotifications() {
 
   const { data } = useQuery({
     queryKey: ["web-inbox-notifications", userId],
-    queryFn: async () => (await getMyNotifications()).items,
+    queryFn: async () => await getMyNotifications(),
     enabled: Boolean(userId),
     refetchInterval: userId ? POLL_INTERVAL_MS : false,
     refetchIntervalInBackground: true,
@@ -38,7 +38,7 @@ export function WebInboxNotifications() {
     if (typeof window === "undefined") return;
 
     const storageKey = `${SEEN_KEY_PREFIX}${userId}`;
-    const currentIds = data.map((item) => item.id);
+    const currentIds = data.items.map((item) => item.id);
     const previous = readIds(storageKey);
 
     // The first fetch establishes a baseline and never turns Inbox history into alerts.
@@ -47,11 +47,15 @@ export function WebInboxNotifications() {
       return;
     }
 
-    const fresh = data.filter((item) => !previous.has(item.id));
-    if (!fresh.length) return;
-
     const nextIds = new Set([...previous, ...currentIds]);
     writeIds(storageKey, Array.from(nextIds));
+    if (data.silent) return;
+
+    const silentOffAt = data.silentOffAt ? new Date(data.silentOffAt).getTime() : 0;
+    const fresh = data.items.filter(
+      (item) => !previous.has(item.id) && new Date(item.created_at).getTime() > silentOffAt,
+    );
+    if (!fresh.length) return;
 
     if (getWebNotificationPermission() !== "granted") return;
     void Promise.all(fresh.map(showInboxNotification));

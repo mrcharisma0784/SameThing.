@@ -270,7 +270,12 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       {entry.category === "user" || entry.category === "quote" ? (
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-background/60 text-sm">
           {entry.emoji ? (
-            <ProfileGlyph value={entry.emoji} photoUrl={entry.avatar_url} className="h-4 w-4" />
+            <ProfileGlyph
+              value={entry.emoji}
+              photoUrl={entry.avatar_url}
+              photoClassName="h-full w-full"
+              className="h-4 w-4"
+            />
           ) : (
             <CircleUserRound className="h-4 w-4 text-muted-foreground" />
           )}

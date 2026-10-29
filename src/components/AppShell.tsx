@@ -77,6 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <ProfileGlyph
                   value={profile.emoji}
                   photoUrl={profile.avatar_url}
+                  photoClassName="h-full w-full"
                   className="h-5 w-5"
                 />
               </Link>

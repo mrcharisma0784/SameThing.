@@ -630,6 +630,7 @@ type UserRow = {
   id: string;
   username: string;
   emoji: string;
+  avatar_url?: string | null;
   plan: string;
   language: string;
   created_at: string;
@@ -694,7 +695,11 @@ function UsersPanel() {
                     onClick={() => setSelected(u.id)}
                     className="flex min-w-0 items-center gap-2 text-left hover:text-accent hover:underline"
                   >
-                    <ProfileGlyph value={u.emoji} className="h-4 w-4 shrink-0" />
+                    <ProfileGlyph
+                      value={u.emoji}
+                      photoUrl={u.avatar_url}
+                      className="h-4 w-4 shrink-0"
+                    />
                     <span className="truncate">@{u.username}</span>
                   </button>
                   <span className="truncate text-muted-foreground">{u.plan}</span>
@@ -808,6 +813,7 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <DetailField label="Icon">
               <ProfileGlyph
                 value={p?.emoji as string}
+                photoUrl={p?.avatar_url as string | null}
                 className="inline-block h-4 w-4 align-[-0.2em]"
               />
             </DetailField>

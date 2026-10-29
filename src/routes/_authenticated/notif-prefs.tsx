@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { SettingsBackLink } from "@/components/SettingsBackLink";
 import { useEffect, useState } from "react";
 import { BellOff, ChevronLeft } from "lucide-react";
@@ -27,7 +28,8 @@ type PrefKey =
   | "mention"
   | "only_one"
   | "follow"
-  | "system";
+  | "system"
+  | "silent";
 type Prefs = {
   same: boolean;
   nah: boolean;
@@ -38,6 +40,8 @@ type Prefs = {
   only_one: boolean;
   follow: boolean;
   system: boolean;
+  silent: boolean;
+  silent_off_at?: string | null;
 };
 
 const DEFAULTS: Prefs = {
@@ -50,6 +54,7 @@ const DEFAULTS: Prefs = {
   only_one: true,
   follow: true,
   system: true,
+  silent: false,
 };
 
 const ITEMS: Array<{ key: PrefKey; label: string; hint: string }> = [
@@ -104,6 +109,7 @@ const RETENTION_OPTIONS = [
 ] as const;
 
 function NotifPrefsPage() {
+  const queryClient = useQueryClient();
   const { profile, refreshProfile } = useAuth();
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [retentionHours, setRetentionHours] = useState(720);
@@ -151,6 +157,9 @@ function NotifPrefsPage() {
       toast.error("Couldn't save notification settings.");
       return false;
     }
+    void queryClient.invalidateQueries({ queryKey: ["web-inbox-notifications"] });
+    void queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
+    void queryClient.invalidateQueries({ queryKey: ["inbox-unread"] });
     void refreshProfile();
     return true;
   };
@@ -158,6 +167,7 @@ function NotifPrefsPage() {
   const toggle = async (key: PrefKey) => {
     if (key === "system") return;
     const next = { ...prefs, [key]: !prefs[key] };
+    if (key === "silent" && prefs.silent) next.silent_off_at = new Date().toISOString();
     setPrefs(next);
     const ok = await save(next, retentionHours);
     if (!ok) setPrefs(prefs);
@@ -219,6 +229,28 @@ function NotifPrefsPage() {
             )}
           </section>
         )}
+
+        <section className="mt-5 rounded-3xl border border-border/80 bg-card p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm text-foreground">Silent mode</p>
+              <p className="text-xs text-muted-foreground">
+                Pause Inbox badges and browser alerts. Ordinary items are kept and return when
+                Silent mode is off.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Account-security and legal notices stay in your Inbox without alerts.
+              </p>
+            </div>
+            <Switch
+              checked={prefs.silent}
+              onCheckedChange={() => void toggle("silent")}
+              aria-label="Silent mode"
+              disabled={saving}
+              className="h-5 w-9 border-transparent data-[state=checked]:bg-accent data-[state=unchecked]:bg-background"
+            />
+          </div>
+        </section>
 
         <section className="mt-5 space-y-3">
           {ITEMS.map((item) => {

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
+import { pulseHaptic } from "@/lib/haptics";
 import { ArrowRight, Plus, Sparkles } from "lucide-react";
 import {
   AlertDialog,
@@ -108,24 +109,32 @@ function DropPage() {
     let promptIndex = 0;
     let characterIndex = 0;
     let deleting = false;
+    let finalReplay = false;
     let timer: number;
     const tick = () => {
       if (placeholderTouched.current) return;
       const prompt = prompts[promptIndex];
       characterIndex += deleting ? -1 : 1;
       setPlaceholder(prompt.slice(0, characterIndex));
+      pulseHaptic(6);
       let delay = deleting ? 28 : 55;
       if (!deleting && characterIndex === prompt.length) {
+        if (finalReplay && promptIndex === prompts.length - 1) return;
         deleting = true;
         delay = 1100;
       } else if (deleting && characterIndex === 0) {
         deleting = false;
-        promptIndex += 1;
-        if (promptIndex >= prompts.length) {
-          setPlaceholder(prompts[0]);
-          return;
+        if (promptIndex === prompts.length - 1) {
+          if (!finalReplay) {
+            finalReplay = true;
+          } else {
+            return;
+          }
+          delay = 300;
+        } else {
+          promptIndex += 1;
+          delay = 300;
         }
-        delay = 300;
       }
       timer = window.setTimeout(tick, delay);
     };

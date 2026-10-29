@@ -200,7 +200,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
     let q = supabaseAdmin
       .from("profiles")
       .select(
-        "id, username, emoji, bio, plan, language, created_at, warnings_count, banned_at, ban_reason, rare_thing_count, gender, age_range",
+        "id, username, emoji, avatar_url, bio, plan, language, created_at, warnings_count, banned_at, ban_reason, rare_thing_count, gender, age_range",
         { count: "exact" },
       )
       .order("created_at", { ascending: false })

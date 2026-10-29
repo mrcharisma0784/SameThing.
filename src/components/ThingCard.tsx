@@ -384,6 +384,7 @@ export function ThingCard({
                 <ProfileGlyph
                   value={local.author.emoji}
                   photoUrl={local.author.avatar_url}
+                  photoClassName="h-full w-full"
                   className="h-3.5 w-3.5"
                 />
               </div>
@@ -402,6 +403,7 @@ export function ThingCard({
                 <ProfileGlyph
                   value={local.author.emoji}
                   photoUrl={local.author.avatar_url}
+                  photoClassName="h-full w-full"
                   className="h-3.5 w-3.5"
                 />
               </div>

@@ -327,6 +327,7 @@ function QuoteDetailPage() {
                     <ProfileGlyph
                       value={commentAuthor.emoji}
                       photoUrl={commentAuthor.avatar_url}
+                      photoClassName="h-full w-full"
                       className="h-3 w-3"
                     />
                   </span>
@@ -548,6 +549,7 @@ function QuoteDetailPage() {
                   <ProfileGlyph
                     value={author.emoji}
                     photoUrl={author.avatar_url}
+                    photoClassName="h-full w-full"
                     className="h-3.5 w-3.5"
                   />
                 </span>

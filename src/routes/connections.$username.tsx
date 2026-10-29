@@ -24,6 +24,7 @@ type Connection = {
   id: string;
   username: string;
   emoji: string;
+  avatar_url?: string | null;
   plan: string;
   bio: string | null;
 };
@@ -107,6 +108,7 @@ function ConnectionsPage() {
                 <ProfileGlyph
                   value={person.emoji}
                   photoUrl={person.avatar_url}
+                  photoClassName="h-full w-full"
                   className="h-5 w-5"
                 />
               </span>

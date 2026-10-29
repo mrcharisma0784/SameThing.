@@ -24,7 +24,9 @@ export function MentionTextarea({
   const suggest = useServerFn(suggestMentions);
   const ref = useRef<HTMLTextAreaElement>(null);
   const [query, setQuery] = useState<string | null>(null);
-  const [users, setUsers] = useState<Array<{ username: string; emoji: string }>>([]);
+  const [users, setUsers] = useState<
+    Array<{ username: string; emoji: string; avatar_url: string | null }>
+  >([]);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -126,7 +128,12 @@ export function MentionTextarea({
               className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm ${i === active ? "bg-accent/15 text-foreground" : "text-muted-foreground hover:bg-secondary/40"}`}
             >
               <span className="grid h-6 w-6 place-items-center rounded-full border border-border bg-background/60 text-[13px]">
-                <ProfileGlyph value={u.emoji} photoUrl={u.avatar_url} className="h-3.5 w-3.5" />
+                <ProfileGlyph
+                  value={u.emoji}
+                  photoUrl={u.avatar_url}
+                  photoClassName="h-full w-full"
+                  className="h-3.5 w-3.5"
+                />
               </span>
               <span>@{u.username}</span>
             </button>
