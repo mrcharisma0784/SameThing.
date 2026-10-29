@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
 import { Brand } from "@/components/Brand";
+import { HapticFeedback } from "@/components/HapticFeedback";
 import { ThemeSync } from "@/components/ThemeSync";
 import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 import { getSiteUrl } from "@/lib/site-url";
@@ -165,6 +166,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <HapticFeedback />
         <ThemeSync />
         <MaintenanceGuard>
           <Outlet />
