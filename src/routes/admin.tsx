@@ -189,9 +189,6 @@ function AdminPage() {
             SameThing · Admin<span className="dot">.</span>
           </h1>
           <div className="flex items-center gap-3">
-            <span className="hidden text-[10px] uppercase tracking-widest text-muted-foreground sm:inline">
-              {adminState.username ? `@${adminState.username}` : "founder access"}
-            </span>
             <button
               className="rounded-full border border-border px-3 py-1 text-xs hover:bg-secondary"
               onClick={async () => {
@@ -259,7 +256,6 @@ function AdminPage() {
 }
 
 function LoginScreen({ onOk }: { onOk: () => void }) {
-  const [username, setUsername] = useState("");
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -276,7 +272,7 @@ function LoginScreen({ onOk }: { onOk: () => void }) {
           setBusy(true);
           setErr(null);
           try {
-            const r = await login({ data: { username, password: pw } });
+            const r = await login({ data: { password: pw } });
             if (r.ok) onOk();
             else setErr(r.error ?? "Login failed.");
           } catch {
@@ -301,33 +297,19 @@ function LoginScreen({ onOk }: { onOk: () => void }) {
         <div>
           <h1 className="text-lg font-medium text-foreground">Admin access</h1>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Founder access requires the founder username and password on every session.
+            Founder access requires the private admin password on every session.
           </p>
         </div>
         <div className="border-t border-border pt-4">
           <label
-            htmlFor="admin-username"
-            className="text-[10px] uppercase tracking-widest text-muted-foreground"
-          >
-            Username
-          </label>
-          <input
-            id="admin-username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Admin username"
-            className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-accent/60"
-          />
-          <label
             htmlFor="admin-password"
-            className="mt-3 block text-[10px] uppercase tracking-widest text-muted-foreground"
+            className="block text-[10px] uppercase tracking-widest text-muted-foreground"
           >
             Password
           </label>
           <input
             id="admin-password"
+            autoFocus
             autoComplete="current-password"
             type="password"
             value={pw}
@@ -342,11 +324,11 @@ function LoginScreen({ onOk }: { onOk: () => void }) {
           </p>
         )}
         <button
-          disabled={busy || !username || !pw}
+          disabled={busy || !pw}
           type="submit"
           className="h-11 w-full rounded-xl bg-accent text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
         >
-          {busy ? "Verifying…" : "Sign in as founder"}
+          {busy ? "Verifying…" : "Unlock admin"}
         </button>
       </form>
     </div>
@@ -501,7 +483,6 @@ function AdminLogsPanel() {
   const [items, setItems] = useState<
     Array<{
       id: string;
-      actor_username: string;
       actor_mode: string;
       action: string;
       permission: string | null;
@@ -511,13 +492,14 @@ function AdminLogsPanel() {
       created_at: string;
     }>
   >([]);
-  const [actor, setActor] = useState("");
   const [action, setAction] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
     setBusy(true);
-    const result = await list({ data: { limit: 100, offset: 0, actor, action } });
+    const result = await list({ data: { limit: 100, offset: 0, action, fromDate, toDate } });
     setBusy(false);
     if (result.error) toast.error(result.error);
     else setItems(result.items as typeof items);
@@ -533,11 +515,19 @@ function AdminLogsPanel() {
         Append-only record of admin actions. Secrets, tokens and authorization headers are excluded
         from metadata.
       </p>
-      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+      <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
         <input
-          value={actor}
-          onChange={(event) => setActor(event.target.value)}
-          placeholder="Filter by username"
+          type="date"
+          value={fromDate}
+          onChange={(event) => setFromDate(event.target.value)}
+          aria-label="From date"
+          className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+        />
+        <input
+          type="date"
+          value={toDate}
+          onChange={(event) => setToDate(event.target.value)}
+          aria-label="To date"
           className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
         <input
@@ -560,8 +550,6 @@ function AdminLogsPanel() {
           <div key={item.id} className="rounded-2xl border border-border bg-background/40 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
-                <span>@{item.actor_username}</span>
-                <span className="text-muted-foreground">·</span>
                 <span>{item.action}</span>
               </div>
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -739,6 +727,10 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const [premiumSelection, setPremiumSelection] = useState<7 | 14 | 30 | 90 | "forever">(30);
   const [customPremiumDays, setCustomPremiumDays] = useState("");
   const [premiumBusy, setPremiumBusy] = useState(false);
+  const [premiumUndo, setPremiumUndo] = useState<{
+    grant: boolean;
+    duration_days: "forever" | number;
+  } | null>(null);
   const [banPanelOpen, setBanPanelOpen] = useState(false);
   const [banReason, setBanReason] = useState("");
   const [banBusy, setBanBusy] = useState(false);
@@ -774,6 +766,13 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
         return;
       }
       toast.success("PremiumThing. access updated.");
+      setPremiumUndo({
+        grant: isPremium,
+        duration_days:
+          isPremium && premiumUntil
+            ? Math.max(1, Math.ceil((new Date(premiumUntil).getTime() - Date.now()) / 86400000))
+            : "forever",
+      });
       setPremiumPanelOpen(false);
       load();
       return;
@@ -1005,6 +1004,28 @@ function UserDetail({ id, onClose }: { id: string; onClose: () => void }) {
                     className="rounded-xl border border-border px-3 py-2.5 text-sm text-foreground disabled:opacity-50"
                   >
                     Remove premium
+                  </button>
+                )}
+                {premiumUndo && (
+                  <button
+                    type="button"
+                    disabled={premiumBusy}
+                    onClick={async () => {
+                      setPremiumBusy(true);
+                      const result = await premiumFn({ data: { id, ...premiumUndo } });
+                      setPremiumBusy(false);
+                      if (!result.ok) {
+                        toast.error(result.error);
+                        return;
+                      }
+                      setPremiumUndo(null);
+                      toast.success("Premium access undone.");
+                      setPremiumPanelOpen(false);
+                      load();
+                    }}
+                    className="rounded-xl border border-amber-500/60 px-3 py-2.5 text-sm text-amber-700 dark:text-amber-300 disabled:opacity-50"
+                  >
+                    Undo premium
                   </button>
                 )}
               </div>
@@ -1598,7 +1619,7 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
 
   const resolveOne = async (
     report: ReportItem,
-    action: "none" | "hide" | "delete" | "warn" | "ban",
+    action: "none" | "hide" | "delete",
   ) => {
     setBusy(report.id);
     const result = await resolve({
@@ -1725,22 +1746,6 @@ function ReportsPanel({ targetId }: { targetId: string | null }) {
                       Delete
                     </button>
                   )}
-                  <button
-                    type="button"
-                    disabled={busy === report.id}
-                    onClick={() => void resolveOne(report, "warn")}
-                    className="rounded-full border border-amber-500/50 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300 disabled:opacity-50"
-                  >
-                    Warn owner
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy === report.id}
-                    onClick={() => void resolveOne(report, "ban")}
-                    className="rounded-full bg-destructive px-3 py-1.5 text-xs text-destructive-foreground disabled:opacity-50"
-                  >
-                    Ban owner
-                  </button>
                   <button
                     type="button"
                     disabled={busy === report.id || !report.owner}
@@ -2797,7 +2802,6 @@ function BannedPanel() {
   const del = useServerFn(adminDeleteBannedWord);
   const [items, setItems] = useState<Array<{ id: string; word: string; severity: string }>>([]);
   const [word, setWord] = useState("");
-  const [severity, setSeverity] = useState<"warn" | "block">("warn");
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
   const [swipeId, setSwipeId] = useState<string | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -2812,41 +2816,23 @@ function BannedPanel() {
         <div>
           <h2 className="text-base font-medium text-foreground">Forbidden words</h2>
           <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
-            Warn sends a system message and allows the content. Block prevents the post or comment
-            from being saved.
+            Every configured word is a hard stop. Matching content cannot be posted or commented;
+            the author receives a warning and repeated warnings can lead to an automatic ban.
           </p>
         </div>
       </div>
       <div className="mt-4 rounded-2xl border border-border/70 bg-background/40 p-3">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_130px_auto]">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
           <input
             value={word}
             onChange={(e) => setWord(e.target.value)}
             placeholder="Add a word or phrase"
             className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-accent/60"
           />
-          <div className="grid grid-cols-2 gap-2">
-            {(
-              [
-                ["warn", "Warn"],
-                ["block", "Ban"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={severity === value}
-                onClick={() => setSeverity(value)}
-                className={`rounded-xl border px-3 py-2.5 text-sm transition-colors ${severity === value ? "border-accent bg-accent/10 text-accent" : "border-border bg-background text-muted-foreground hover:border-accent/50 hover:text-foreground"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
           <button
             disabled={!word.trim()}
             onClick={async () => {
-              const r = await add({ data: { word: word.trim(), severity } });
+              const r = await add({ data: { word: word.trim() } });
               if (r.ok) {
                 setWord("");
                 reload();

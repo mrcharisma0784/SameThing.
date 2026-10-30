@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { effectivePlan } from "@/lib/premium";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
-import { pulseHaptic } from "@/lib/haptics";
 import { ArrowRight, Plus, Sparkles } from "lucide-react";
 import {
   AlertDialog,
@@ -61,8 +60,6 @@ function DropPage() {
   const [dropComplete, setDropComplete] = useState(false);
   const [noticeDismissed, setNoticeDismissed] = useState(false);
   const [noticeLoadedFor, setNoticeLoadedFor] = useState<string | null>(null);
-  const [placeholder, setPlaceholder] = useState("The exact thought, fear, habit, or moment.");
-  const placeholderTouched = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanRunRef = useRef(0);
 
@@ -97,54 +94,6 @@ function DropPage() {
     } catch {
       // Keep the notice dismissed for this mounted screen if storage is unavailable.
     }
-  };
-
-  useEffect(() => {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const prompts = [
-      "The exact thought, fear, habit, or moment.",
-      "Use @username to mention someone.",
-      "Use #tag to tag something.",
-    ];
-    let promptIndex = 0;
-    let characterIndex = 0;
-    let deleting = false;
-    let finalReplay = false;
-    let timer: number;
-    const tick = () => {
-      if (placeholderTouched.current) return;
-      const prompt = prompts[promptIndex];
-      characterIndex += deleting ? -1 : 1;
-      setPlaceholder(prompt.slice(0, characterIndex));
-      pulseHaptic(6);
-      let delay = deleting ? 28 : 55;
-      if (!deleting && characterIndex === prompt.length) {
-        if (finalReplay && promptIndex === prompts.length - 1) return;
-        deleting = true;
-        delay = 1100;
-      } else if (deleting && characterIndex === 0) {
-        deleting = false;
-        if (promptIndex === prompts.length - 1) {
-          if (!finalReplay) {
-            finalReplay = true;
-          } else {
-            return;
-          }
-          delay = 300;
-        } else {
-          promptIndex += 1;
-          delay = 300;
-        }
-      }
-      timer = window.setTimeout(tick, delay);
-    };
-    timer = window.setTimeout(tick, 55);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const stopPlaceholder = () => {
-    placeholderTouched.current = true;
-    setPlaceholder("The exact thought, fear, habit, or moment.");
   };
 
   // Debounced AI tag suggestion (premium) + content scan
@@ -256,15 +205,13 @@ function DropPage() {
             >
               The thing
             </Label>
-            <div onFocus={stopPlaceholder} onTouchStart={stopPlaceholder}>
-              <MentionTextarea
-                value={raw}
-                onChange={setRaw}
-                maxLength={1000}
-                placeholder={placeholder}
-                className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
-              />
-            </div>
+            <MentionTextarea
+              value={raw}
+              onChange={setRaw}
+              maxLength={1000}
+              placeholder="The exact thought, fear, habit, or moment."
+              className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
+            />
             <div className="mt-1 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
               <span>{charCount}/1000</span>
               {thinking && (

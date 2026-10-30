@@ -1,4 +1,3 @@
-import { Asterisk } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Shared avatar mark: uploaded photo when present, otherwise the neutral SameThing star. */
@@ -22,5 +21,12 @@ export function ProfileGlyph({
       />
     );
   }
-  return <Asterisk aria-hidden="true" className={cn("shrink-0", className)} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("inline-flex shrink-0 items-center justify-center leading-none", className)}
+    >
+      {value || "✹"}
+    </span>
+  );
 }

@@ -106,7 +106,10 @@ export const scanContent = createServerFn({ method: "POST" })
     if (block.length) warnings.push(`Forbidden word(s): ${block.map((w) => `"${w}"`).join(", ")}.`);
     if (blockedMentions.length) warnings.push(`@${blockedMentions[0]} doesn't accept mentions.`);
 
-    const deterministicBlock = block.length > 0 || blockedMentions.length > 0;
+    // Every configured Forbidden Word is a hard pre-publish stop. The former
+    // warn/block distinction allowed a configured word through, which made the
+    // editor and the publish endpoint disagree.
+    const deterministicBlock = hits.length > 0 || blockedMentions.length > 0;
     // Model review is intentionally deferred until after publish. This preflight
     // remains fast and only enforces deterministic platform rules.
     const safety: "safe" | "blocked" | "review" = deterministicBlock ? "blocked" : "review";

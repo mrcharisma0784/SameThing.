@@ -69,12 +69,11 @@ async function sendAdminSystemMessage(
 
 // ---------- auth ----------
 const FOUNDER_USERNAME = "jeonwx_0";
-const FOUNDER_LOGIN_USERNAME = "jeonwx";
 
 export const adminLogin = createServerFn({ method: "POST" })
-  .inputValidator((i: { username: string; password: string }) =>
+  .inputValidator((i: { password: string }) =>
     z
-      .object({ username: z.string().trim().min(1).max(80), password: z.string().min(1).max(500) })
+      .object({ password: z.string().min(1).max(500) })
       .parse(i),
   )
   .handler(async ({ data }) => {
@@ -82,12 +81,7 @@ export const adminLogin = createServerFn({ method: "POST" })
     if (!expected) return { ok: false as const, error: "Admin not configured." };
     if (!process.env.ADMIN_SESSION_SECRET)
       return { ok: false as const, error: "Admin session is not configured." };
-    if (
-      !pwEqual(data.password, expected) ||
-      data.username.trim().toLowerCase() !== FOUNDER_LOGIN_USERNAME
-    ) {
-      return { ok: false as const, error: "Wrong username or password." };
-    }
+    if (!pwEqual(data.password, expected)) return { ok: false as const, error: "Wrong password." };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: founder, error: founderError } = await supabaseAdmin
@@ -687,7 +681,7 @@ export const adminRetrySuspicious = createServerFn({ method: "POST" })
 const ReportActionInput = z.object({
   report_id: z.string().uuid(),
   status: z.enum(["in_review", "resolved", "dismissed"]),
-  action: z.enum(["none", "hide", "delete", "warn", "ban"]).default("none"),
+  action: z.enum(["none", "hide", "delete"]).default("none"),
   admin_note: z.string().max(1000).default(""),
 });
 
@@ -737,26 +731,6 @@ export const adminResolveReport = createServerFn({ method: "POST" })
         await db.from("quotes").update({ hidden: true }).eq("id", report.target_id);
       if (data.action === "delete") await db.from("quotes").delete().eq("id", report.target_id);
     }
-    if (ownerId && data.action === "warn") {
-      const { data: profile } = await db
-        .from("profiles")
-        .select("warnings_count")
-        .eq("id", ownerId)
-        .maybeSingle();
-      await db
-        .from("profiles")
-        .update({ warnings_count: Number(profile?.warnings_count ?? 0) + 1 })
-        .eq("id", ownerId);
-    }
-    if (ownerId && data.action === "ban") {
-      await db
-        .from("profiles")
-        .update({
-          banned_at: new Date().toISOString(),
-          ban_reason: data.admin_note || "Reported content",
-        })
-        .eq("id", ownerId);
-    }
     if (ownerId && data.action !== "none") {
       const messages: Record<string, { title: string; body: string }> = {
         hide: {
@@ -766,14 +740,6 @@ export const adminResolveReport = createServerFn({ method: "POST" })
         delete: {
           title: "Reported content was removed",
           body: "A moderator removed content connected to a report. Please review the community rules.",
-        },
-        warn: {
-          title: "A moderator sent you a warning",
-          body: data.admin_note || "Please review the community rules before posting again.",
-        },
-        ban: {
-          title: "Your account has been banned",
-          body: data.admin_note || "Your account is restricted after a moderation review.",
         },
       };
       const message = messages[data.action];
@@ -1525,13 +1491,14 @@ export const adminUpsertAdminMember = createServerFn({ method: "POST" })
   });
 
 export const adminListAuditLogs = createServerFn({ method: "GET" })
-  .inputValidator((input: { limit?: number; offset?: number; actor?: string; action?: string }) =>
+  .inputValidator((input: { limit?: number; offset?: number; action?: string; fromDate?: string; toDate?: string }) =>
     z
       .object({
         limit: z.number().int().min(1).max(200).default(100),
         offset: z.number().int().min(0).default(0),
-        actor: z.string().trim().max(40).optional().or(z.literal("")),
         action: z.string().trim().max(120).optional().or(z.literal("")),
+        fromDate: z.string().regex(/^$|^\d{4}-\d{2}-\d{2}$/).default(""),
+        toDate: z.string().regex(/^$|^\d{4}-\d{2}-\d{2}$/).default(""),
       })
       .parse(input),
   )
@@ -1541,13 +1508,14 @@ export const adminListAuditLogs = createServerFn({ method: "GET" })
     let query = (supabaseAdmin as any)
       .from("admin_audit_logs")
       .select(
-        "id, actor_user_id, actor_username, actor_mode, action, permission, target_type, target_id, metadata, created_at",
+        "id, actor_mode, action, permission, target_type, target_id, metadata, created_at",
         { count: "exact" },
       )
       .order("created_at", { ascending: false })
       .range(data.offset, data.offset + data.limit - 1);
-    if (data.actor) query = query.ilike("actor_username", `%${data.actor.replace(/[%_]/g, "")}%`);
     if (data.action) query = query.ilike("action", `%${data.action.replace(/[%_]/g, "")}%`);
+    if (data.fromDate) query = query.gte("created_at", `${data.fromDate}T00:00:00.000Z`);
+    if (data.toDate) query = query.lte("created_at", `${data.toDate}T23:59:59.999Z`);
     const { data: items, count, error } = await query;
     return { items: items ?? [], total: count ?? 0, error: error?.message ?? null };
   });
@@ -1627,11 +1595,10 @@ export const adminListBannedWords = createServerFn({ method: "GET" }).handler(as
 });
 
 export const adminAddBannedWord = createServerFn({ method: "POST" })
-  .inputValidator((i: { word: string; severity?: "warn" | "block" }) =>
+  .inputValidator((i: { word: string }) =>
     z
       .object({
         word: z.string().min(1).max(60),
-        severity: z.enum(["warn", "block"]).default("warn"),
       })
       .parse(i),
   )
@@ -1641,7 +1608,7 @@ export const adminAddBannedWord = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("banned_words" as never)
-      .insert({ word: data.word.trim().toLowerCase(), severity: data.severity } as never);
+      .insert({ word: data.word.trim().toLowerCase(), severity: "block" } as never);
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   });

@@ -209,7 +209,7 @@ export const dropThing = createServerFn({ method: "POST" })
     }
 
     const bwHits = await scanBannedWords(data.raw_text);
-    if (bwHits.some((h) => h.severity === "block")) {
+    if (bwHits.length > 0) {
       await sendBannedWordWarning(userId, bwHits, "thing");
       return {
         error: `Your post contains forbidden word(s): ${bwHits.map((h) => `"${h.word}"`).join(", ")}.`,
@@ -265,14 +265,6 @@ export const dropThing = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("thing mention persist failed", e);
-    }
-
-    if (bwHits.length) {
-      try {
-        await sendBannedWordWarning(userId, bwHits, "thing");
-      } catch (e) {
-        console.error("bw warn", e);
-      }
     }
 
     if (data.ai_review === "review") {

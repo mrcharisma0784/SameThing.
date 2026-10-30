@@ -41,5 +41,27 @@ export async function sendBannedWordWarning(
     .eq("id", userId)
     .maybeSingle();
   const next = ((prof?.warnings_count as number | undefined) ?? 0) + 1;
-  await supabaseAdmin.from("profiles").update({ warnings_count: next }).eq("id", userId);
+  const autoBan = next >= 3;
+  await supabaseAdmin
+    .from("profiles")
+    .update({
+      warnings_count: next,
+      ...(autoBan
+        ? {
+            banned_at: new Date().toISOString(),
+            ban_reason: "Automatic ban after repeated Forbidden Word violations.",
+          }
+        : {}),
+    })
+    .eq("id", userId);
+  if (autoBan) {
+    await supabaseAdmin.from("system_messages" as never).insert({
+      recipient_id: userId,
+      kind: "warning",
+      title: "Your account has been banned",
+      body: "Your account was automatically restricted after repeated Forbidden Word violations.",
+      link: "/faq#forbidden-words",
+      meta: { warnings_count: next, reason: "forbidden_words" },
+    } as never);
+  }
 }
