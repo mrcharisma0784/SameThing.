@@ -82,8 +82,6 @@ export const scanContent = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const text = data.text;
     const hits = await scanBannedWords(text);
-    const warn = hits.filter((h) => h.severity === "warn").map((h) => h.word);
-    const block = hits.filter((h) => h.severity === "block").map((h) => h.word);
 
     const raw = text.match(/@([a-z0-9_]{2,24})/gi) ?? [];
     const usernames = Array.from(new Set(raw.map((m) => m.slice(1).toLowerCase())));
@@ -102,8 +100,10 @@ export const scanContent = createServerFn({ method: "POST" })
       }
     }
     const warnings: string[] = [];
-    if (warn.length) warnings.push(`Watch your words: ${warn.map((w) => `"${w}"`).join(", ")}.`);
-    if (block.length) warnings.push(`Forbidden word(s): ${block.map((w) => `"${w}"`).join(", ")}.`);
+    if (hits.length)
+      warnings.push(
+        `Forbidden word(s): ${hits.map((hit) => `"${hit.word}"`).join(", ")}. Please change the text before posting.`,
+      );
     if (blockedMentions.length) warnings.push(`@${blockedMentions[0]} doesn't accept mentions.`);
 
     // Every configured Forbidden Word is a hard pre-publish stop. The former
