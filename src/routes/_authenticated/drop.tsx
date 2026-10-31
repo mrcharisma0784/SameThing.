@@ -14,6 +14,7 @@ import { suggestTags, scanContent } from "@/lib/api/ai.functions";
 import { TAGS } from "@/lib/thing-helpers";
 import { cn } from "@/lib/utils";
 import { effectivePlan } from "@/lib/premium";
+import { pulseHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { ArrowRight, Plus, Sparkles } from "lucide-react";
@@ -60,6 +61,10 @@ function DropPage() {
   const [dropComplete, setDropComplete] = useState(false);
   const [noticeDismissed, setNoticeDismissed] = useState(false);
   const [noticeLoadedFor, setNoticeLoadedFor] = useState<string | null>(null);
+  const [placeholder, setPlaceholder] = useState("The exact thought, fear, habit, or moment.");
+  const [forbiddenWords, setForbiddenWords] = useState<string[]>([]);
+  const forbiddenSignatureRef = useRef("");
+  const placeholderTouched = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanRunRef = useRef(0);
 
@@ -106,6 +111,8 @@ function DropPage() {
       setSafetyStatus("idle");
       setWarnings([]);
       setBlocked(false);
+      setForbiddenWords([]);
+      forbiddenSignatureRef.current = "";
       return;
     }
     setThinking(true);
@@ -122,12 +129,19 @@ function DropPage() {
         setSuggested(tagRes.tags ?? []);
         setWarnings(scanRes.warnings ?? []);
         setBlocked(!!scanRes.block);
+        const nextForbiddenWords = scanRes.forbiddenWords ?? [];
+        const signature = nextForbiddenWords.join("|");
+        if (signature && signature !== forbiddenSignatureRef.current) pulseHaptic(12);
+        forbiddenSignatureRef.current = signature;
+        setForbiddenWords(nextForbiddenWords);
         setSafetyStatus(scanRes.safety ?? (scanRes.block ? "blocked" : "safe"));
       } catch {
         if (runId !== scanRunRef.current) return;
         setSuggested([]);
         setWarnings([]);
         setBlocked(false);
+        setForbiddenWords([]);
+        forbiddenSignatureRef.current = "";
         setSafetyStatus("review");
       } finally {
         if (runId === scanRunRef.current) setThinking(false);
@@ -137,6 +151,47 @@ function DropPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [raw, suggest, scan, customTags, isPremium]);
+
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const prompts = [
+      "The exact thought, fear, habit, or moment.",
+      "Use @username to mention someone.",
+      "Use #tag to tag something.",
+    ];
+    let promptIndex = 0;
+    let characterIndex = 0;
+    let deleting = false;
+    let finalReplay = false;
+    let timer: number;
+    const tick = () => {
+      if (placeholderTouched.current) return;
+      const prompt = prompts[promptIndex];
+      characterIndex += deleting ? -1 : 1;
+      setPlaceholder(prompt.slice(0, characterIndex));
+      const delay = deleting ? 28 : 55;
+      if (!deleting && characterIndex === prompt.length) {
+        if (finalReplay && promptIndex === 0) return;
+        deleting = true;
+      } else if (deleting && characterIndex === 0) {
+        deleting = false;
+        if (promptIndex === prompts.length - 1) {
+          finalReplay = true;
+          promptIndex = 0;
+        } else {
+          promptIndex += 1;
+        }
+      }
+      timer = window.setTimeout(tick, !deleting && characterIndex === prompt.length ? 1100 : delay);
+    };
+    timer = window.setTimeout(tick, 55);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const stopPlaceholder = () => {
+    placeholderTouched.current = true;
+    setPlaceholder("The exact thought, fear, habit, or moment.");
+  };
 
   const toggleTag = (t: string) => {
     setTags((cur) =>
@@ -205,13 +260,15 @@ function DropPage() {
             >
               The thing
             </Label>
-            <MentionTextarea
-              value={raw}
-              onChange={setRaw}
-              maxLength={1000}
-              placeholder="The exact thought, fear, habit, or moment."
-              className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
-            />
+            <div onFocus={stopPlaceholder} onTouchStart={stopPlaceholder}>
+              <MentionTextarea
+                value={raw}
+                onChange={setRaw}
+                maxLength={1000}
+                placeholder={placeholder}
+                className="mt-1 min-h-[140px] resize-none bg-card font-serif text-lg italic placeholder:not-italic placeholder:font-sans placeholder:text-base placeholder:text-muted-foreground"
+              />
+            </div>
             <div className="mt-1 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
               <span>{charCount}/1000</span>
               {thinking && (
@@ -264,9 +321,20 @@ function DropPage() {
                     : "border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400",
                 )}
               >
-                {warnings.map((w, i) => (
-                  <p key={i}>· {w}</p>
-                ))}
+                {forbiddenWords.length > 0 ? (
+                  <p>
+                    The forbidden word was used! You received a warning. {forbiddenWords.map((word) => (
+                      <span
+                        key={word}
+                        className="ml-1 inline-flex rounded-md border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 font-mono text-[11px] text-destructive"
+                      >
+                        @{word}
+                      </span>
+                    ))}
+                  </p>
+                ) : (
+                  warnings.map((w, i) => <p key={i}>· {w}</p>)
+                )}
               </div>
             )}
           </div>

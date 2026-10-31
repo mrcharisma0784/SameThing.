@@ -115,6 +115,7 @@ export const scanContent = createServerFn({ method: "POST" })
     const safety: "safe" | "blocked" | "review" = deterministicBlock ? "blocked" : "review";
     return {
       warnings,
+      forbiddenWords: hits.map((hit) => hit.word),
       block: deterministicBlock,
       safety,
     };

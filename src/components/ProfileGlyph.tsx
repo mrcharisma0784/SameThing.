@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared avatar mark: uploaded photo when present, otherwise the neutral SameThing star. */
 export function ProfileGlyph({
+  value,
   photoUrl,
   photoClassName,
   className,
